@@ -54,11 +54,18 @@
             justify-content: space-between;
             position: relative;
         }
+        .progress-labels {
+            display: flex;
+            padding: 1.5rem;
+            justify-content: space-between;
+            position: relative;
+            align-items: center;
+        }
 
         .progress-bar::before {
             content: '';
             position: absolute;
-            top: 50%;
+            top: 37%;
             left: 2rem;
             right: 2rem;
             height: 2px;
@@ -78,7 +85,24 @@
             font-weight: 600;
             z-index: 2;
         }
-
+        .step-label {
+            display: flex;
+            flex-direction:column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+        }
+        .step-wrap {
+            display: flex;
+            flex-direction:column;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-wrap > div {
+            margin: 0.25em 0;
+        }
         .step.active {
             background: var(--primary);
             border-color: var(--primary);
@@ -214,14 +238,28 @@
 <body>
     <div class="container">
         <div class="form-header">
+            <img src="/img/round-logo.svg" height="100" style="float:left;">
             <h1>Create New Campaign</h1>
         </div>
 
         <div class="progress-bar">
-            <div class="step active">1</div>
-            <div class="step">2</div>
-            <div class="step">3</div>
-            <div class="step">4</div>
+
+            <div class="step-wrap">
+                <div class="step active">1</div>
+                <div class="step-label">Basic Info</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">2</div>
+                <div class="step-label">Funding Goals</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">3</div>
+                <div class="step-label">Media</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">4</div>
+                <div class="step-label">Review</div>
+            </div>
         </div>
 
         <form id="campaignForm">

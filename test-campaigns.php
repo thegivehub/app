@@ -21,7 +21,7 @@ $newCampaign = [
         'currency' => 'XLM'
     ]
 ];
-$results = $campaign->create($newCampaign);
+// $results = $campaign->create($newCampaign);
 
 //print_r($results);
 
