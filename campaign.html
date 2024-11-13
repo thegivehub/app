@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Detail - Clean Water Pipeline</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .campaign-info, .campaign-metrics, .campaign-media, .campaign-verification {
+            margin: 15px 0;
+        }
+        .progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar div {
+            height: 20px;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="campaign-title">Campaign Title</h1>
+    <p id="campaign-description"></p>
+
+    <div class="campaign-info">
+        <strong>Location:</strong> <span id="campaign-location"></span><br>
+        <strong>Goal Amount:</strong> <span id="campaign-goal"></span><br>
+        <strong>Raised Amount:</strong> <span id="campaign-raised"></span><br>
+        <strong>Donor Count:</strong> <span id="campaign-donors"></span><br>
+    </div>
+
+    <div class="funding-progress">
+        <strong>Funding Progress:</strong>
+        <div class="progress-bar">
+            <div id="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+    </div>
+
+    <div class="campaign-metrics">
+        <h3>Impact Metrics</h3>
+        <ul id="impact-metrics"></ul>
+    </div>
+
+    <div class="campaign-milestones">
+        <h3>Milestones</h3>
+        <ul id="milestones"></ul>
+    </div>
+
+    <div class="campaign-media">
+        <h3>Media</h3>
+        <div id="media-gallery"></div>
+    </div>
+</div>
+
+<script>
+    function parseSearch() {
+        let qs = document.location.search.replace(/^\?/, '');
+
+        let items = qs.split(/&/);
+        let query = {};
+
+        for (let item of items) {
+            let parts = item.split(/=/, 2);
+            if (parts && parts[0]) query[parts[0]] = parts[1];
+        }
+        return query;
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        let query = parseSearch();
+        const campaignId = query.id;
+        // const campaignId = "65ee1a1b2f3a4b5c6d7e8f9a";  // Replace with actual campaign ID or pass it dynamically
+        
+        fetch(`/api/campaign?id=${campaignId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('campaign-title').textContent = data.title || "Campaign Title";
+                document.getElementById('campaign-description').textContent = data.description || "Campaign Description";
+                document.getElementById('campaign-location').textContent = `${data.location?.region}, ${data.location?.country}`;
+                document.getElementById('campaign-goal').textContent = `${data.funding.goalAmount} ${data.funding.currency}`;
+                document.getElementById('campaign-raised').textContent = `${data.funding.raisedAmount} ${data.funding.currency}`;
+                document.getElementById('campaign-donors').textContent = data.funding.donorCount;
+
+                // Funding Progress
+                const goalAmount = data.funding.goalAmount;
+                const raisedAmount = data.funding.raisedAmount;
+                const progress = (raisedAmount / goalAmount) * 100;
+                document.getElementById('progress-bar-fill').style.width = progress + '%';
+
+                // Impact Metrics
+                const impactMetricsContainer = document.getElementById('impact-metrics');
+                data.impact.metrics.forEach(metric => {
+                    const metricItem = document.createElement('li');
+                    metricItem.textContent = `${metric.name}: ${metric.current}/${metric.target} ${metric.unit} (Baseline: ${metric.baseline})`;
+                    impactMetricsContainer.appendChild(metricItem);
+                });
+
+                // Milestones
+                const milestonesContainer = document.getElementById('milestones');
+                data.timeline.milestones.forEach(milestone => {
+                    const milestoneItem = document.createElement('li');
+                    milestoneItem.innerHTML = `<strong>${milestone.title}:</strong> ${milestone.description} - Status: ${milestone.status}`;
+                    milestonesContainer.appendChild(milestoneItem);
+                });
+
+                // Media Gallery
+                const mediaGallery = document.getElementById('media-gallery');
+                data.media.forEach(media => {
+                    const mediaItem = document.createElement(media.type === 'image' ? 'img' : 'a');
+                    mediaItem.src = media.url;
+                    mediaItem.alt = media.caption;
+                    mediaItem.style.width = '100px';
+                    mediaItem.style.marginRight = '10px';
+                    if (media.type === 'document') {
+                        mediaItem.href = media.url;
+                        mediaItem.textContent = media.caption;
+                        mediaItem.target = '_blank';
+                    }
+                    mediaGallery.appendChild(mediaItem);
+                });
+            })
+            .catch(error => console.error("Error fetching campaign data:", error));
+    });
+</script>
+
+</body>
+</html>
+
