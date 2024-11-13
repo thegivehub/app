@@ -1,0 +1,8 @@
+<FilesMatch "^\.env.*">
+    Require all denied
+</FilesMatch>
+
+<Files "api">
+    ForceType application/x-httpd-php
+</Files>
+
