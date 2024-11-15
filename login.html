@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - The Give Hub</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+            <h1>Welcome back</h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Email or Username</label>
+                <input type="text" id="username" name="username" required autocomplete="username">
+                <div class="form-error" id="usernameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <div class="form-error" id="passwordError"></div>
+            </div>
+
+            <div class="remember-forgot">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    Remember me
+                </label>
+                <a href="/forgot-password" class="forgot-password">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">
+                <div class="spinner"></div>
+                <span>Sign in</span>
+            </button>
+
+            <div class="form-error" id="loginError"></div>
+
+            <div class="divider">
+                <span>Or continue with</span>
+            </div>
+
+            <div class="social-login">
+                <button type="button" class="social-button" id="googleLogin">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path d="M12.545,12.151L12.545,12.151c0,1.054,0.855,1.909,1.909,1.909h3.536c-0.684,2.053-2.417,3.636-4.54,3.636
+                            c-2.769,0-5.012-2.243-5.012-5.012s2.243-5.012,5.012-5.012c1.335,0,2.545,0.523,3.444,1.371l1.909-1.909
+                            C17.523,5.651,15.318,4.727,12.909,4.727C8.905,4.727,5.636,7.996,5.636,12s3.269,7.273,7.273,7.273
+                            c4.438,0,7.273-3.269,7.273-7.273v-1.909h-7.636V12.151z" fill="currentColor"/>
+                    </svg>
+                    Continue with Google
+                </button>
+            </div>
+
+            <div class="register-prompt">
+                Don't have an account? <a href="/register.html">Sign up</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const app = {
+            elements: {
+                form: document.getElementById('loginForm'),
+                username: document.getElementById('username'),
+                password: document.getElementById('password'),
+                loginButton: document.getElementById('loginButton'),
+                usernameError: document.getElementById('usernameError'),
+                passwordError: document.getElementById('passwordError'),
+                loginError: document.getElementById('loginError'),
+                googleLogin: document.getElementById('googleLogin')
+            },
+
+            init() {
+                this.setupEventListeners();
+            },
+
+            setupEventListeners() {
+                this.elements.form.addEventListener('submit', (e) => this.handleLogin(e));
+                this.elements.googleLogin.addEventListener('click', () => this.handleGoogleLogin());
+                
+                // Clear errors on input
+                this.elements.username.addEventListener('input', () => {
+                    this.elements.usernameError.textContent = '';
+                    this.elements.usernameError.classList.remove('active');
+                });
+                
+                this.elements.password.addEventListener('input', () => {
+                    this.elements.passwordError.textContent = '';
+                    this.elements.passwordError.classList.remove('active');
+                });
+            },
+
+            async handleLogin(e) {
+                e.preventDefault();
+                
+                // Reset errors
+                this.clearErrors();
+
+                // Validate
+                if (!this.validateForm()) {
+                    return;
+                }
+
+                // Show loading state
+                this.setLoading(true);
+
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: this.elements.username.value,
+                            password: this.elements.password.value
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Store tokens
+                        localStorage.setItem('accessToken', data.tokens.accessToken);
+                        localStorage.setItem('refreshToken', data.tokens.refreshToken);
+                        
+                        // Redirect to dashboard
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        this.showError('loginError', data.error || 'Login failed');
+                    }
+                } catch (error) {
+                    this.showError('loginError', `An error occurred (${error}). Please try again.`);
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+            handleGoogleLogin() {
+                // Implement Google OAuth login
+                console.log('Google login clicked');
+            },
+
+            validateForm() {
+                let isValid = true;
+
+                if (!this.elements.username.value) {
+                    this.showError('usernameError', 'Username is required');
+                    isValid = false;
+                }
+
+                if (!this.elements.password.value) {
+                    this.showError('passwordError', 'Password is required');
+                    isValid = false;
+                }
+
+                return isValid;
+            },
+
+            showError(elementId, message) {
+                const element = this.elements[elementId];
+                element.textContent = message;
+                element.classList.add('active');
+            },
+
+            clearErrors() {
+                ['usernameError', 'passwordError', 'loginError'].forEach(id => {
+                    const element = this.elements[id];
+                    element.textContent = '';
+                    element.classList.remove('active');
+                });
+            },
+
+            setLoading(loading) {
+                this.elements.loginButton.classList.toggle('loading', loading);
+                this.elements.loginButton.disabled = loading;
+            }
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>

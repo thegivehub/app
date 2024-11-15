@@ -6,8 +6,9 @@ class Database {
     private $db;
 
     public function __construct($databaseName = 'givehub') {
+        global $mongodb;
         $this->client = new MongoDB\Client("mongodb://localhost:27017");
-        $this->db = $this->client->$databaseName;
+        $mongodb = $this->db = $this->client->$databaseName;
     }
 
     public function getCollection($collectionName) {

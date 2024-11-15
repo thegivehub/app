@@ -13,15 +13,25 @@ spl_autoload_register(function ($className) {
         exit;
     }
 });
+session_start();
+
+// Parse request
+$method = $_SERVER['REQUEST_METHOD'];
+$actions = [];
+
+if (isset($_SERVER['PATH_INFO'])) {
+    $actions = preg_split("/\//", $_SERVER['PATH_INFO']);
+    array_shift($actions);
+    $endpoint = ucfirst(array_shift($actions));
+}
+
+$id = $_GET['id'] ?? null;
+
+$posted = json_decode(file_get_contents('php://input'), true);
 
 // Set headers
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
-
-// Parse request
-$method = $_SERVER['REQUEST_METHOD'];
-$endpoint = isset($_SERVER['PATH_INFO']) ? ucfirst(strtolower(preg_replace("/\W/",'', $_SERVER['PATH_INFO']))) : null;
-$id = $_GET['id'] ?? null;
 
 // Verify that the endpoint class exists
 if (!$endpoint || !class_exists($endpoint)) {
@@ -33,11 +43,21 @@ if (!$endpoint || !class_exists($endpoint)) {
 // Instantiate the required class dynamically
 $instance = new $endpoint();
 
+if (count($actions)) {
+    foreach ($actions as $action) {
+        $action = preg_replace_callback("/\-(\w)/", function($m) {
+            return strtoupper($m[1]);
+        }, $action);
+        $out = $instance->$action($posted);
+        print json_encode($out);
+        exit;
+    }
+}
+
 // Handle CRUD operations based on HTTP method
 switch ($method) {
     case 'POST':
-        // Create
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = $posted;
         if ($data) {
             $result = $instance->create($data);
             echo json_encode($result);

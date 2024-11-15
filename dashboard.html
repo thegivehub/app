@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Dashboard</title>
+    <style>
+        /* Theme variables */
+        .light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --text-primary: #374151;
+            --text-secondary: #4b5563;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --primary: #3b82f6;
+            --primary-light: #1e3a8a;
+            --success: #059669;
+            --warning: #d97706;
+            --gray-100: #374151;
+            --gray-200: #4b5563;
+            --gray-300: #6b7280;
+            --gray-600: #9ca3af;
+            --gray-700: #d1d5db;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #4b5563;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .dashboard {
+            padding: 1rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--text-primary);
+        }
+
+        .stat-trend {
+            font-size: 0.875rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard {
+                padding: 1.5rem;
+            }
+
+            .main-grid {
+                grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-tools {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-button {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .icon-button:hover {
+            background: var(--gray-100);
+        }
+
+        .card-content {
+            padding: 1rem;
+        }
+
+        .campaign-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .campaign-item {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+        }
+
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .campaign-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .campaign-category {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .campaign-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 999px;
+            margin: 0.75rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        .campaign-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        #trendingChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+
+            .campaign-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <h1>Dashboard</h1>
+            <div class="header-buttons">
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <button class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Campaign
+                </button>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: var(--primary);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Raised</div>
+                    <div class="stat-value">$12,650</div>
+                    <div class="stat-trend">↑ 12.5%</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Active Campaigns</div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-trend">↑ 2 new</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Backers</div>
+                    <div class="stat-value">157</div>
+                    <div class="stat-trend">↑ 8.3%</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Wallet Balance</div>
+                    <div class="stat-value">$2,450</div>
+                    <div class="stat-trend">Available</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Active Campaigns</h2>
+                    <div class="card-tools">
+                        <button class="icon-button">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                        <button class="icon-button">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="campaign-list" id="campaign-list">
+                        <!-- Campaign items would be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Funding Trends</h2>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <canvas id="trendingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="errorContainer"></div>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.querySelector('.theme-toggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.className = savedTheme;
+
+        // Update theme toggle icon based on current theme
+        function updateThemeIcon(theme) {
+            const iconPath = theme === 'dark' 
+                ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                   </svg>`
+                : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                   </svg>`;
+            themeToggle.innerHTML = iconPath;
+        }
+
+        // Initialize theme icon
+        updateThemeIcon(savedTheme);
+
+        // Toggle theme
+        themeToggle.addEventListener('click', () => {
+            const newTheme = html.className === 'light' ? 'dark' : 'light';
+            html.className = newTheme;
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+       // Initialize chart (using Chart.js)
+        const ctx = document.getElementById('trendingChart').getContext('2d');
+        // Chart initialization code would go here
+    </script>
+<script>
+// API configuration
+const API_BASE_URL = 'https://app.thegivehub.com/api';
+
+// Fetch utilities
+const fetchAPI = async (endpoint) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+};
+
+// Data fetching functions
+const fetchCampaigns = async () => {
+    return await fetchAPI('/campaign');
+};
+
+const fetchCampaignDetails = async (campaignId) => {
+    return await fetchAPI(`/campaign?id=${campaignId}`);
+};
+
+// Dashboard state management
+class DashboardState {
+    constructor() {
+        this.campaigns = [];
+        this.selectedCampaign = null;
+        this.loading = false;
+        this.error = null;
+    }
+
+    // Update methods
+    setState(newState) {
+        Object.assign(this, newState);
+        this.render();
+    }
+
+    setLoading(loading) {
+        this.loading = loading;
+        this.updateLoadingState();
+    }
+
+    setError(error) {
+        this.error = error;
+        this.updateErrorState();
+    }
+
+    // UI update methods
+    updateLoadingState() {
+        const loadingIndicators = document.querySelectorAll('.loading-indicator');
+        loadingIndicators.forEach(indicator => {
+            indicator.style.display = this.loading ? 'block' : 'none';
+        });
+    }
+
+    updateErrorState() {
+        const errorContainer = document.getElementById('errorContainer');
+        if (this.error) {
+            errorContainer.textContent = `Error: ${this.error.message}`;
+            errorContainer.style.display = 'block';
+        } else {
+            errorContainer.style.display = 'none';
+        }
+    }
+
+    // Render methods
+    render() {
+        this.renderStats();
+        this.renderCampaignsList();
+        this.renderSelectedCampaign();
+    }
+
+    renderStats() {
+        if (!this.campaigns.length) return;
+
+        const totalRaised = this.campaigns.reduce((sum, campaign) => 
+            sum + (campaign.funding?.raisedAmount || 0), 0);
+        
+        const totalBeneficiaries = this.campaigns.reduce((sum, campaign) => 
+            sum + (campaign.impact?.beneficiariesCount || 0), 0);
+        
+        const totalDonors = this.campaigns.reduce((sum, campaign) => 
+            sum + (campaign.funding?.donorCount || 0), 0);
+
+        const statsHtml = `
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-label">Total Raised (XLM)</div>
+                    <div class="stat-value">${totalRaised.toLocaleString()}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-label">Total Beneficiaries</div>
+                    <div class="stat-value">${totalBeneficiaries.toLocaleString()}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-label">Total Donors</div>
+                    <div class="stat-value">${totalDonors.toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+
+        document.querySelector('.stats-grid').innerHTML = statsHtml;
+    }
+
+    renderCampaignsList() {
+        const campaignsContainer = document.getElementById('campaign-list');
+        
+        if (this.loading) {
+            campaignsContainer.innerHTML = '<div class="loading-indicator">Loading campaigns...</div>';
+            return;
+        }
+
+        const campaignsHtml = this.campaigns.map(campaign => `
+            <div class="campaign-item" data-campaign-id="${campaign._id.$oid}">
+                <div class="campaign-header">
+                    <div>
+                        <div class="campaign-title">${campaign.title}</div>
+                        <div class="campaign-meta">
+                            <span class="verification-badge">
+                                ${campaign.verification?.status === 'verified' ? 'Verified' : 'Pending'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <p class="campaign-category">${campaign.description}</p>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(campaign.funding?.raisedAmount / campaign.funding?.goalAmount * 100) || 0}%"></div>
+                </div>
+                <div class="campaign-stats">
+                    <span>${campaign.funding?.raisedAmount?.toLocaleString()} ${campaign.funding?.currency} raised</span>
+                    <span>${campaign.funding?.donorCount || 0} donors</span>
+                </div>
+            </div>
+        `).join('');
+
+        campaignsContainer.innerHTML = campaignsHtml;
+
+        // Add click handlers
+        campaignsContainer.querySelectorAll('.campaign-item').forEach(item => {
+            item.addEventListener('click', () => this.selectCampaign(item.dataset.campaignId));
+        });
+    }
+
+    async selectCampaign(campaignId) {
+        try {
+            this.setLoading(true);
+            const campaign = await fetchCampaignDetails(campaignId);
+            this.setState({ selectedCampaign: campaign });
+        } catch (error) {
+            this.setError(error);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    renderSelectedCampaign() {
+        const detailContainer = document.getElementById('campaignDetail');
+        if (!this.selectedCampaign) {
+            detailContainer.innerHTML = '<div class="empty-state">Select a campaign to view details</div>';
+            return;
+        }
+
+        const campaign = this.selectedCampaign;
+        detailContainer.innerHTML = `
+            <div class="campaign-detail">
+                <h2>${campaign.title}</h2>
+                
+                <div class="impact-metrics">
+                    ${campaign.impact?.metrics?.map(metric => `
+                        <div class="metric-card">
+                            <div class="metric-label">${metric.name}</div>
+                            <div class="metric-value">
+                                ${metric.current} ${metric.unit}
+                            </div>
+                            <div class="metric-progress">
+                                Target: ${metric.target} ${metric.unit}
+                            </div>
+                        </div>
+                    `).join('') || ''}
+                </div>
+
+                <div class="timeline">
+                    ${campaign.timeline?.milestones?.map(milestone => `
+                        <div class="milestone ${milestone.status}">
+                            <div class="milestone-title">${milestone.title}</div>
+                            <div class="milestone-description">${milestone.description}</div>
+                            <div class="milestone-status">${milestone.status}</div>
+                        </div>
+                    `).join('') || ''}
+                </div>
+
+                <div class="tags">
+                    ${campaign.tags?.map(tag => `
+                        <span class="tag">${tag}</span>
+                    `).join('') || ''}
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Initialize dashboard
+const dashboard = new DashboardState();
+
+// Initial load
+async function initializeDashboard() {
+    try {
+        dashboard.setLoading(true);
+        const campaigns = await fetchCampaigns();
+        console.dir(campaigns);
+        dashboard.setState({ campaigns });
+        dashboard.render();
+    } catch (error) {
+        dashboard.setError(error);
+    } finally {
+        dashboard.setLoading(false);
+    }
+}
+
+// Auto-refresh (every 5 minutes)
+const REFRESH_INTERVAL = 5 * 60 * 1000;
+setInterval(initializeDashboard, REFRESH_INTERVAL);
+
+// Start the dashboard
+document.addEventListener('DOMContentLoaded', initializeDashboard);
+//initializeDashboard();
+    </script>
+</body>
+</html>

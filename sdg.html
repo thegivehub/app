@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDG Badges with Text</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+
+        .sdg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sdg-badge {
+            border-radius: 12px;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: 160px;
+        }
+
+        .sdg-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge-header {
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            height: 60px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .number-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .badge-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .badge-content {
+            padding: 0.75rem;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-content svg {
+            width: 40px;
+            height: 40px;
+            opacity: 0.8;
+        }
+
+        /* SDG Colors */
+        .sdg-1 { background: #E5243B; }
+        .sdg-2 { background: #DDA63A; }
+        .sdg-3 { background: #4C9F38; }
+        .sdg-4 { background: #C5192D; }
+        .sdg-5 { background: #FF3A21; }
+        .sdg-6 { background: #26BDE2; }
+        .sdg-7 { background: #FCC30B; }
+        .sdg-8 { background: #A21942; }
+        .sdg-9 { background: #FD6925; }
+        .sdg-10 { background: #DD1367; }
+        .sdg-11 { background: #FD9D24; }
+        .sdg-12 { background: #BF8B2E; }
+        .sdg-13 { background: #3F7E44; }
+        .sdg-14 { background: #0A97D9; }
+        .sdg-15 { background: #56C02B; }
+        .sdg-16 { background: #00689D; }
+        .sdg-17 { background: #19486A; }
+
+        /* Selection styles */
+        .sdg-badge.selected {
+            outline: 3px solid white;
+            outline-offset: -3px;
+        }
+
+        .sdg-badge.selected .number-circle {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Optional: Add a checkbox to show selection state */
+        .selection-indicator {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sdg-badge.selected .selection-indicator {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="sdg-grid">
+        <div class="sdg-badge sdg-1">
+            <div class="badge-header">
+                <div class="badge-title">No Poverty</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="5"/>
+                    <path d="M20 21v-2a8 8 0 0 0-16 0v2"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-2">
+            <div class="badge-header">
+                <div class="badge-title">Zero Hunger</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a8 8 0 0 0-8 8v12h16V10a8 8 0 0 0-8-8z"/>
+                    <path d="M8 14h8"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-3">
+            <div class="badge-header">
+                <div class="badge-title">Good Health and Well-Being</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-4">
+            <div class="badge-header">
+                <div class="badge-title">Quality Education</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-6">
+            <div class="badge-header">
+                <div class="badge-title">Clean Water and Sanitation</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v6l4.5 4.5a7.5 7.5 0 1 1-9 0L12 8V2z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-7">
+            <div class="badge-header">
+                <div class="badge-title">Affordable and Clean Energy</div>
+            </div>
+            <div class="badge-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2"/>
+                    <path d="M12 21v2"/>
+                    <path d="M4.22 4.22l1.42 1.42"/>
+                    <path d="M18.36 18.36l1.42 1.42"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-8" data-title="Decent Work and Economic Growth">
+            <div class="badge-header">
+                <div class="badge-title">Decent Work and Economic Growth</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 20h20"/>
+                    <path d="M6 16l4-8 4 4 4-12"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-9" data-title="Industry, Innovation and Infrastructure">
+            <div class="badge-header">
+                <div class="badge-title">Industry, Innovation and Infrastructure</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-8-6-8 6v12z"/>
+                    <path d="M12 16v3"/>
+                    <path d="M8 16v3"/>
+                    <path d="M16 16v3"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-10" data-title="Reduced Inequalities">
+            <div class="badge-header">
+                <div class="badge-title">Reduced Inequalities</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 12h16"/>
+                    <path d="M4 6h16"/>
+                    <path d="M4 18h16"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-11" data-title="Sustainable Cities and Communities">
+            <div class="badge-header">
+                <div class="badge-title">Sustainable Cities and Communities</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18"/>
+                    <path d="M5 21V7l8-4v18"/>
+                    <path d="M19 21V11l-6-4"/>
+                    <path d="M9 9h.01"/>
+                    <path d="M9 13h.01"/>
+                    <path d="M9 17h.01"/>
+                    <path d="M13 13h.01"/>
+                    <path d="M13 17h.01"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-12" data-title="Responsible Consumption and Production">
+            <div class="badge-header">
+                <div class="badge-title">Responsible Consumption and Production</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                    <path d="M12 6v12"/>
+                    <path d="M6 12h12"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-13" data-title="Climate Action">
+            <div class="badge-header">
+                <div class="badge-title">Climate Action</div>
+            </div>
+            <div class="badge-content">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    <path d="M2 12h20"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-14" data-title="Life Below Water">
+            <div class="badge-header">
+                <div class="badge-title">Life Below Water</div>
+            </div>
+            <div class="badge-content">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50.05" xmlns:bx="https://boxy-svg.com">
+  <bx:title></bx:title>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M 17.708 13.528 C 16.109 11.705 15.382 9.111 15.298 6.54 C 18.083 6.199 20.945 6.647 22.98 8.336 C 25.194 10.173 27.017 13.273 28.394 16.117 C 28.886 17.134 29.381 18.152 29.911 19.15 C 30.027 19.369 30.22 19.536 30.452 19.621 L 33.767 20.826 L 31.847 21.786 C 31.653 21.883 31.496 22.04 31.4 22.234 L 30.439 24.154 L 29.234 20.839 C 29.149 20.607 28.981 20.414 28.763 20.298 C 27.759 19.765 26.744 19.246 25.711 18.772 C 25.7 18.767 25.689 18.762 25.678 18.758 C 23.625 17.904 21.512 16.67 19.869 15.444 C 20.285 15.363 20.695 15.246 21.088 15.094 C 22.4 14.586 23.613 13.64 24.2 12.19 C 24.407 11.678 24.159 11.095 23.647 10.888 C 23.135 10.681 22.553 10.928 22.346 11.44 C 22.017 12.251 21.306 12.864 20.365 13.229 C 19.521 13.556 18.56 13.653 17.708 13.528 Z M 36.636 19.741 L 31.501 17.874 C 31.286 17.456 30.876 16.65 30.293 15.45 C 30.315 14.893 30.52 14.446 30.812 14.148 C 31.129 13.824 31.597 13.622 32.204 13.677 C 32.586 13.711 32.955 13.524 33.152 13.195 C 33.349 12.865 33.34 12.452 33.13 12.131 C 31.183 9.171 27.463 7.101 24.025 6.611 C 21.178 4.399 17.368 4.116 14.118 4.696 C 13.649 4.78 13.304 5.183 13.294 5.66 C 13.228 8.787 13.988 12.346 16.235 14.881 C 16.439 16.576 17.218 18.17 18.172 19.558 C 19.199 21.051 20.476 22.375 21.62 23.419 C 21.919 23.692 22.352 23.758 22.719 23.586 C 23.085 23.414 23.312 23.039 23.293 22.635 C 23.261 21.957 23.474 21.467 23.78 21.158 C 24.057 20.879 24.479 20.679 25.061 20.675 C 25.945 21.088 26.967 21.615 27.486 21.886 L 29.354 27.023 C 29.491 27.398 29.838 27.656 30.237 27.679 C 30.635 27.702 31.01 27.485 31.188 27.128 L 33.039 23.426 L 36.741 21.575 C 37.099 21.397 37.315 21.022 37.292 20.623 C 37.269 20.225 37.011 19.878 36.636 19.741 Z M 30.461 11.994 C 29.919 12.239 29.444 12.621 29.085 13.094 C 28.407 11.863 27.633 10.614 26.763 9.47 C 28.153 10.082 29.453 10.951 30.461 11.994 Z M 19.821 18.425 C 19.594 18.096 19.386 17.764 19.2 17.43 C 20.244 18.169 21.412 18.887 22.613 19.519 C 22.226 19.839 21.91 20.244 21.69 20.696 C 21.024 19.998 20.376 19.233 19.821 18.425 Z M 19.794 10.681 C 20.622 10.681 21.294 10.009 21.294 9.181 C 21.294 8.352 20.622 7.681 19.794 7.681 C 18.966 7.681 18.294 8.352 18.294 9.181 C 18.294 10.009 18.966 10.681 19.794 10.681 Z" style="transform-box: fill-box; transform-origin: 50% 50%; fill: rgb(255, 255, 255);" transform="matrix(0.698178, 0.715924, -0.715924, 0.698178, 0.000001, -0.000001)"></path>
+  <g transform="matrix(1, 0, 0, 1, -2.51135, -3.841879)" style="opacity: 1;">
+    <path d="M25.6,45.1v-1.6c0-1.3-0.5-2.5-1.4-3.5L13.9,29.8c-0.7-0.7-1.5-1.1-2.4-1.3c-0.5-0.1-0.9-0.1-1.3-0.1v-4.5   c0-1.7-0.9-3.3-2.3-4c-0.8-0.4-1.7-0.5-2.4-0.3c-0.9,0.3-1.7,1.1-2.4,2.3C3,22,3,22.2,3,22.4v11.1c0,1.2,0.5,2.4,1.4,3.3l8.7,8.7   c-0.4,0.4-0.6,0.9-0.6,1.5v3.8c0,1.2,1,2.2,2.2,2.2h9.6c1.2,0,2.2-1,2.2-2.2v-3.8C26.5,46.2,26.2,45.5,25.6,45.1z M5,33.5V22.6   c0.4-0.6,0.7-1,1.1-1.1c0.1,0,0.4-0.1,0.9,0.2c0.8,0.4,1.3,1.3,1.3,2.3v5.7c-0.3,0.5-0.4,1-0.4,1.7c0,1.4,0.6,2.7,1.6,3.8l3.9,3.9   c0.4,0.4,1,0.4,1.4,0c0.4-0.4,0.4-1,0-1.4l-3.9-3.9c-0.7-0.7-1.1-1.5-1-2.4c0-0.4,0.1-0.7,0.2-0.8c0.2-0.1,0.6-0.1,1,0   c0.5,0.1,1,0.4,1.4,0.8l10.2,10.2c0.6,0.6,0.9,1.3,0.9,2.1v1.2h-8.4l-9.3-9.4C5.3,34.8,5,34.2,5,33.5z M24.5,50.8   c0,0.1-0.1,0.2-0.2,0.2h-9.6c-0.1,0-0.2-0.1-0.2-0.2v-3.8c0-0.1,0.1-0.2,0.2-0.2c0,0,0,0,0,0c0,0,0,0,0,0h9.5   c0.1,0,0.2,0.1,0.2,0.2V50.8z" style="fill: rgb(255, 255, 255);"></path>
+    <path d="M52.9,21.9c-0.6-1.3-1.4-2-2.4-2.3c-0.8-0.2-1.6-0.1-2.4,0.3c-1.4,0.8-2.3,2.3-2.3,4v4.5c-0.4,0-0.8,0-1.3,0.1   c-0.9,0.2-1.7,0.6-2.4,1.3L31.9,40.1c-0.9,0.9-1.4,2.2-1.4,3.5v1.6c-0.6,0.4-1,1.1-1,1.8v3.8c0,1.2,1,2.2,2.2,2.2h9.6   c1.2,0,2.2-1,2.2-2.2v-3.8c0-0.6-0.2-1.1-0.6-1.5l8.7-8.7c0.9-0.9,1.4-2.1,1.4-3.3V22.4C53,22.2,53,22,52.9,21.9z M41.5,50.8   c0,0.1-0.1,0.2-0.2,0.2h-9.6c-0.1,0-0.2-0.1-0.2-0.2v-3.8c0-0.1,0.1-0.2,0.2-0.2h9.5c0,0,0,0,0,0c0,0,0,0,0,0   c0.1,0,0.2,0.1,0.2,0.2V50.8z M51,33.5c0,0.7-0.3,1.4-0.8,1.9l-9.3,9.4h-8.4v-1.2c0-0.8,0.3-1.5,0.9-2.1l10.2-10.2   c0.4-0.4,0.9-0.7,1.4-0.8c0.5-0.1,0.9-0.1,1,0c0.1,0.1,0.2,0.4,0.2,0.8c0,0.8-0.4,1.7-1,2.4l-3.9,3.9c-0.4,0.4-0.4,1,0,1.4   c0.4,0.4,1,0.4,1.4,0l3.9-3.9c1.1-1.1,1.6-2.4,1.6-3.8c0-0.7-0.2-1.2-0.4-1.7v-5.7c0-1,0.5-1.9,1.3-2.3c0.5-0.3,0.8-0.2,0.9-0.2   c0.4,0.1,0.7,0.5,1.1,1.1V33.5z" style="fill: rgb(255, 255, 255);"></path>
+  </g>
+</svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-15" data-title="Life on Land">
+            <div class="badge-header">
+                <div class="badge-title">Life on Land</div>
+            </div>
+            <div class="badge-content">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50.05" xmlns:bx="https://boxy-svg.com">
+  <bx:title></bx:title>
+  <g transform="matrix(1, 0, 0, 1, -2.999999, -2.95)">
+    <path d="M25.6,45.1v-1.6c0-1.3-0.5-2.5-1.4-3.5L13.9,29.8c-0.7-0.7-1.5-1.1-2.4-1.3c-0.5-0.1-0.9-0.1-1.3-0.1v-4.5   c0-1.7-0.9-3.3-2.3-4c-0.8-0.4-1.7-0.5-2.4-0.3c-0.9,0.3-1.7,1.1-2.4,2.3C3,22,3,22.2,3,22.4v11.1c0,1.2,0.5,2.4,1.4,3.3l8.7,8.7   c-0.4,0.4-0.6,0.9-0.6,1.5v3.8c0,1.2,1,2.2,2.2,2.2h9.6c1.2,0,2.2-1,2.2-2.2v-3.8C26.5,46.2,26.2,45.5,25.6,45.1z M5,33.5V22.6   c0.4-0.6,0.7-1,1.1-1.1c0.1,0,0.4-0.1,0.9,0.2c0.8,0.4,1.3,1.3,1.3,2.3v5.7c-0.3,0.5-0.4,1-0.4,1.7c0,1.4,0.6,2.7,1.6,3.8l3.9,3.9   c0.4,0.4,1,0.4,1.4,0c0.4-0.4,0.4-1,0-1.4l-3.9-3.9c-0.7-0.7-1.1-1.5-1-2.4c0-0.4,0.1-0.7,0.2-0.8c0.2-0.1,0.6-0.1,1,0   c0.5,0.1,1,0.4,1.4,0.8l10.2,10.2c0.6,0.6,0.9,1.3,0.9,2.1v1.2h-8.4l-9.3-9.4C5.3,34.8,5,34.2,5,33.5z M24.5,50.8   c0,0.1-0.1,0.2-0.2,0.2h-9.6c-0.1,0-0.2-0.1-0.2-0.2v-3.8c0-0.1,0.1-0.2,0.2-0.2c0,0,0,0,0,0c0,0,0,0,0,0h9.5   c0.1,0,0.2,0.1,0.2,0.2V50.8z" style="fill: rgb(255, 255, 255);"></path>
+    <path d="M52.9,21.9c-0.6-1.3-1.4-2-2.4-2.3c-0.8-0.2-1.6-0.1-2.4,0.3c-1.4,0.8-2.3,2.3-2.3,4v4.5c-0.4,0-0.8,0-1.3,0.1   c-0.9,0.2-1.7,0.6-2.4,1.3L31.9,40.1c-0.9,0.9-1.4,2.2-1.4,3.5v1.6c-0.6,0.4-1,1.1-1,1.8v3.8c0,1.2,1,2.2,2.2,2.2h9.6   c1.2,0,2.2-1,2.2-2.2v-3.8c0-0.6-0.2-1.1-0.6-1.5l8.7-8.7c0.9-0.9,1.4-2.1,1.4-3.3V22.4C53,22.2,53,22,52.9,21.9z M41.5,50.8   c0,0.1-0.1,0.2-0.2,0.2h-9.6c-0.1,0-0.2-0.1-0.2-0.2v-3.8c0-0.1,0.1-0.2,0.2-0.2h9.5c0,0,0,0,0,0c0,0,0,0,0,0   c0.1,0,0.2,0.1,0.2,0.2V50.8z M51,33.5c0,0.7-0.3,1.4-0.8,1.9l-9.3,9.4h-8.4v-1.2c0-0.8,0.3-1.5,0.9-2.1l10.2-10.2   c0.4-0.4,0.9-0.7,1.4-0.8c0.5-0.1,0.9-0.1,1,0c0.1,0.1,0.2,0.4,0.2,0.8c0,0.8-0.4,1.7-1,2.4l-3.9,3.9c-0.4,0.4-0.4,1,0,1.4   c0.4,0.4,1,0.4,1.4,0l3.9-3.9c1.1-1.1,1.6-2.4,1.6-3.8c0-0.7-0.2-1.2-0.4-1.7v-5.7c0-1,0.5-1.9,1.3-2.3c0.5-0.3,0.8-0.2,0.9-0.2   c0.4,0.1,0.7,0.5,1.1,1.1V33.5z" style="fill: rgb(255, 255, 255);"></path>
+    <path d="M38.9,17.2c0.2-4.9-3.2-9.6-10.3-14.1c-0.3-0.2-0.7-0.2-1,0c-0.4,0.2-10.4,6-10.4,14c0,4.6,3.3,8.9,9.9,12.8v3.1   c0,0.6,0.4,1,1,1s1-0.4,1-1V30C31.1,28.8,38.6,24.1,38.9,17.2z M19.1,17.2c0-5.9,6.9-10.7,8.9-12c6,3.9,9,8,8.9,12   c-0.2,5-5.3,8.9-7.9,10.5v-4.6l4.4-3c0.5-0.3,0.6-0.9,0.3-1.4c-0.3-0.5-0.9-0.6-1.4-0.3L29,20.7v-3.1l3.3-2.1   c0.5-0.3,0.6-0.9,0.3-1.4c-0.3-0.5-0.9-0.6-1.4-0.3L29,15.2V10c0-0.6-0.4-1-1-1s-1,0.4-1,1v5.3l-2.2-1.4c-0.5-0.3-1.1-0.2-1.4,0.3   c-0.3,0.5-0.2,1.1,0.3,1.4l3.3,2.1v2.9l-2.7-2.1c-0.4-0.3-1.1-0.2-1.4,0.2s-0.2,1.1,0.2,1.4l3.9,3v4.5   C21.8,24.3,19.1,20.8,19.1,17.2z" style="fill: rgb(255, 255, 255);"></path>
+  </g>
+</svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-16" data-title="Peace, Justice and Strong Institutions">
+            <div class="badge-header">
+                <div class="badge-title">Peace, Justice and Strong Institutions</div>
+            </div>
+            <div class="badge-content">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37.406 34">
+  <path d="M 35.78 12.597 L 32.064 4.546 C 32.335 4.3 32.552 4.001 32.701 3.667 C 32.85 3.333 32.929 2.971 32.931 2.605 C 32.929 2.012 32.724 1.436 32.352 0.974 C 31.979 0.512 31.46 0.19 30.88 0.062 C 30.3 -0.066 29.694 0.007 29.162 0.269 C 28.629 0.531 28.201 0.967 27.949 1.504 L 9.162 6.28 C 8.699 5.881 8.108 5.662 7.497 5.661 C 6.967 5.657 6.448 5.816 6.011 6.115 C 5.573 6.415 5.237 6.841 5.049 7.336 C 4.86 7.832 4.827 8.374 4.955 8.888 C 5.083 9.403 5.365 9.866 5.763 10.216 L 1.951 18.474 L 13.03 18.433 L 9.231 10.175 C 9.636 9.812 9.915 9.33 10.03 8.799 L 16.815 7.078 L 16.815 28.218 L 16.677 28.218 L 7.511 31.067 C 7.218 31.16 6.961 31.343 6.779 31.59 C 6.596 31.837 6.496 32.136 6.492 32.443 L 6.492 32.54 C 6.481 32.733 6.51 32.927 6.578 33.108 C 6.646 33.29 6.752 33.455 6.888 33.593 C 7.025 33.73 7.189 33.838 7.37 33.908 C 7.55 33.978 7.744 34.009 7.938 33.998 L 29.807 33.998 C 29.999 34.008 30.191 33.978 30.371 33.909 C 30.551 33.84 30.714 33.733 30.851 33.597 C 30.987 33.461 31.093 33.298 31.162 33.118 C 31.231 32.938 31.262 32.746 31.252 32.553 L 31.252 32.443 C 31.25 32.138 31.152 31.84 30.971 31.593 C 30.791 31.346 30.538 31.162 30.247 31.067 L 21.095 28.218 L 20.943 28.218 L 20.943 6.198 L 28.265 4.257 L 28.541 4.546 L 24.811 12.625 C 25.634 12.625 35.025 12.597 35.78 12.597 Z M 4.222 18.474 L 7.497 11.372 L 10.727 18.442 L 4.222 18.474 Z M 30.371 5.702 L 33.564 12.583 L 27.137 12.583 L 30.371 5.702 Z" style="fill: rgb(255, 255, 255);"></path>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M 7.5 23.718 C 9.832 23.718 11.825 22.267 12.626 20.218 C 10.713 20.218 9.492 20.218 8.454 20.218 C 6.713 20.218 5.486 20.218 2.375 20.218 C 3.176 22.267 5.169 23.718 7.5 23.718 Z M 0.27 20.218 C 0.094 19.581 0 18.911 0 18.218 C 0.743 18.218 1.405 18.218 2 18.218 C 5.398 18.218 6.65 18.218 8.466 18.218 C 9.568 18.218 10.877 18.218 13 18.218 C 13.598 18.218 14.26 18.218 15 18.218 C 15 18.219 15 18.22 15 18.221 C 15 18.912 14.906 19.582 14.731 20.218 C 13.856 23.389 10.95 25.718 7.5 25.718 C 4.051 25.718 1.145 23.389 0.27 20.218 Z" style="fill: rgb(255, 255, 255);"></path>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M 29.906 18.014 C 32.238 18.014 34.231 16.563 35.031 14.514 C 33.119 14.514 31.898 14.514 30.86 14.514 C 29.119 14.514 27.892 14.514 24.781 14.514 C 25.581 16.563 27.574 18.014 29.906 18.014 Z M 22.676 14.514 C 22.5 13.877 22.406 13.207 22.406 12.514 C 23.149 12.514 23.81 12.514 24.406 12.514 C 27.804 12.514 29.056 12.514 30.872 12.514 C 31.973 12.514 33.283 12.514 35.406 12.514 C 36.004 12.514 36.666 12.514 37.406 12.514 C 37.406 12.515 37.406 12.516 37.406 12.517 C 37.406 13.208 37.312 13.878 37.137 14.514 C 36.261 17.685 33.356 20.014 29.906 20.014 C 26.457 20.014 23.551 17.685 22.676 14.514 Z" style="fill: rgb(255, 255, 255);"></path>
+</svg>
+            </div>
+        </div>
+
+        <div class="sdg-badge sdg-17" data-title="Partnerships for the Goals">
+            <div class="badge-header">
+                <div class="badge-title">Partnerships for the Goals</div>
+            </div>
+            <div class="badge-content">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32.04 20.289" xmlns:bx="https://boxy-svg.com">
+  <bx:title></bx:title>
+  <path class="cls-1" d="M 30.717 12.051 L 28.817 12.691 L 27.167 3.631 L 31.407 1.931 C 32.122 1.646 32.262 0.693 31.657 0.216 C 31.376 -0.006 30.999 -0.061 30.667 0.071 L 25.667 2.071 C 25.217 2.242 24.952 2.708 25.037 3.181 L 25.037 3.361 L 22.647 4.551 C 22.308 4.723 21.901 4.688 21.597 4.461 L 19.167 2.601 C 18.647 2.212 18.016 2.001 17.367 2.001 L 14.657 2.001 C 13.906 2.002 13.218 2.423 12.877 3.091 L 11.087 3.001 C 10.913 2.994 10.741 3.032 10.587 3.111 L 8.917 3.941 L 6.037 3.221 L 6.037 3.091 C 6.08 2.676 5.861 2.277 5.487 2.091 L 1.487 0.091 C 0.776 -0.205 0.011 0.38 0.11 1.143 C 0.15 1.446 0.325 1.714 0.587 1.871 L 3.977 3.571 L 3.157 12.631 L 1.357 12.031 C 0.598 11.785 -0.142 12.452 0.023 13.232 C 0.1 13.594 0.365 13.887 0.717 14.001 L 3.717 15.001 C 3.823 15.016 3.93 15.016 4.037 15.001 C 4.231 14.997 4.421 14.942 4.587 14.841 C 4.844 14.674 5.01 14.397 5.037 14.091 L 5.117 13.161 L 6.407 13.801 C 6.526 14.543 6.914 15.216 7.497 15.691 L 13.267 19.831 C 14.13 20.544 15.411 20.409 16.107 19.531 C 16.876 19.824 17.734 19.776 18.467 19.401 L 23.877 16.701 C 24.539 16.367 25 15.734 25.117 15.001 C 25.127 14.895 25.127 14.788 25.117 14.681 L 27.017 14.051 L 27.017 14.171 C 27.068 14.455 27.239 14.703 27.487 14.851 C 27.651 14.954 27.843 15.006 28.037 15.001 C 28.145 14.999 28.253 14.982 28.357 14.951 L 31.357 13.951 C 32.088 13.705 32.278 12.759 31.699 12.249 C 31.431 12.012 31.056 11.937 30.717 12.051 Z M 8.717 14.111 C 8.393 13.841 8.273 13.397 8.417 13.001 C 8.437 12.931 8.495 12.877 8.567 12.861 C 8.627 12.861 8.707 12.861 8.827 12.941 L 14.877 17.311 L 14.547 18.311 L 8.717 14.111 Z M 22.977 14.911 L 17.567 17.611 C 17.331 17.731 17.058 17.752 16.807 17.671 C 16.938 16.948 16.661 16.21 16.087 15.751 L 10.087 11.381 C 9.509 10.922 8.741 10.779 8.037 11.001 C 7.559 11.139 7.143 11.436 6.857 11.841 L 5.497 11.161 C 5.439 11.135 5.379 11.119 5.317 11.111 L 5.847 5.281 L 8.847 6.021 L 9.037 6.001 C 9.193 6 9.347 5.963 9.487 5.891 L 11.247 5.001 L 11.897 5.001 L 11.147 6.511 C 10.9 7.003 11.096 7.602 11.587 7.851 L 11.797 7.961 C 13.143 8.637 14.782 8.209 15.627 6.961 L 16.627 6.961 L 23.007 14.251 C 23.033 14.303 23.063 14.354 23.097 14.401 C 23.166 14.464 23.197 14.56 23.177 14.651 C 23.186 14.758 23.131 14.86 23.037 14.911 L 22.977 14.911 Z M 24.337 12.841 L 17.777 5.341 C 17.589 5.128 17.32 5.004 17.037 5.001 L 15.037 5.001 C 14.66 5.002 14.316 5.215 14.147 5.551 L 14.037 5.761 C 13.931 5.972 13.753 6.138 13.537 6.231 L 14.657 4.001 L 17.367 4.001 C 17.583 4.001 17.793 4.071 17.967 4.201 L 20.447 6.061 C 21.356 6.741 22.571 6.85 23.587 6.341 L 25.457 5.411 L 26.667 12.071 L 24.337 12.841 Z" style="fill: rgb(255, 255, 255);"></path>
+</svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click handling for selection
+        document.querySelectorAll('.sdg-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+                badge.classList.toggle('selected');
+            });
+        });
+    </script>
+</body>
+</html>

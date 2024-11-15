@@ -35,21 +35,35 @@
             height: 20px;
             background-color: #4caf50;
         }
+        .campaign-top {
+            display: flex;
+        }
+        #map {
+            width: 250px;
+            height: 250px;
+        }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
 </head>
 <body>
 
 <div class="container">
-    <h1 id="campaign-title">Campaign Title</h1>
-    <p id="campaign-description"></p>
+    <div class="campaign-top">
+        <div>
+            <h1 id="campaign-title">Campaign Title</h1>
+            <p id="campaign-description"></p>
 
-    <div class="campaign-info">
-        <strong>Location:</strong> <span id="campaign-location"></span><br>
-        <strong>Goal Amount:</strong> <span id="campaign-goal"></span><br>
-        <strong>Raised Amount:</strong> <span id="campaign-raised"></span><br>
-        <strong>Donor Count:</strong> <span id="campaign-donors"></span><br>
+            <div class="campaign-info">
+                <strong>Location:</strong> <span id="campaign-location"></span><br>
+                <strong>Goal Amount:</strong> <span id="campaign-goal"></span><br>
+                <strong>Raised Amount:</strong> <span id="campaign-raised"></span><br>
+                <strong>Donor Count:</strong> <span id="campaign-donors"></span><br>
+            </div>
+        </div>
+        <div class="map" id="map"></div>
     </div>
-
     <div class="funding-progress">
         <strong>Funding Progress:</strong>
         <div class="progress-bar">
@@ -72,7 +86,9 @@
         <div id="media-gallery"></div>
     </div>
 </div>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
 <script>
     function parseSearch() {
         let qs = document.location.search.replace(/^\?/, '');
