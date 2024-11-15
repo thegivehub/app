@@ -1,0 +1,107 @@
+Commit notes:
+
+schemas/impactMetrics.js
+------------------------
+Key enhancements:
+
+1. Structured Subschemas:
+	- Detailed history tracking
+	- SDG alignment validation
+	- Demographics categorization
+	- Qualitative data verification
+
+2. Added Features:
+	- Risk assessment
+	- Verification scheduling
+	- Status tracking
+	- Progress calculations
+
+3. Enhanced Validation:
+	- Required fields
+	- Enum values
+	- Number ranges
+	- Date validations
+
+4. Analysis Tools:
+	- SDG impact aggregation
+	- Category impact analysis
+	- Status calculations
+	- Progress tracking
+
+5. Methods and Statics:
+	- Metric updates
+	- Status calculations
+	- Impact aggregation
+	- Verification tracking
+
+
+schemas/notification.js
+--------------------------
+Key enhancements:
+
+1. Structured Subschemas:
+	- Delivery attempt tracking
+	- Action handling
+	- Content localization
+
+2. Added Features:
+	- Expiry handling
+	- Retry management
+	- Engagement tracking
+	- Batch processing
+	- Template support
+
+3. Enhanced Validation:
+	- Required fields
+	- Enum values
+	- Status tracking
+	- Method verification
+
+4. Delivery Management:
+	- Multiple delivery methods
+	- Retry logic
+	- Failure handling
+	- Batch processing
+
+5. Methods and Statics:
+    - Read/Archive handling
+    - Delivery tracking
+    - Template processing
+    - Cleanup routines
+
+schemas/update.js
+---------------------------
+Key enhancements:
+
+1. Structured Subschemas:
+    - Enhanced media tracking
+    - Metric change tracking
+    - Improved verification
+
+2. Added Features:
+    - Visibility controls
+    - Importance levels
+    - Engagement tracking
+    - Notification tracking
+    - Related updates
+    - Tags
+
+3. Enhanced Validation:
+    - Required fields
+    - Enum values
+    - Status tracking
+    - Data consistency
+
+4. Integration:
+    - Impact metrics updating
+    - Notification system
+    - Campaign updates
+    - User verification
+
+5. Methods and Statics:
+    - Verification handling
+    - Metric updates
+    - Recent updates query
+    - Metric history tracking
+
+
