@@ -2,15 +2,31 @@
 require 'vendor/autoload.php';
 require_once __DIR__ . '/lib/db.php';
 
+
 // Autoloader function to load the required class file based on the endpoint
 spl_autoload_register(function ($className) {
     $filePath = __DIR__ . "/lib/$className.php";
     if (file_exists($filePath)) {
         require_once $filePath;
     } else {
-        http_response_code(404);
-        echo json_encode(["error" => "Class $className not found"]);
-        exit;
+        try {
+            $myclass = file_get_contents("lib/Collection.php");
+            $myclass = preg_replace("/\%\%(.+?)\%\%/", $className, $myclass);
+            
+            eval($myclass);
+            $test = new $className();
+
+            if (!$test) {
+                throw new Exception('Invalid collection');
+            }
+        } catch(e) {
+            http_response_code(404);
+            // Set headers
+            header('Access-Control-Allow-Origin: *');
+            header('Content-Type: application/json');
+            echo json_encode(["error" => "Class $className not found"]);
+            exit;
+        }
     }
 });
 session_start();
