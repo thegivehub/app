@@ -3,6 +3,9 @@
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+require_once "db.php";
+require_once "Mailer.php";
+
 class Auth {
     private $db;
     private $mail;
@@ -79,7 +82,8 @@ class Auth {
                         'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
                         'verificationCode' => $verificationCode,
                         'verificationExpires' => $verificationExpires,
-                        'verified' => false,
+                        'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
+                        'verified' => (isset($data['verified']))? $data['verified']:false,
                         'twoFactorEnabled' => false
                     ],
                     'profile' => array_merge($data['profile'], [

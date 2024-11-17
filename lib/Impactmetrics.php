@@ -1,17 +1,12 @@
 <?php
-require_once __DIR__ . 'db.php';
+require_once 'db.php';
 
-class %%COLLECTION%% {
+class ImpactMetrics {
     private $collection;
 
     public function __construct() {
         $db = new Database();
-        $collection = strtolower(get_class($this));
-        
-        if (!preg_match("/s$/", $collection)) {
-            $collection .= 's';
-        }
-        $this->collection = $db->getCollection($collection);
+        $this->collection = $db->getCollection('impactmetrics');
     }
 
     public function create($data) {
@@ -19,10 +14,6 @@ class %%COLLECTION%% {
     }
 
     public function read($id = null) {
-        return $this->get($id);
-    }
-
-    public function get($id = null) {
         if ($id) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {

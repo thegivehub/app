@@ -21,16 +21,28 @@ $newCampaign = [
         'currency' => 'XLM'
     ]
 ];
-$campaign->create($newCampaign);
+$uid = $campaign->create($newCampaign);
 
 // Read
-$allCampaigns = $campaign->read();
-print_r($allCampaigns);
+$newitem = $campaign->read($uid);
+print_r($newitem);
 
 // Update
-//$campaignId = 'INSERT_CAMPAIGN_ID_HERE'; // replace with an actual campaign ID
-//$campaign->update($campaignId, ['title' => 'Updated Campaign Title']);
+print "Updating title: ";
+$campaign->update($uid, ['title' => 'Updated Campaign Title']);
+
+// Verify update 
+$updated = $campaign->read($uid);
+if ($updated->title == 'Updated Campaign Title') {
+    print "ok\n";
+} else {
+    print "ERROR\n";
+    print "** Did not receive expected title. Update is broken.\n";
+}
+print_r($updated);
 
 // Delete
-//$campaign->delete($campaignId);
+print "Removing test campaign $uid\n";
+$campaign->delete($uid);
+
 
