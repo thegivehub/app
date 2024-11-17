@@ -37,15 +37,16 @@
         }
         .campaign-top {
             display: flex;
+            flex-wrap: wrap;
         }
         #map {
-            width: 250px;
+            width: 100%;
             height: 250px;
         }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
 </head>
 <body>
 
@@ -86,9 +87,6 @@
         <div id="media-gallery"></div>
     </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
 <script>
     function parseSearch() {
         let qs = document.location.search.replace(/^\?/, '');
@@ -117,6 +115,9 @@
                 document.getElementById('campaign-raised').textContent = `${data.funding.raisedAmount} ${data.funding.currency}`;
                 document.getElementById('campaign-donors').textContent = data.funding.donorCount;
 
+                if (data.location && data.location.coordinates) {
+                    loadMap(data.location.coordinates.latitude, data.location.coordinates.longitude, data.location.region + ', ' + data.location.country);
+                }
                 // Funding Progress
                 const goalAmount = data.funding.goalAmount;
                 const raisedAmount = data.funding.raisedAmount;
@@ -142,6 +143,7 @@
                 // Media Gallery
                 const mediaGallery = document.getElementById('media-gallery');
                 data.media.forEach(media => {
+                    console.dir(media);
                     const mediaItem = document.createElement(media.type === 'image' ? 'img' : 'a');
                     mediaItem.src = media.url;
                     mediaItem.alt = media.caption;
@@ -157,6 +159,17 @@
             })
             .catch(error => console.error("Error fetching campaign data:", error));
     });
+    
+    function loadMap(lat, lng, txt) {
+        const map = L.map('map').setView([lat, lng], 2);
+        const worldTiles =  L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 20,
+        attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+    }).addTo(map);
+
+        const marker = L.marker([lat, lng]).addTo(map)
+            .bindPopup(txt).openPopup();
+    }
 </script>
 
 </body>
