@@ -26,7 +26,25 @@
                 <span style="font-weight: 600; font-size: 1.25rem;">The Give Hub</span>
             </div>
             <div class="user-section">
-                <button class="icon-button">
+                <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
+        <!-- Moon icon for light mode -->
+        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <!-- Sun icon for dark mode (hidden by default) -->
+        <svg class="sun-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+    </button>
+    <button class="icon-button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -166,6 +184,9 @@
                     });
                 });
 
+                app.auth.init();
+
+                app.theme.init();
                 // Initialize with default content
                 app.loadContent('/browse.html');
                 // Event listeners
@@ -181,6 +202,43 @@
                 });
 
             },
+            theme: {
+        init() {
+            const themeToggle = document.getElementById('themeToggle');
+            const moonIcon = themeToggle.querySelector('.moon-icon');
+            const sunIcon = themeToggle.querySelector('.sun-icon');
+
+            // Check for saved theme preference or system preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            }
+
+            // Toggle theme
+            themeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                
+                if (isDark) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
+                }
+            });
+        }
+    },
+
+
             config: {
                 account: {
                     id: 1,
@@ -249,6 +307,69 @@
                 }
             },
         };
+        // Add this to your app object
+        app.auth = {
+            init() {
+                // Import Firebase auth when using modules
+                import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')
+                    .then((firebaseAuth) => {
+                        const auth = firebaseAuth.getAuth(app);
+
+                        // Set up auth state listener
+                        auth.onAuthStateChanged((user) => {
+                            if (user) {
+                                // User is signed in
+                                localStorage.setItem('authStatus', 'authenticated');
+                                document.body.setAttribute('data-auth-status', 'authenticated');
+
+                                // Store user info if needed
+                                const userData = {
+                                    uid: user.uid,
+                                    email: user.email,
+                                    displayName: user.displayName,
+                                    photoURL: user.photoURL
+                                };
+                                localStorage.setItem('userData', JSON.stringify(userData));
+
+                                // Update UI elements if needed
+                                if (user.photoURL) {
+                                    const avatar = document.querySelector('.user-avatar');
+                                    if (avatar) {
+                                        avatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}" class="w-full h-full rounded-full">`;
+                                    }
+                                }
+
+                                console.log('User is authenticated:', user);
+                            } else {
+                                // User is signed out
+                                localStorage.removeItem('authStatus');
+                                localStorage.removeItem('userData');
+                                document.body.removeAttribute('data-auth-status');
+                                console.log('User is not authenticated');
+
+                                // Redirect to login if needed
+                                window.location.href = '/login.html';
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading Firebase Auth:', error);
+                    });
+            },
+
+            // Helper method to check current auth status
+            isAuthenticated() {
+                return localStorage.getItem('authStatus') === 'authenticated';
+            },
+
+            // Helper to get current user data
+            getCurrentUser() {
+                const userData = localStorage.getItem('userData');
+                return userData ? JSON.parse(userData) : null;
+            }
+        };
+
+
         window.app = app;
         app.init();
     })();

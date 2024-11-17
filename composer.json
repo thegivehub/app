@@ -2,6 +2,8 @@
     "require": {
         "mongodb/mongodb": "^1.15",
         "firebase/php-jwt": "^6.10",
-        "paragonie/sodium_compat": "^2.1"
+        "paragonie/sodium_compat": "^2.1",
+        "google/apiclient": "^2.18",
+        "league/oauth2-google": "^4.0"
     }
 }
