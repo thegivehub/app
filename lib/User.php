@@ -12,8 +12,12 @@ class User {
     public function create($data) {
         return $this->collection->insertOne($data);
     }
-
+    
     public function read($id = null) {
+        return $this->get($id);
+    }
+
+    public function get($id = null) {
         if ($id) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
