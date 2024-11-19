@@ -46,12 +46,28 @@ body {
 .login-header {
     padding: 2rem;
     text-align: center;
+    display: flex;
+}
+
+.login-header-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-content: flex-start;
+        align-items: flex-start;
+        margin-left: 1rem;
+}
+
+.login-header h1 {
+    line-height: 1.5;
+    text-align: left;
 }
 
 .logo {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 1rem;
+    width: 84px;
+    height: 84px;
+    margin-top: 1rem;
+    margin-bottom: 0rem;
     float: left;
 }
 
@@ -68,6 +84,12 @@ body {
 
 .login-form {
     padding: 0 2rem 2rem;
+}
+.have-an-account {
+    display: block;
+    text-align: center;
+    margin-top: 1em;
+    font-size: 0.9em;
 }
 
 .form-group {
