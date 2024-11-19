@@ -11,9 +11,11 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <img class="logo" src="/img/grey-logo.svg">
-            <h1>Create Account</h1>
-            <p>Join The Give Hub community</p>
+            <img class="logo" src="/img/black-logo.svg">
+            <div class="login-header-text">
+                <h1>The Give Hub<br><span style="font-size:0.8em;">Account Registration</span></h1>
+                <p>Join The Give Hub community</p>
+            </div>
         </div>
 
         <div class="registration-steps">
@@ -87,6 +89,8 @@
                 </div>
 
                 <button type="button" class="login-button" onclick="app.nextStep(event)">Continue</button>
+
+                <div class="register-prompt">Already have an account? <a href="/login.html" title="Login to The Give Hub">Sign in</a></div>
             </div>
 
             <!-- Step 2: Profile Details -->
