@@ -27,3 +27,6 @@ node_modules
 vendor
 .env
 composer.lock
+dump
+oauth.txt
+info.php
