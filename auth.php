@@ -1,9 +1,12 @@
 <?php
 
-$req = json_encode($_REQUEST);
-file_put_contents("google-auth.log", $req, FILE_APPEND);
+$req = json_encode($_REQUEST, JSON_PRETTY_PRINT);
+file_put_contents("google-auth.log", $req."\n", FILE_APPEND);
+
 require __DIR__ . '/lib/Auth.php';
 require __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/lib/User.php';
 
 use League\OAuth2\Client\Provider\Google;
 
@@ -56,10 +59,23 @@ if (!empty($_GET['error'])) {
         // We got an access token, let's now get the owner details
         $ownerDetails = $provider->getResourceOwner($token);
         
-        $out = ["firstName"=>$ownerDetails->getFirstName(), "lastName"=>$ownerDetails->getLastName(), "email"=>$ownerDetails->getEmail(), "language"=>"en", "password"=>$token->getToken(), "googleToken"=>$token->getToken(), "verified"=>true ];
-        
+        $out = ["firstName"=>$ownerDetails->getFirstName(), "lastName"=>$ownerDetails->getLastName(), "email"=>$ownerDetails->getEmail(), "avatar"=>$ownerDetails->getAvatar(), "language"=>"en", "password"=>$token->getToken(), "googleToken"=>$token->getToken(), "verified"=>true ];
+
+        $_SESSION['googleProfile'] = $out;
+        $_SESSION['token'] = $token->getToken();
+
+        $db = new User();
+        $id = $db->findId(["email"=>$out['email']]);
+
+        $user = $db->get($id);
+        $_SESSION['user'] = $user;
+
+        if ($token->getExpires() < time()) {
+            $token->getRefreshToken();
+        }
+
         // Use these details to create a new profile
-        header("Location: /index.html");
+        //header("Location: /index.html");
 
     } catch (Exception $e) {
 

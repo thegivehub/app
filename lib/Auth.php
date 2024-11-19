@@ -124,23 +124,50 @@ class Auth {
     function sendVerification($data) {
         $verificationCode = random_int(100000, 999999);
         $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
-        
-        $user = [
-            'email' => $data['email'],
-            'personalInfo' => [
-                'email' => $data['email']
-            ],
-            'auth' => [
-                'verificationCode' => $verificationCode,
-                'verificationExpires' => $verificationExpires,
-                'verified' => false,
-                'twoFactorEnabled' => false
-            ]
+
+        $all = $this->db->users->find(["email"=>$data['email']])->toArray();
+        if (isset($all) && count($all)) {
+            $id = $all[0]->_id;
+        }
+        if ($id) {
+            $user = [
+                'email' => $data['email'],
+                'personalInfo' => [
+                    'email' => $data['email']
+                ],
+                'auth' => [
+                    'verificationCode' => $verificationCode,
+                    'verificationExpires' => $verificationExpires,
+                    'verified' => false,
+                    'twoFactorEnabled' => false
+                ]
+            ];
+
+            $result = $this->db->users->updateOne(['_id' => new MongoDB\BSON\ObjectId($id)], ['$set' => $user]);
+
+        } else {
+            $user = [
+                'email' => $data['email'],
+                'personalInfo' => [
+                    'email' => $data['email']
+                ],
+                'auth' => [
+                    'verificationCode' => $verificationCode,
+                    'verificationExpires' => $verificationExpires,
+                    'verified' => false,
+                    'twoFactorEnabled' => false
+                ]
+            ];
+
+            $result = $this->db->users->insertOne($user);
+        }
+        $this->mail->sendVerification($data['email'], $verificationCode);
+        return [
+            'success' => true,
+            'message' => 'Registration successful. Please check your email for verification code.'
         ];
 
-        $result = $this->db->users->insertOne($user);
-        
-        $this->mail->sendVerification($data['email'], $verificationCode);
+
     }
 
     public function requestVerification($data) {
@@ -340,6 +367,108 @@ class Auth {
             'refreshToken' => $refreshToken,
             'expires' => $expire
         ];
+    }
+        /**
+     * Generates a password reset token and sends reset email
+     */
+    public function handleForgotPassword($email) {
+        global $db;
+        
+        // Validate email
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'Invalid email format'];
+        }
+        
+        // Check if user exists
+        $stmt = $db->prepare("SELECT id, firstName FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$user) {
+            // Return success even if user doesn't exist for security
+            return ['success' => true];
+        }
+        
+        // Generate secure random token
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        
+        // Store reset token in database
+        $stmt = $db->prepare("INSERT INTO password_resets (user_id, token, expires) VALUES (?, ?, ?)");
+        $stmt->execute([$user['id'], password_hash($token, PASSWORD_DEFAULT), $expires]);
+        
+        // Send reset email
+        $resetLink = "https://app.thegivehub.com/reset-password.html?token=" . urlencode($token);
+        
+        $to = $email;
+        $subject = "Reset Your Give Hub Password";
+        
+        $message = "
+        <html>
+        <head>
+            <title>Reset Your Password</title>
+        </head>
+        <body>
+            <p>Hi {$user['firstName']},</p>
+            <p>We received a request to reset your password for your Give Hub account.</p>
+            <p>To reset your password, click the link below (or copy and paste it into your browser):</p>
+            <p><a href=\"{$resetLink}\">{$resetLink}</a></p>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you didn't request this password reset, you can safely ignore this email.</p>
+            <p>Best regards,<br>The Give Hub Team</p>
+        </body>
+        </html>
+        ";
+        
+        $headers = [
+            'MIME-Version: 1.0',
+            'Content-type: text/html; charset=utf-8',
+            'From: The Give Hub <noreply@thegivehub.com>',
+            'Reply-To: support@thegivehub.com',
+            'X-Mailer: PHP/' . phpversion()
+        ];
+        
+        mail($to, $subject, $message, implode("\r\n", $headers));
+        
+        return ['success' => true];
+    }
+    
+    /**
+     * Validates reset token and updates password
+     */
+    public function resetPassword($token, $newPassword) {
+        global $db;
+        
+        if (strlen($newPassword) < 8) {
+            return ['success' => false, 'error' => 'Password must be at least 8 characters'];
+        }
+        
+        // Find valid reset token
+        $stmt = $db->prepare("
+            SELECT pr.user_id, pr.token, u.email 
+            FROM password_resets pr
+            JOIN users u ON u.id = pr.user_id
+            WHERE pr.expires > NOW()
+            ORDER BY pr.created_at DESC 
+            LIMIT 1
+        ");
+        $stmt->execute();
+        $reset = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$reset || !password_verify($token, $reset['token'])) {
+            return ['success' => false, 'error' => 'Invalid or expired reset token'];
+        }
+        
+        // Update password
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->execute([$hashedPassword, $reset['user_id']]);
+        
+        // Delete used reset token
+        $stmt = $db->prepare("DELETE FROM password_resets WHERE user_id = ?");
+        $stmt->execute([$reset['user_id']]);
+        
+        return ['success' => true];
     }
 }
 

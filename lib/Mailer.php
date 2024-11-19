@@ -20,6 +20,6 @@ EOT;
 
         file_put_contents(__DIR__."/x.log", $cmd."\n---\n".$msg."\n---\n", FILE_APPEND);
 
-        print $send;
+        // print $send;
     }
 }
