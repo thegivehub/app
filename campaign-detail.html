@@ -234,6 +234,18 @@
             background-color: #fef9c3;
             color: #854d0e;
         }
+        .link {
+            color: #339;
+            text-decoration: none;
+            background-color: #0099ff00;
+            transition: all 300ms linear;
+        }
+        .link:hover {
+            color: #fff;
+
+            text-decoration: underline;
+            background-color: #0066ffcc;
+        }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
@@ -241,6 +253,7 @@
 <body>
 <main>
     <div class="container">
+        <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
         <div class="card campaign-header">
             <div class="campaign-info">
                 <h1 id="campaign-title" class="campaign-title">Campaign Title</h1>
@@ -514,6 +527,7 @@
     };
 
     // Override the fetch method to include loading states and error handling
+    /*
     const originalFetch = app.fetch;
     app.fetch = function(url) {
         app.setLoading(true);
@@ -527,6 +541,7 @@
                 app.utils.handleError(error);
             });
     };
+    */
 
     window.app = app;
     document.addEventListener('DOMContentLoaded', () => app.init());
