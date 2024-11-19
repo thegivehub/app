@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        h1 {
+            color: #333;
+            margin: 20px;
+        }
+        .campaign-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 1200px;
+        }
+        .campaign-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-decoration: none;
+            color: inherit;
+            transition: box-shadow 0.2s;
+        }
+        .campaign-card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .campaign-title {
+            font-size: 1.2em;
+            margin: 0 0 10px;
+            color: #333;
+        }
+        .campaign-location, .campaign-goal, .campaign-progress {
+            font-size: 0.9em;
+            margin: 5px 0;
+            color: #555;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar div {
+            height: 10px;
+            background-color: #4caf50;
+        }
+        .view-more {
+            margin-top: auto;
+            font-size: 0.9em;
+            color: #0066cc;
+            text-align: right;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Browse Campaigns</h1>
+<div class="campaign-grid" id="campaign-grid"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch('/api/campaign')  // Adjust URL as needed
+            .then(response => response.json())
+            .then(campaigns => {
+                const campaignGrid = document.getElementById('campaign-grid');
+                campaigns.forEach(campaign => {
+                    // Create card element
+                    const card = document.createElement('div');
+                    card.classList.add('campaign-card');
+
+                    // Campaign title
+                    const title = document.createElement('h2');
+                    title.classList.add('campaign-title');
+                    title.textContent = campaign.title || "Campaign Title";
+                    card.appendChild(title);
+
+                    // Campaign location
+                    const location = document.createElement('p');
+                    location.classList.add('campaign-location');
+                    location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
+                    card.appendChild(location);
+
+                    // Campaign funding goal
+                    const goal = document.createElement('p');
+                    goal.classList.add('campaign-goal');
+                    goal.textContent = `Goal: ${campaign.funding.goalAmount} ${campaign.funding.currency}`;
+                    card.appendChild(goal);
+
+                    // Campaign progress
+                    const raisedAmount = campaign.funding.raisedAmount;
+                    const goalAmount = campaign.funding.goalAmount;
+                    const progress = (raisedAmount / goalAmount) * 100;
+
+                    const progressText = document.createElement('p');
+                    progressText.classList.add('campaign-progress');
+                    progressText.textContent = `Progress: ${raisedAmount} / ${goalAmount} ${campaign.funding.currency}`;
+                    card.appendChild(progressText);
+
+                    // Progress bar
+                    const progressBar = document.createElement('div');
+                    progressBar.classList.add('progress-bar');
+                    const progressFill = document.createElement('div');
+                    progressFill.style.width = `${progress}%`;
+                    progressBar.appendChild(progressFill);
+                    card.appendChild(progressBar);
+
+                    // View more link
+                    const viewMore = document.createElement('a');
+                    viewMore.classList.add('view-more');
+                    viewMore.href = `campaign-detail.html?id=${campaign._id.$oid}`;  // Link to detail page
+                    viewMore.textContent = 'View More';
+                    card.appendChild(viewMore);
+
+                    // Append card to grid
+                    campaignGrid.appendChild(card);
+                });
+            })
+            .catch(error => console.error("Error fetching campaigns:", error));
+    });
+</script>
+
+</body>
+</html>

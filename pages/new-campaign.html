@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Campaign</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --red-500: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: #f8fafc;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+            color: var(--gray-700);
+        }
+
+        .progress-bar {
+            display: flex;
+            padding: 1.5rem;
+            justify-content: space-between;
+            position: relative;
+        }
+        .progress-labels {
+            display: flex;
+            padding: 1.5rem;
+            justify-content: space-between;
+            position: relative;
+            align-items: center;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 37%;
+            left: 2rem;
+            right: 2rem;
+            height: 2px;
+            background: var(--gray-200);
+            z-index: 1;
+        }
+
+        .step {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--gray-300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            z-index: 2;
+        }
+        .step-label {
+            display: flex;
+            flex-direction:column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+        }
+        .step-wrap {
+            display: flex;
+            flex-direction:column;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-wrap > div {
+            margin: 0.25em 0;
+        }
+        .step.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .step.completed {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .form-section {
+            display: none;
+            padding: 2rem;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.15s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        .error {
+            color: var(--red-500);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .form-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-100);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--gray-300);
+            padding: 2rem;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .preview-item {
+            aspect-ratio: 16/9;
+            background: var(--gray-100);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-header">
+            <img src="/img/round-logo.svg" height="100" style="float:left;">
+            <h1>Create New Campaign</h1>
+        </div>
+
+        <div class="progress-bar">
+
+            <div class="step-wrap">
+                <div class="step active">1</div>
+                <div class="step-label">Basic Info</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">2</div>
+                <div class="step-label">Funding Goals</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">3</div>
+                <div class="step-label">Media</div>
+            </div>
+            <div class="step-wrap">
+                <div class="step">4</div>
+                <div class="step-label">Review</div>
+            </div>
+        </div>
+
+        <form id="campaignForm">
+            <!-- Step 1: Basic Information -->
+            <div class="form-section active" id="step1">
+                <div class="form-group">
+                    <label for="campaignTitle">Campaign Title</label>
+                    <input type="text" id="campaignTitle" required>
+                    <div class="help-text">Choose a clear, descriptive title for your campaign</div>
+                    <div class="error">Title is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="campaignType">Campaign Type</label>
+                    <select id="campaignType" required>
+                        <option value="">Select campaign type</option>
+                        <option value="crowdfunding">Crowdfunding</option>
+                        <option value="microloan">Microloan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Campaign Description</label>
+                    <textarea id="description" rows="5" required></textarea>
+                    <div class="help-text">Tell your story and explain why people should support your campaign</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Funding Goals -->
+            <div class="form-section" id="step2">
+                <div class="form-group">
+                    <label for="fundingGoal">Funding Goal</label>
+                    <input type="number" id="fundingGoal" required min="1">
+                    <div class="help-text">Set a realistic funding goal in USD</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="deadline">Campaign Deadline</label>
+                    <input type="date" id="deadline" required>
+                    <div class="help-text">Choose when your campaign will end</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="minContribution">Minimum Contribution</label>
+                    <input type="number" id="minContribution" required min="1">
+                    <div class="help-text">Set the minimum amount someone can contribute</div>
+                </div>
+            </div>
+
+            <!-- Step 3: Media -->
+            <div class="form-section" id="step3">
+                <div class="form-group">
+                    <label>Campaign Images</label>
+                    <div class="file-upload" id="imageUpload">
+                        <div>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                                <line x1="16" y1="5" x2="22" y2="5"></line>
+                                <line x1="19" y1="2" x2="19" y2="8"></line>
+                                <circle cx="9" cy="9" r="2"></circle>
+                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                            </svg>
+                            <p>Drop images here or click to upload</p>
+                        </div>
+                    </div>
+                    <div class="preview-grid" id="imagePreview"></div>
+                </div>
+            </div>
+
+            <!-- Step 4: Review -->
+            <div class="form-section" id="step4">
+                <h2>Review Your Campaign</h2>
+                <div id="campaignPreview"></div>
+            </div>
+
+            <div class="form-footer">
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+                <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateForm();
+                } else {
+                    submitForm();
+                }
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateForm();
+            }
+        });
+
+        function validateCurrentStep() {
+            const currentSection = document.getElementById(`step${currentStep}`);
+            const inputs = currentSection.querySelectorAll('input, select, textarea');
+            let valid = true;
+
+            inputs.forEach(input => {
+                if (input.required && !input.value) {
+                    valid = false;
+                    input.classList.add('error');
+                    const errorDiv = input.parentElement.querySelector('.error');
+                    if (errorDiv) errorDiv.style.display = 'block';
+                } else {
+                    input.classList.remove('error');
+                    const errorDiv = input.parentElement.querySelector('.error');
+                    if (errorDiv) errorDiv.style.display = 'none';
+                }
+            });
+
+            return valid;
+        }
+
+        function updateForm() {
+            // Update progress steps
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                } else if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+            });
+
+            // Show/hide form sections
+            document.querySelectorAll('.form-section').forEach((section, index) => {
+                if (index + 1 === currentStep) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+
+            // Update buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
+            nextBtn.textContent = currentStep === totalSteps ? 'Submit Campaign' : 'Next';
+        }
+
+        function submitForm() {
+            // Here you would typically send the form data to your backend
+            alert('Campaign submitted successfully!');
+        }
+
+        // Image upload handling
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+
+        imageUpload.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.multiple = true;
+            input.click();
+
+            input.onchange = () => {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = document.createElement('div');
+                        preview.className = 'preview-item';
+                        preview.style.backgroundImage = `url(${e.target.result})`;
+                        preview.style.backgroundSize = 'cover';
+                        preview.style.backgroundPosition = 'center';
+                        imagePreview.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+        });
+
+        // Drag and drop handling
+        imageUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUpload.style.borderColor = 'var(--primary)';
+        });
+
+        imageUpload.addEventListener('dragleave', () => {
+            imageUpload.style.borderColor = 'var(--gray-300)';
+        });
+
+        imageUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUpload.style.borderColor = 'var(--gray-300)';
+            
+            Array.from(e.dataTransfer.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = document.createElement('div');
+                        preview.className = 'preview-item';
+                        preview.style.backgroundImage = `url(${e.target.result})`;
+                        preview.style.backgroundSize = 'cover';
+                        preview.style.backgroundPosition = 'center';
+                        imagePreview.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
