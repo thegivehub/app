@@ -1,0 +1,19 @@
+#!/usr/local/bin/php
+<?php
+require_once 'lib/Campaign.php';
+
+$exe = array_shift($argv);
+
+$campaign = new Campaign();
+
+while ($campaignId = array_shift($argv)) {
+    // Check for object in store first
+    $obj = $campaign->read($campaignId);
+
+    if ($obj) {
+        // Delete
+        $campaign->delete($campaignId);
+        print "Deleted Campaign ID: {$campaignId}\n";
+    }
+}
+
