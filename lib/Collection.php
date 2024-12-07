@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . 'db.php';
+require_once __DIR__ . '/lib/db.php';
 
-class %%COLLECTION%% {
+class Collection {
     private $collection;
 
     public function __construct() {

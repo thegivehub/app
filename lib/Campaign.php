@@ -5,7 +5,7 @@ class Campaign {
     private $collection;
 
     public function __construct() {
-        $db = new Database();
+        $db = new Database("givehub");
         $this->collection = $db->getCollection('campaigns');
     }
 
@@ -21,7 +21,7 @@ class Campaign {
         if ($id) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
-            return $this->collection->find()->toArray();
+            return $this->collection->find();
         }
     }
 

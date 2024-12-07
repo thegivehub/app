@@ -89,7 +89,26 @@
                 </div>
 
                 <button type="button" class="login-button" onclick="app.nextStep(event)">Continue</button>
-
+                <div class="center">
+                    - or -<br>
+                    <button class="gsi-material-button">
+                      <div class="gsi-material-button-state"></div>
+                      <div class="gsi-material-button-content-wrapper">
+                        <div class="gsi-material-button-icon">
+                          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink" style="display: block;">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                          </svg>
+                        </div>
+                        <span class="gsi-material-button-contents">Sign up with Google</span>
+                        <span style="display: none;">Sign up with Google</span>
+                      </div>
+                    </button>
+                </div>
+                <hr>
                 <div class="register-prompt">Already have an account? <a href="/login.html" title="Login to The Give Hub">Sign in</a></div>
             </div>
 
@@ -108,7 +127,7 @@
                     </div>
                     <div class="avatar-text">Upload profile picture</div>
                 </div>
-
+                <input type="hidden" id="profileImg" name="profileImg" value="">
                 <div class="form-group">
                     <label for="firstName">First Name</label>
                     <input type="text" id="firstName" name="firstName" required>
@@ -163,7 +182,7 @@
                     </svg>
                     <h2>Registration Complete!</h2>
                     <p>Your account has been created successfully.</p>
-                    <button type="button" class="login-button" onclick="window.location.href='/login'">
+                    <button type="button" class="login-button" onclick="window.location.href='/login.html'">
                         Go to Login
                     </button>
                 </div>
@@ -171,461 +190,469 @@
         </form>
     </div>
 
-    <script>
-        const app = {
-            currentStep: 1,
-            elements: {
-                form: document.getElementById('registrationForm'),
-                steps: document.querySelectorAll('.registration-step'),
-                indicators: document.querySelectorAll('.step-indicator'),
-                password: document.getElementById('password'),
-                strengthBar: document.getElementById('strengthBar'),
-                strengthText: document.getElementById('strengthText'),
-                requirements: document.querySelectorAll('.requirement'),
-                avatarUpload: document.getElementById('avatarUpload'),
-                avatarPreview: document.getElementById('avatarPreview'),
-                registerButton: document.getElementById('registerButton')
-            },
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+    const app = {
+        currentStep: 1,
+        elements: {
+            form: document.getElementById('registrationForm'),
+            steps: document.querySelectorAll('.registration-step'),
+            indicators: document.querySelectorAll('.step-indicator'),
+            password: document.getElementById('password'),
+            strengthBar: document.getElementById('strengthBar'),
+            strengthText: document.getElementById('strengthText'),
+            requirements: document.querySelectorAll('.requirement'),
+            avatarUpload: document.getElementById('avatarUpload'),
+            avatarPreview: document.getElementById('avatarPreview'),
+            registerButton: document.getElementById('registerButton')
+        },
 
-            init() {
-                this.setupEventListeners();
-                this.setupPasswordStrength();
-                this.setupAvatarUpload();
-            },
+        init() {
+            this.setupEventListeners();
+            this.setupPasswordStrength();
+            this.setupAvatarUpload();
+        },
 
-            setupEventListeners() {
-                this.elements.form.addEventListener('submit', (e) => this.handleRegistration(e));
-            },
+        setupEventListeners() {
+            this.elements.form.addEventListener('submit', (e) => this.handleRegistration(e));
+        },
 
-            setupPasswordStrength() {
-                this.elements.password.addEventListener('input', (e) => {
-                    const password = e.target.value;
-                    const strength = this.calculatePasswordStrength(password);
-                    this.updatePasswordStrength(strength);
-                    this.updateRequirements(password);
-                });
-            },
+        setupPasswordStrength() {
+            this.elements.password.addEventListener('input', (e) => {
+                const password = e.target.value;
+                const strength = this.calculatePasswordStrength(password);
+                this.updatePasswordStrength(strength);
+                this.updateRequirements(password);
+            });
+        },
 
-            setupAvatarUpload() {
-                this.elements.avatarUpload.addEventListener('click', () => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = (e) => this.handleAvatarUpload(e);
-                    input.click();
-                });
-            },
+        setupAvatarUpload() {
+            this.elements.avatarUpload.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => this.handleAvatarUpload(e);
+                input.click();
+            });
+        },
 
-            calculatePasswordStrength(password) {
-                let score = 0;
-                
-                // Length
-                if (password.length >= 8) score++;
-                if (password.length >= 12) score++;
-                
-                // Complexity
-                if (/[A-Z]/.test(password)) score++;
-                if (/[0-9]/.test(password)) score++;
-                if (/[^A-Za-z0-9]/.test(password)) score++;
-                
-                return score;
-            },
-            updatePasswordStrength(score) {
-                const strengthBar = this.elements.strengthBar;
-                const strengthText = this.elements.strengthText;
-                
-                let strength = '';
-                let width = '';
-                let color = '';
-
-                switch (score) {
-                    case 0:
-                    case 1:
-                        strength = 'Weak';
-                        width = '33.33%';
-                        color = 'weak';
-                        break;
-                    case 2:
-                    case 3:
-                        strength = 'Medium';
-                        width = '66.66%';
-                        color = 'medium';
-                        break;
-                    case 4:
-                    case 5:
-                        strength = 'Strong';
-                        width = '100%';
-                        color = 'strong';
-                        break;
-                }
-
-                strengthBar.style.width = width;
-                strengthBar.className = color;
-                strengthText.textContent = strength;
-            },
-
-            updateRequirements(password) {
-                const requirements = {
-                    length: password.length >= 8,
-                    uppercase: /[A-Z]/.test(password),
-                    number: /[0-9]/.test(password),
-                    special: /[^A-Za-z0-9]/.test(password)
-                };
-
-                Object.entries(requirements).forEach(([requirement, isMet]) => {
-                    const element = document.querySelector(`[data-requirement="${requirement}"]`);
-                    if (element) {
-                        element.classList.toggle('met', isMet);
-                    }
-                });
-
-                return Object.values(requirements).every(Boolean);
-            },
-
-            async handleAvatarUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                if (!file.type.startsWith('image/')) {
-                    this.showError('avatarError', 'Please select an image file');
-                    return;
-                }
-
-                try {
-                    // Show preview
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        this.elements.avatarPreview.src = e.target.result;
-                        this.elements.avatarPreview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-
-                    // Upload to server
-                    const formData = new FormData();
-                    formData.append('avatar', file);
-                    formData.append('username', document.querySelector("#username").value);
-                    formData.append('email', document.querySelector("#email").value);
-
-                    const response = await fetch('/api/auth/upload-avatar', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const result = await response.json();
-                    if (!result.success) {
-                        throw new Error(result.error || 'Failed to upload avatar');
-                    }
-                } catch (error) {
-                    this.showError('avatarError', error.message);
-                }
-            },
-
-            prevStep() {
-                if (this.currentStep > 1) {
-                    this.currentStep--;
-                    this.updateSteps();
-                }
-            },
-
-            validateCurrentStep() {
-                const currentStepElement = document.querySelector(`.registration-step[data-step="${this.currentStep}"]`);
-                const inputs = currentStepElement.querySelectorAll('input[required]');
-                let isValid = true;
-
-                inputs.forEach(input => {
-                    if (!input.value) {
-                        this.showError(`${input.id}Error`, `${input.name} is required`);
-                        isValid = false;
-                    }
-                });
-
-                // Step-specific validation
-                if (isValid && this.currentStep === 1) {
-                    // Validate email format
-                    const email = document.getElementById('email').value;
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        this.showError('emailError', 'Please enter a valid email address');
-                        isValid = false;
-                    }
-
-                    // Validate password strength
-                    const password = document.getElementById('password').value;
-                    if (this.calculatePasswordStrength(password) < 3) {
-                        this.showError('passwordError', 'Please choose a stronger password');
-                        isValid = false;
-                    }
-                }
-
-                return isValid;
-            },
-
-            updateSteps() {
-                // Update step visibility
-                this.elements.steps.forEach(step => {
-                    step.classList.toggle('active', 
-                        step.dataset.step === this.currentStep.toString());
-                });
-
-                // Update indicators
-                this.elements.indicators.forEach(indicator => {
-                    const step = parseInt(indicator.dataset.step);
-                    indicator.classList.toggle('active', step === this.currentStep);
-                    indicator.classList.toggle('completed', step < this.currentStep);
-                });
-            },
-
-            showStep(step) {
-                this.elements.steps.forEach(s => {
-                    s.classList.toggle('active', s.dataset.step === step);
-                });
-            },
-
-            showError(elementId, message) {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    element.textContent = message;
-                    element.classList.add('active');
-                }
-            },
-
-            clearError(elementId) {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    element.textContent = '';
-                    element.classList.remove('active');
-                }
-            },
-
-            setLoading(loading) {
-                this.elements.registerButton.classList.toggle('loading', loading);
-                this.elements.registerButton.disabled = loading;
-            },
+        calculatePasswordStrength(password) {
+            let score = 0;
             
-            async requestVerificationCode(email) {
-                try {
-            const response = await fetch('/api/auth/request-verification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
+            // Length
+            if (password.length >= 8) score++;
+            if (password.length >= 12) score++;
+            
+            // Complexity
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            return score;
+        },
+        updatePasswordStrength(score) {
+            const strengthBar = this.elements.strengthBar;
+            const strengthText = this.elements.strengthText;
+            
+            let strength = '';
+            let width = '';
+            let color = '';
+
+            switch (score) {
+                case 0:
+                case 1:
+                    strength = 'Weak';
+                    width = '33.33%';
+                    color = 'weak';
+                    break;
+                case 2:
+                case 3:
+                    strength = 'Medium';
+                    width = '66.66%';
+                    color = 'medium';
+                    break;
+                case 4:
+                case 5:
+                    strength = 'Strong';
+                    width = '100%';
+                    color = 'strong';
+                    break;
+            }
+
+            strengthBar.style.width = width;
+            strengthBar.className = color;
+            strengthText.textContent = strength;
+        },
+
+        updateRequirements(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[^A-Za-z0-9]/.test(password)
+            };
+
+            Object.entries(requirements).forEach(([requirement, isMet]) => {
+                const element = document.querySelector(`[data-requirement="${requirement}"]`);
+                if (element) {
+                    element.classList.toggle('met', isMet);
+                }
             });
 
-            const result = await response.json();
+            return Object.values(requirements).every(Boolean);
+        },
 
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to send verification code');
+        async handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                this.showError('avatarError', 'Please select an image file');
+                return;
             }
-
-            return true;
-        } catch (error) {
-            this.showError('emailError', error.message);
-            return false;
-        }
-    },
-    async sendVerificationEmail(email) {
-        try {
-            const response = await fetch('/api/auth/send-verification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
-            });
-
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to send verification email');
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('Error sending verification email:', error);
-            throw error;
-        }
-    },
-
-    // Add a resend verification code function
-    async resendVerificationCode() {
-        const email = document.getElementById('email').value;
-        if (!email) {
-            this.showError('verificationError', 'Email address is required');
-            return;
-        }
-
-        const resendButton = document.querySelector('.resend-button');
-        if (resendButton) {
-            resendButton.disabled = true;
-        }
-
-        try {
-            await this.sendVerificationEmail(email);
-            
-            // Show success message
-            const successMessage = document.createElement('div');
-            successMessage.className = 'success-message';
-            successMessage.textContent = 'Verification code resent!';
-            document.querySelector('.verification-instructions').appendChild(successMessage);
-
-            // Remove success message after 3 seconds
-            setTimeout(() => successMessage.remove(), 3000);
-        } catch (error) {
-            this.showError('verificationError', error.message);
-        } finally {
-            if (resendButton) {
-                resendButton.disabled = false;
-            }
-        }
-    },
-
-    async nextStep(e) {
-        if (!this.validateCurrentStep()) {
-            return;
-        }
-        
-        if (this.currentStep === 3) {
-            this.handleRegistration(e);
-        }
-
-        // If moving from step 2 to verification step (step 3)
-        if (this.currentStep === 2) {
-            const email = document.getElementById('email').value;
-            this.setLoading(true);
 
             try {
-                // Send verification email before showing verification step
-                await this.sendVerificationEmail(email);
+                // Show preview
+                const reader = new FileReader();
+                let myimg = '';
+                reader.onload = (e) => {
+                    this.elements.avatarPreview.src = e.target.result;
+                    this.elements.avatarPreview.style.display = 'block';
+                    $("#profileImg").value = e.target.result;
+                    myimg = e.target.result;
+                };
+                reader.readAsDataURL(file);
 
-                // Update verification instructions
-                const instructions = document.querySelector('.verification-instructions');
-                if (instructions) {
-                    instructions.textContent = `We've sent a verification code to ${email}. Please check your inbox and enter the code below.`;
+                // Upload to server
+                const formData = new FormData();
+                formData.append('avatar', file);
+                formData.append('username', document.querySelector("#username").value);
+                formData.append('email', document.querySelector("#email").value);
+
+                const response = await fetch('/api/auth/upload-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to upload avatar');
                 }
-
-                // Move to next step
-                this.currentStep++;
-                this.updateSteps();
-
             } catch (error) {
-                this.showError('emailError', error.message);
-            } finally {
-                this.setLoading(false);
+                this.showError('avatarError', error.message);
             }
-            return;
-        }
+        },
 
-        // For other steps, just move forward
-        if (this.currentStep < 3) {
-            this.currentStep++;
-            this.updateSteps();
-        }
-    },
-    async verification() {
-        // First verify the code
-        const verificationResult = await this.verifyCode(
-            formData.get('email'),
-            formData.get('verificationCode')
-        );
+        prevStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+                this.updateSteps();
+            }
+        },
 
-        if (!verificationResult.success) {
-            throw new Error(verificationResult.error || 'Invalid verification code');
-        }
-    },
-    // Modify the existing handleRegistration method to include verification
-    async handleRegistration(e) {
-        e.preventDefault();
+        validateCurrentStep() {
+            const currentStepElement = document.querySelector(`.registration-step[data-step="${this.currentStep}"]`);
+            const inputs = currentStepElement.querySelectorAll('input[required]');
+            let isValid = true;
 
-        //if (this.currentStep !== 3) {
-        //    return;
-        //}
-
-        this.setLoading(true);
-
-        try {
-            const formData = new FormData(this.elements.form);
-
-            // Then complete registration
-            const registrationData = {
-                email: formData.get('email'),
-                username: formData.get('username'),
-                password: formData.get('password'),
-                profile: {
-                    firstName: formData.get('firstName'),
-                    lastName: formData.get('lastName')
+            inputs.forEach(input => {
+                if (!input.value) {
+                    this.showError(`${input.id}Error`, `${input.name} is required`);
+                    isValid = false;
                 }
-            };
-
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(registrationData)
             });
 
-            const result = await response.json();
+            // Step-specific validation
+            if (isValid && this.currentStep === 1) {
+                // Validate email format
+                const email = document.getElementById('email').value;
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    this.showError('emailError', 'Please enter a valid email address');
+                    isValid = false;
+                }
 
-            if (result.success) {
-                this.showStep('success');
-            } else {
-                throw new Error(result.error || 'Registration failed');
+                // Validate password strength
+                const password = document.getElementById('password').value;
+                if (this.calculatePasswordStrength(password) < 3) {
+                    this.showError('passwordError', 'Please choose a stronger password');
+                    isValid = false;
+                }
             }
-        } catch (error) {
-            this.showError('verificationError', error.message);
-        } finally {
-            this.setLoading(false);
-        }
-    },
 
-    async verifyCode(email, code) {
-        try {
-            const response = await fetch('/api/auth/verify-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email,
-                    code
-                })
+            return isValid;
+        },
+
+        updateSteps() {
+            // Update step visibility
+            this.elements.steps.forEach(step => {
+                step.classList.toggle('active', 
+                    step.dataset.step === this.currentStep.toString());
             });
 
-            return await response.json();
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message
-            };
-        }
-    },
+            // Update indicators
+            this.elements.indicators.forEach(indicator => {
+                const step = parseInt(indicator.dataset.step);
+                indicator.classList.toggle('active', step === this.currentStep);
+                indicator.classList.toggle('completed', step < this.currentStep);
+            });
+        },
 
-    // Add a resend code feature
-    async resendCode() {
+        showStep(step) {
+            this.elements.steps.forEach(s => {
+                s.classList.toggle('active', s.dataset.step === step);
+            });
+        },
+
+        showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.add('active');
+            }
+        },
+
+        clearError(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = '';
+                element.classList.remove('active');
+            }
+        },
+
+        setLoading(loading) {
+            this.elements.registerButton.classList.toggle('loading', loading);
+            this.elements.registerButton.disabled = loading;
+        },
+        
+        async requestVerificationCode(email) {
+            try {
+        const response = await fetch('/api/auth/send-verification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to send verification code');
+        }
+
+        return true;
+    } catch (error) {
+        this.showError('emailError', error.message);
+        return false;
+    }
+},
+async sendVerificationEmail(email) {
+    try {
+        const response = await fetch('/api/auth/send-verification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        });
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to send verification email');
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+        throw error;
+    }
+},
+
+// Add a resend verification code function
+async resendVerificationCode() {
+    const email = document.getElementById('email').value;
+    if (!email) {
+        this.showError('verificationError', 'Email address is required');
+        return;
+    }
+
+    const resendButton = document.querySelector('.resend-button');
+    if (resendButton) {
+        resendButton.disabled = true;
+    }
+
+    try {
+        await this.sendVerificationEmail(email);
+        
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success-message';
+        successMessage.textContent = 'Verification code resent!';
+        document.querySelector('.verification-instructions').appendChild(successMessage);
+
+        // Remove success message after 3 seconds
+        setTimeout(() => successMessage.remove(), 3000);
+    } catch (error) {
+        this.showError('verificationError', error.message);
+    } finally {
+        if (resendButton) {
+            resendButton.disabled = false;
+        }
+    }
+},
+
+async nextStep(e) {
+    if (!this.validateCurrentStep()) {
+        return;
+    }
+    
+    if (this.currentStep === 3) {
+        this.handleRegistration(e);
+    }
+
+    // If moving from step 2 to verification step (step 3)
+    if (this.currentStep === 2) {
         const email = document.getElementById('email').value;
         this.setLoading(true);
 
         try {
-            await this.requestVerificationCode(email);
-            // Show success message
-            const message = document.createElement('div');
-            message.className = 'success-message';
-            message.textContent = 'Verification code resent!';
-            document.querySelector('.verification-step').appendChild(message);
+            // Send verification email before showing verification step
+            await this.sendVerificationEmail(email);
 
-            // Remove message after 3 seconds
-            setTimeout(() => message.remove(), 3000);
+            // Update verification instructions
+            const instructions = document.querySelector('.verification-instructions');
+            if (instructions) {
+                instructions.textContent = `We've sent a verification code to ${email}. Please check your inbox and enter the code below.`;
+            }
+
+            // Move to next step
+            this.currentStep++;
+            this.updateSteps();
+
         } catch (error) {
-            this.showError('verificationError', error.message);
+            this.showError('emailError', error.message);
         } finally {
             this.setLoading(false);
         }
+        return;
     }
-};
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => app.init());
-    </script>
+    // For other steps, just move forward
+    if (this.currentStep < 3) {
+        this.currentStep++;
+        this.updateSteps();
+    }
+},
+async verification() {
+    // First verify the code
+    const verificationResult = await this.verifyCode(
+        formData.get('email'),
+        formData.get('verificationCode')
+    );
+
+    if (!verificationResult.success) {
+        throw new Error(verificationResult.error || 'Invalid verification code');
+    }
+},
+// Modify the existing handleRegistration method to include verification
+async handleRegistration(e) {
+    e.preventDefault();
+
+    //if (this.currentStep !== 3) {
+    //    return;
+    //}
+
+    this.setLoading(true);
+
+    try {
+        const formData = new FormData(this.elements.form);
+
+        // Then complete registration
+        const registrationData = {
+            email: formData.get('email'),
+            username: formData.get('username'),
+            password: formData.get('password'),
+            profile: {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                pic: formData.get('profileImg')
+            }
+        };
+
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registrationData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            this.showStep('success');
+        } else {
+            throw new Error(result.error || 'Registration failed');
+        }
+    } catch (error) {
+        this.showError('verificationError', error.message);
+    } finally {
+        this.setLoading(false);
+    }
+},
+
+async verifyCode(email, code) {
+    try {
+        const response = await fetch('/api/auth/verify-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email,
+                code
+            })
+        });
+
+        return await response.json();
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+},
+
+// Add a resend code feature
+async resendCode() {
+    const email = document.getElementById('email').value;
+    this.setLoading(true);
+
+    try {
+        await this.requestVerificationCode(email);
+        // Show success message
+        const message = document.createElement('div');
+        message.className = 'success-message';
+        message.textContent = 'Verification code resent!';
+        document.querySelector('.verification-step').appendChild(message);
+
+        // Remove message after 3 seconds
+        setTimeout(() => message.remove(), 3000);
+    } catch (error) {
+        this.showError('verificationError', error.message);
+    } finally {
+        this.setLoading(false);
+    }
+}
+};
+    window.app = app;
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', () => app.init());
+})();
+</script>
 
 </body>
 </html>

@@ -113,6 +113,20 @@ body {
 .frame-error p {
     color: var(--text-secondary);
 }
+.new-campaign-btn {
+    margin: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: transparent;
+    color: white;
+    border: none;
+    padding: 8px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
 button.icon-button {
     color: var(--text-primary);
@@ -180,7 +194,7 @@ button.icon-button:hover {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--gray-600);
+    color: var(--gray-300);
 }
 
 .user-section {
@@ -388,5 +402,11 @@ button.icon-button:hover {
 
     .overlay.active {
         display: block;
+    }
+    .new-campaign-btn > span {
+        display: none;
+    }
+    .logo-section > span {
+        display: none;
     }
 }

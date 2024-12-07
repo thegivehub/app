@@ -16,8 +16,11 @@ session_start(); // Remove if session.auto_start=1 in php.ini
 $config = [];
 $lines = preg_split("/\n/", file_get_contents(".env"));
 foreach ($lines as $line) {
-    [$key, $val] = preg_split("/\=/", $line, 2);
-    if ($key && $val) $config[$key] = $val;
+    $line = preg_replace("/\#.*/", '', $line);
+    if ($line) {
+        [$key, $val] = preg_split("/\=/", $line, 2);
+        if ($key && $val) $config[$key] = $val;
+    }
 }
 
 $provider = new Google([
@@ -59,23 +62,16 @@ if (!empty($_GET['error'])) {
         // We got an access token, let's now get the owner details
         $ownerDetails = $provider->getResourceOwner($token);
         
-        $out = ["firstName"=>$ownerDetails->getFirstName(), "lastName"=>$ownerDetails->getLastName(), "email"=>$ownerDetails->getEmail(), "avatar"=>$ownerDetails->getAvatar(), "language"=>"en", "password"=>$token->getToken(), "googleToken"=>$token->getToken(), "verified"=>true ];
-
-        $_SESSION['googleProfile'] = $out;
+        $out = ["firstName"=>$ownerDetails->getFirstName(), "lastName"=>$ownerDetails->getLastName(), "email"=>$ownerDetails->getEmail(), "language"=>"en", "password"=>$token->getToken(), "googleToken"=>$token->getToken(), "verified"=>true ];
+    
+        $_SESSION['user'] = $out;
         $_SESSION['token'] = $token->getToken();
-
-        $db = new User();
-        $id = $db->findId(["email"=>$out['email']]);
-
-        $user = $db->get($id);
-        $_SESSION['user'] = $user;
-
+        
         if ($token->getExpires() < time()) {
             $token->getRefreshToken();
         }
-
         // Use these details to create a new profile
-        //header("Location: /index.html");
+        header("Location: /index.html");
 
     } catch (Exception $e) {
 

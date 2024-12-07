@@ -45,9 +45,9 @@ class Auth {
                 ]
             ]);
 
-            if ($exists) {
-                throw new Exception('Email or username already exists');
-            }
+//            if ($exists) {
+//                throw new Exception('Email or username already exists');
+//            }
 
             // Generate verification code
             $verificationCode = random_int(100000, 999999);
@@ -66,7 +66,7 @@ class Auth {
  */
             $user = $this->db->users->findOne([ 'email' => $data['email']]);
 
-             // Create user document
+             // Update user document
                 $result = $this->db->users->updateOne(['_id'=>$user['_id']],
                 [
                     '$set' => [
@@ -110,7 +110,7 @@ class Auth {
             return [
                 'success' => true,
                 'message' => 'Registration successful. Please check your email for verification code.',
-                'userId' => (string)$result->getInsertedId()
+                'userId' => (string)$user['_id']
             ];
 
         } catch (Exception $e) {
@@ -164,7 +164,7 @@ class Auth {
         $this->mail->sendVerification($data['email'], $verificationCode);
         return [
             'success' => true,
-            'message' => 'Registration successful. Please check your email for verification code.'
+            'message' => 'Verfication email sent successfully. Please check your email for verification code.'
         ];
 
 
