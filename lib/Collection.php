@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/db.php';
 
 class Collection {
     private $collection;
@@ -23,10 +23,10 @@ class Collection {
     }
 
     public function get($id = null) {
-        if ($id) {
+        if ($id && !is_null($id)) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
-            return $this->collection->find()->toArray();
+            return $this->collection->find();
         }
     }
 

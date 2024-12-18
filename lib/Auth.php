@@ -64,43 +64,72 @@ class Auth {
     "language": "en"
             },
  */
-            $user = $this->db->users->findOne([ 'email' => $data['email']]);
+$updateFields = [
+    'email' => $data['email'],
+    'username' => $data['username'],
+    'personalInfo' => [
+        'firstName' => $data['firstName'],
+        'lastName' => $data['lastName'],
+        'email' => $data['email'],
+        'language' => isset($data['lang']) ? $data['lang'] : 'en'
+    ],
+    'auth' => [
+        'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
+        'verificationCode' => $verificationCode,
+        'verificationExpires' => $verificationExpires,
+        'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
+        'verified' => (isset($data['verified'])) ? $data['verified'] : false,
+        'twoFactorEnabled' => false
+    ],
+    'profile' => $data['profile'],
+    'status' => 'pending',
+    'roles' => ['user'],
+    'created' => new MongoDB\BSON\UTCDateTime(),
+    'updated' => new MongoDB\BSON\UTCDateTime()
+];
 
-             // Update user document
+$result = $this->db->users->updateOne(
+    ['_id' => $user['_id']],
+    [
+        '$replaceWith' => $updateFields
+    ]
+);
+
+// Update user document
+/*
                 $result = $this->db->users->updateOne(['_id'=>$user['_id']],
                 [
                     '$set' => [
-                    'email' => $data['email'],
-                    'username' => $data['username'],
-                    'personalInfo' => [
-                        'firstName' => $data['firstName'],
-                        'lastName' => $data['lastName'],
                         'email' => $data['email'],
-                        'language' => $data['lang']
-                    ],
-                    'auth' => [
-                        'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
-                        'verificationCode' => $verificationCode,
-                        'verificationExpires' => $verificationExpires,
-                        'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
-                        'verified' => (isset($data['verified']))? $data['verified']:false,
-                        'twoFactorEnabled' => false
-                    ],
-                    'profile' => array_merge($data['profile'], [
-                        'avatar' => null
-                    ]),
-                    'status' => 'pending',
-                    'roles' => ['user'],
-                    'created' => new MongoDB\BSON\UTCDateTime(),
-                    'updated' => new MongoDB\BSON\UTCDateTime()
+                        'username' => $data['username'],
+                        'personalInfo' => [
+                            'firstName' => $data['firstName'],
+                            'lastName' => $data['lastName'],
+                            'email' => $data['email'],
+                            'language' => isset($data['lang']) ? $data['lang'] : 'en'
+                        ],
+                        'auth' => [
+                            'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
+                            'verificationCode' => $verificationCode,
+                            'verificationExpires' => $verificationExpires,
+                            'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
+                            'verified' => (isset($data['verified']))? $data['verified']:false,
+                            'twoFactorEnabled' => false
+                        ],
+                        'profile' => array_merge($data['profile'], [
+                            'avatar' => null
+                        ]),
+                        'status' => 'pending',
+                        'roles' => ['user'],
+                        'created' => new MongoDB\BSON\UTCDateTime(),
+                        'updated' => new MongoDB\BSON\UTCDateTime()
                     ]
                 ]
                 );
-
+ */
             // Insert user
             //$result = $this->db->users->insertOne($user);
-
-            if (!$result->getModifiedCount()) {
+            if ($result['success']!=1) {
                 throw new Exception('Failed to create user');
             }
 
@@ -125,7 +154,7 @@ class Auth {
         $verificationCode = random_int(100000, 999999);
         $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
 
-        $all = $this->db->users->find(["email"=>$data['email']])->toArray();
+        $all = $this->db->users->find(["email"=>$data['email']]);
         if (isset($all) && count($all)) {
             $id = $all[0]->_id;
         }
