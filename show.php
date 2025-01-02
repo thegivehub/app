@@ -1,38 +1,17 @@
 #!/usr/local/bin/php
 <?php
-
-// Autoloader function to load the required class file based on the endpoint
-spl_autoload_register(function ($className) {
-    $filePath = __DIR__ . "/lib/$className.php";
-    if (file_exists($filePath)) {
-        require_once $filePath;
-    } else {
-        try {
-            $myclass = file_get_contents("lib/Collection.php");
-            $myclass = preg_replace("/\%\%(.+?)\%\%/", $className, $myclass);
-            
-            eval($myclass);
-            $test = new $className();
-
-            if (!$test) {
-                throw new Exception('Invalid collection');
-            }
-        } catch(e) {
-            http_response_code(404);
-            // Set headers
-            header('Access-Control-Allow-Origin: *');
-            header('Content-Type: application/json');
-            echo json_encode(["error" => "Class $className not found"]);
-            exit;
-        }
-    }
-});
+require 'vendor/autoload.php';
+require_once __DIR__ . '/lib/db.php';
+require(__DIR__."/lib/autoload.php");
 
 array_shift($argv);
 
 $collection = ucfirst(array_shift($argv));
+print $collection."\n";
 
-require_once "lib/{$collection}.php";
+if (file_exists("lib/{$collection}.php")) {
+    include __DIR__."/lib/{$collection}.php";
+}
 $obj = new $collection();
 // $results = $campaign->create($newCampaign);
 
@@ -57,6 +36,8 @@ if (count($argv)) {
 } else {
     $out = $obj->read();
 }
+
+print_r($obj);
 print json_encode($out, JSON_PRETTY_PRINT);
 // Update
 //$campaignId = 'INSERT_CAMPAIGN_ID_HERE'; // replace with an actual campaign ID
