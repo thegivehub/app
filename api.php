@@ -10,6 +10,7 @@ require_once __DIR__ . '/lib/db.php';
  */
 function sendJson($code, $data, $exit = true) {
     http_response_code($code);
+    header('Access-Control-Allow-Origin: *');
     header('Content-Type: application/json');
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($exit) {
@@ -39,6 +40,7 @@ function logMessage($message, array $context = [], $level = 'info') {
     
     error_log($logEntry, 3, $logFile);
 }
+
 // Autoloader function to load the required class file based on the endpoint
 spl_autoload_register(function ($className) {
     $filePath = __DIR__ . "/lib/$className.php";
@@ -99,11 +101,26 @@ if (count($actions)) {
         $action = preg_replace_callback("/\-(\w)/", function($m) {
             return strtoupper($m[1]);
         }, $action);
-
-        if (method_exists($instance, $action)) {
-            $out = $instance->$action($posted);
-            print json_encode($out);
-            exit;
+        
+        switch ($action) {
+            case 'register':
+                $result = $instance->register($posted);
+                echo json_encode($result);
+                exit;
+            case 'send-verification':
+                $result = $instance->sendVerification($posted);
+                echo json_encode($result);
+                exit;
+            case 'verify-code':
+                $result = $instance->verifyCode($posted);
+                echo json_encode($result);
+                exit;
+            default:
+                if (method_exists($instance, $action)) {
+                    $out = $instance->$action($posted);
+                    print json_encode($out);
+                    exit;
+                }
         }
     }
 }
