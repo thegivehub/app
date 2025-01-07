@@ -384,7 +384,7 @@ body {
 }
 
 .back-button {
-    background: white;
+    background: var(--gray-800);
     border: 1px solid var(--gray-200);
 }
 
