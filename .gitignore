@@ -31,3 +31,4 @@ dump
 oauth.txt
 info.php
 img/avatars/*.jpeg
+img/avatars/**
