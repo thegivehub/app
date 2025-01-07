@@ -210,9 +210,24 @@
         },
 
         init() {
+            let args = app.parseQuery();
+            let keys = Object.keys(args);
+            for (let key of keys) {
+                let val = args[key];
+                key = key.replace(/[\-_](\w)/g, function(m) { return m[1].toUpperCase(); });
+                $(`#${key}`).value = val;
+            }
             this.setupEventListeners();
             this.setupPasswordStrength();
             this.setupAvatarUpload();
+            $("#email").focus();
+        },
+        
+        parseQuery() {
+            let out = {};
+            location.search.replace(/^\?/,'').split(/\&/).forEach((item)=>{ let parts = item.split(/=/); if (parts[0]) out[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]); });
+
+            return out;
         },
 
         setupEventListeners() {
@@ -302,47 +317,6 @@
             });
 
             return Object.values(requirements).every(Boolean);
-        },
-
-        async handleAvatarUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                this.showError('avatarError', 'Please select an image file');
-                return;
-            }
-
-            try {
-                // Show preview
-                const reader = new FileReader();
-                let myimg = '';
-                reader.onload = (e) => {
-                    this.elements.avatarPreview.src = e.target.result;
-                    this.elements.avatarPreview.style.display = 'block';
-                    $("#profileImg").value = e.target.result;
-                    myimg = e.target.result;
-                };
-                reader.readAsDataURL(file);
-
-                // Upload to server
-                const formData = new FormData();
-                formData.append('avatar', file);
-                formData.append('username', document.querySelector("#username").value);
-                formData.append('email', document.querySelector("#email").value);
-
-                const response = await fetch('/api/auth/upload-avatar', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error || 'Failed to upload avatar');
-                }
-            } catch (error) {
-                this.showError('avatarError', error.message);
-            }
         },
 
         prevStep() {
@@ -557,31 +531,40 @@ async verification() {
         throw new Error(verificationResult.error || 'Invalid verification code');
     }
 },
-// Modify the existing handleRegistration method to include verification
 async handleRegistration(e) {
     e.preventDefault();
-
-    //if (this.currentStep !== 3) {
-    //    return;
-    //}
-
     this.setLoading(true);
 
     try {
         const formData = new FormData(this.elements.form);
-
-        // Then complete registration
+        
+        // Log the form data to debug
+        console.log('Form data:', Object.fromEntries(formData));
+        
+        // Structure the registration data
         const registrationData = {
             email: formData.get('email'),
             username: formData.get('username'),
             password: formData.get('password'),
-            profile: {
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            type: 'donor',  // default type
+            status: 'pending',
+            personalInfo: {
                 firstName: formData.get('firstName'),
                 lastName: formData.get('lastName'),
-                pic: formData.get('profileImg')
+                email: formData.get('email'),
+                language: 'en'
+            },
+            profile: {
+                avatar: formData.get('profileImg') || null
             }
         };
 
+        // Log the structured data to debug
+        console.log('Registration data:', registrationData);
+
+        // Complete registration
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
@@ -591,6 +574,7 @@ async handleRegistration(e) {
         });
 
         const result = await response.json();
+        console.log('Registration result:', result);
 
         if (result.success) {
             this.showStep('success');
@@ -601,6 +585,48 @@ async handleRegistration(e) {
         this.showError('verificationError', error.message);
     } finally {
         this.setLoading(false);
+    }
+},
+// Avatar upload handler
+async handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        this.showError('avatarError', 'Please select an image file');
+        return;
+    }
+
+    try {
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.elements.avatarPreview.src = e.target.result;
+            this.elements.avatarPreview.style.display = 'block';
+            document.getElementById('profileImg').value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to server
+        const formData = new FormData();
+        formData.append('avatar', file);
+        formData.append('username', document.getElementById('username').value);
+        formData.append('email', document.getElementById('email').value);
+
+        const response = await fetch('/api/auth/upload-avatar', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to upload avatar');
+        }
+
+        // Store the returned avatar URL
+        document.getElementById('profileImg').value = result.filename || result.url;
+    } catch (error) {
+        this.showError('avatarError', error.message);
     }
 },
 
