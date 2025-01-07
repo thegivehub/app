@@ -14,21 +14,22 @@ class Auth {
     public function __construct() {
         $this->db = new Database();
         $this->db->users = $this->db->getCollection('users');
-        // Initialize mailer
         $this->mail = new Mailer();
         
-        // Load config
         $this->config = [
             'jwt_secret' => '6ABD1CF21B5743C99A283D9184AB6F1A15E8FC1F141C749E39B49B6FD3E9D705',
-            'jwt_expire' => 3600 * 24, // 24 hours
-            'verification_expire' => 3600, // 1 hour
+            'jwt_expire' => 3600 * 24,
+            'verification_expire' => 3600,
             'upload_dir' => __DIR__ . '/../img/avatars',
-            'avatar_max_size' => 5 * 1024 * 1024 // 5MB
+            'avatar_max_size' => 5 * 1024 * 1024
         ];
     }
 
     public function register($data) {
         try {
+            // Debug incoming data
+            error_log("Registration data: " . print_r($data, true));
+
             // Validate required fields
             $requiredFields = ['email', 'username', 'password'];
             foreach ($requiredFields as $field) {
@@ -37,100 +38,74 @@ class Auth {
                 }
             }
 
-            // Check if email or username exists
-            $exists = $this->db->users->findOne([
-                '$or' => [
-                    ['email' => $data['email']],
-                    ['username' => $data['username']]
-                ]
+            // Check for existing user
+            $existingUser = $this->db->users->findOne([
+                'email' => $data['email']
             ]);
-
-//            if ($exists) {
-//                throw new Exception('Email or username already exists');
-//            }
 
             // Generate verification code
             $verificationCode = random_int(100000, 999999);
             $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
-/*
-  "type": "donor",
-  "status": "active",
-  "personalInfo": {
-    "firstName": "Sarah",
-    "lastName": "Chen",
-    "email": "sarah.chen@email.com",
-    "phone": "+1-415-555-0101",
-    "timezone": "America/Los_Angeles",
-    "language": "en"
-            },
- */
-$updateFields = [
-    'email' => $data['email'],
-    'username' => $data['username'],
-    'personalInfo' => [
-        'firstName' => $data['firstName'],
-        'lastName' => $data['lastName'],
-        'email' => $data['email'],
-        'language' => isset($data['lang']) ? $data['lang'] : 'en'
-    ],
-    'auth' => [
-        'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
-        'verificationCode' => $verificationCode,
-        'verificationExpires' => $verificationExpires,
-        'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
-        'verified' => (isset($data['verified'])) ? $data['verified'] : false,
-        'twoFactorEnabled' => false
-    ],
-    'profile' => $data['profile'],
-    'status' => 'pending',
-    'roles' => ['user'],
-    'created' => new MongoDB\BSON\UTCDateTime(),
-    'updated' => new MongoDB\BSON\UTCDateTime()
-];
 
-$result = $this->db->users->updateOne(
-    ['_id' => $user['_id']],
-    [
-        '$replaceWith' => $updateFields
-    ]
-);
-
-// Update user document
-/*
-                $result = $this->db->users->updateOne(['_id'=>$user['_id']],
-                [
-                    '$set' => [
-                        'email' => $data['email'],
-                        'username' => $data['username'],
-                        'personalInfo' => [
-                            'firstName' => $data['firstName'],
-                            'lastName' => $data['lastName'],
-                            'email' => $data['email'],
-                            'language' => isset($data['lang']) ? $data['lang'] : 'en'
-                        ],
-                        'auth' => [
-                            'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
-                            'verificationCode' => $verificationCode,
-                            'verificationExpires' => $verificationExpires,
-                            'googleToken' => (isset($data['googleToken'])) ? $data['googleToken'] : '',
-                            'verified' => (isset($data['verified']))? $data['verified']:false,
-                            'twoFactorEnabled' => false
-                        ],
-                        'profile' => array_merge($data['profile'], [
-                            'avatar' => null
-                        ]),
-                        'status' => 'pending',
-                        'roles' => ['user'],
-                        'created' => new MongoDB\BSON\UTCDateTime(),
-                        'updated' => new MongoDB\BSON\UTCDateTime()
+            // Structure user document
+            $userData = [
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'type' => $data['type'] ?? 'donor',
+                'status' => 'pending',
+                'personalInfo' => [
+                    'firstName' => $data['firstName'] ?? '',
+                    'lastName' => $data['lastName'] ?? '',
+                    'email' => $data['email'],
+                    'language' => $data['personalInfo']['language'] ?? 'en'
+                ],
+                'auth' => [
+                    'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
+                    'verificationCode' => $verificationCode,
+                    'verificationExpires' => $verificationExpires,
+                    'verified' => false,
+                    'twoFactorEnabled' => false,
+                    'lastLogin' => new MongoDB\BSON\UTCDateTime()
+                ],
+                'profile' => array_merge([
+                    'avatar' => null,
+                    'bio' => '',
+                    'preferences' => [
+                        'emailNotifications' => true,
+                        'currency' => 'USD'
                     ]
-                ]
-                );
- */
-            // Insert user
-            //$result = $this->db->users->insertOne($user);
-            if ($result['success']!=1) {
-                throw new Exception('Failed to create user');
+                ], $data['profile'] ?? []),
+                'roles' => ['user'],
+                'updated' => new MongoDB\BSON\UTCDateTime()
+            ];
+
+            if ($existingUser) {
+                // If user exists but isn't verified, update their info
+                if ($existingUser['status'] === 'pending' || !$existingUser['auth']['verified']) {
+                    $result = $this->db->users->updateOne(
+                        ['email' => $data['email']],
+                        [
+                            '$set' => $userData,
+                            '$setOnInsert' => [
+                                'created' => new MongoDB\BSON\UTCDateTime()
+                            ]
+                        ]
+                    );
+
+                    if (!$result->getModifiedCount() && !$result->getUpsertedCount()) {
+                        throw new Exception('Failed to update user');
+                    }
+                } else {
+                    throw new Exception('Email already registered');
+                }
+            } else {
+                // New user
+                $userData['created'] = new MongoDB\BSON\UTCDateTime();
+                $result = $this->db->users->insertOne($userData);
+
+                if (!$result->getInsertedCount()) {
+                    throw new Exception('Failed to create user');
+                }
             }
 
             // Send verification email
@@ -139,64 +114,64 @@ $result = $this->db->users->updateOne(
             return [
                 'success' => true,
                 'message' => 'Registration successful. Please check your email for verification code.',
-                'userId' => (string)$user['_id']
+                'userId' => (string)($result->getInsertedId() ?? $existingUser['_id'])
             ];
 
         } catch (Exception $e) {
+            error_log("Registration error: " . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()
             ];
         }
     }
-    
-    function sendVerification($data) {
+
+    public function sendVerification($data) {
         $verificationCode = random_int(100000, 999999);
         $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
 
-        $all = $this->db->users->find(["email"=>$data['email']]);
-        if (isset($all) && count($all)) {
-            $id = $all[0]->_id;
-        }
-        if ($id) {
-            $user = [
+        // Prepare the data for upsert
+        $update = [
+            '$set' => [
                 'email' => $data['email'],
-                'personalInfo' => [
-                    'email' => $data['email']
-                ],
-                'auth' => [
-                    'verificationCode' => $verificationCode,
-                    'verificationExpires' => $verificationExpires,
-                    'verified' => false,
-                    'twoFactorEnabled' => false
-                ]
-            ];
-
-            $result = $this->db->users->updateOne(['_id' => new MongoDB\BSON\ObjectId($id)], ['$set' => $user]);
-
-        } else {
-            $user = [
-                'email' => $data['email'],
-                'personalInfo' => [
-                    'email' => $data['email']
-                ],
-                'auth' => [
-                    'verificationCode' => $verificationCode,
-                    'verificationExpires' => $verificationExpires,
-                    'verified' => false,
-                    'twoFactorEnabled' => false
-                ]
-            ];
-
-            $result = $this->db->users->insertOne($user);
-        }
-        $this->mail->sendVerification($data['email'], $verificationCode);
-        return [
-            'success' => true,
-            'message' => 'Verfication email sent successfully. Please check your email for verification code.'
+                'personalInfo.email' => $data['email'],
+                'auth.verificationCode' => $verificationCode,
+                'auth.verificationExpires' => $verificationExpires,
+                'auth.verified' => false,
+                'auth.twoFactorEnabled' => false
+            ],
+            '$setOnInsert' => [
+                'created' => new MongoDB\BSON\UTCDateTime(),
+                'status' => 'pending',
+                'roles' => ['user']
+            ]
         ];
 
+        // Set options for findOneAndUpdate
+        $options = [
+            'upsert' => true,
+            'returnDocument' => MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER
+        ];
 
+        $result = $this->db->users->findOneAndUpdate(
+            ['email' => $data['email']],  // Changed to use email as primary filter
+            $update,
+            $options
+        );
+
+        // Send verification email if we have a result
+        if ($result) {
+            $this->mail->sendVerification($data['email'], $verificationCode);
+            return [
+                'success' => true,
+                'message' => 'Verification email sent successfully. Please check your email for verification code.'
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to process verification request.'
+        ];
     }
 
     public function requestVerification($data) {
@@ -312,17 +287,16 @@ $result = $this->db->users->updateOne(
 
     public function uploadAvatar($data) {
         global $_FILES;
-        global $_GET;
-
-        $file = $_FILES['avatar'];
-        file_put_contents("x.log", json_encode($data, JSON_PRETTY_PRINT)."\n===\n".json_encode($file, JSON_PRETTY_PRINT)."\n===\n", FILE_APPEND);
+        
         try {
+            $file = $_FILES['avatar'];
+            
             // Validate file
             if (!isset($file['tmp_name'])) {
                 throw new Exception('No file uploaded');
             }
 
-            // Check file size
+            // Check file size (5MB limit)
             if ($file['size'] > $this->config['avatar_max_size']) {
                 throw new Exception('File too large');
             }
@@ -336,9 +310,9 @@ $result = $this->db->users->updateOne(
                 throw new Exception('Invalid file type');
             }
 
-            // Generate filename
+            // Generate unique filename
             $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $filename = $userId . '_' . time() . '.' . $extension;
+            $filename = uniqid() . '.' . $extension;
             $filepath = $this->config['upload_dir'] . '/' . $filename;
 
             // Create directory if it doesn't exist
@@ -351,23 +325,23 @@ $result = $this->db->users->updateOne(
                 throw new Exception('Failed to save file');
             }
 
-            // Update user
-            $result = $this->db->users->updateOne(
-                ['_id' => new MongoDB\BSON\ObjectId($userId)],
-                [
-                    '$set' => [
-                        'profile.avatar' => $filename
-                    ]
-                ]
-            );
+            // Update user if email is provided
+            if (isset($data['email'])) {
+                $result = $this->db->users->updateOne(
+                    ['email' => $data['email']],
+                    ['$set' => ['profile.avatar' => $filename]]
+                );
 
-            if (!$result->getModifiedCount()) {
-                throw new Exception('Failed to update user');
+                if (!$result->getModifiedCount()) {
+                    // Don't throw an error as the user might not exist yet
+                    // The avatar will be associated when they complete registration
+                }
             }
 
             return [
                 'success' => true,
-                'filename' => $filename
+                'filename' => $filename,
+                'url' => '/img/avatars/' . $filename
             ];
 
         } catch (Exception $e) {
