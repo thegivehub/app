@@ -138,8 +138,8 @@
                         localStorage.setItem('accessToken', data.tokens.accessToken);
                         localStorage.setItem('refreshToken', data.tokens.refreshToken);
                         
-                        // Redirect to dashboard
-                        window.location.href = '/dashboard.html';
+                        // Redirect to root
+                        window.location.href = '/';
                     } else {
                         this.showError('loginError', data.error || 'Login failed');
                     }

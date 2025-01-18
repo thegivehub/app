@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --red-500: #ef4444;
+            --success: #22c55e;
+            --background-color: #f4f4f9;
+            --yellow-500: #eab308;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Lexend", -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: var(--background-color);
+            padding: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .volunteer-header {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .volunteer-header {
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .volunteer-header h1 {
+            font-size: 1.5rem;
+            color: var(--gray-700);
+        }
+
+        .volunteer-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .volunteer-layout {
+                display: grid;
+                grid-template-columns: 250px 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .volunteer-nav {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--gray-100);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .volunteer-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .volunteer-content {
+                padding: 2rem;
+            }
+        }
+
+        .volunteer-section {
+            display: none;
+        }
+
+        .volunteer-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.15s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .btn {
+                width: auto;
+            }
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .opportunity-card {
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .opportunity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-applied {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .success-message {
+            display: none;
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--gray-100);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .time-log {
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background: var(--gray-100);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="volunteer-header">
+            <h1>Volunteer Dashboard</h1>
+            <div id="saveStatus" class="success-message"></div>
+        </div>
+
+        <div class="volunteer-layout">
+            <div class="volunteer-nav">
+                <div class="nav-item active" data-section="overview">Overview</div>
+                <div class="nav-item" data-section="opportunities">Opportunities</div>
+                <div class="nav-item" data-section="schedule">Schedule</div>
+                <div class="nav-item" data-section="skills">Skills & Interests</div>
+            </div>
+
+            <div class="volunteer-content">
+                <!-- Overview Section -->
+                <div class="volunteer-section active" id="overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div id="hoursContributed" class="stat-value">--</div>
+                            <div class="stat-label">Hours Contributed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="projectsSupported" class="stat-value">--</div>
+                            <div class="stat-label">Projects Supported</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="activeApplications" class="stat-value">--</div>
+                            <div class="stat-label">Active Applications</div>
+                        </div>
+                    </div>
+
+                    <h3>Recent Activity</h3>
+                    <div class="time-log">
+                        <div>
+                            <strong>Water Project Documentation</strong>
+                            <div style="color: var(--gray-600)">April 5, 2024</div>
+                        </div>
+                        <div>4 hours</div>
+                    </div>
+                    <div class="time-log">
+                        <div>
+                            <strong>Translation Services</strong>
+                            <div style="color: var(--gray-600)">April 3, 2024</div>
+                        </div>
+                        <div>2 hours</div>
+                    </div>
+                </div>
+
+                <!-- Opportunities Section -->
+                <div class="volunteer-section" id="opportunities">
+                    <div class="opportunity-card">
+                        <div class="opportunity-header">
+                            <h3>Project Documentation Specialist</h3>
+                            <span class="badge badge-available">Available</span>
+                        </div>
+                        <p>Help document the progress and impact of our water access projects in Colombia.</p>
+                        <div style="margin: 1rem 0;">
+                            <span class="skill-tag">Photography</span>
+                            <span class="skill-tag">Writing</span>
+                            <span class="skill-tag">Spanish</span>
+                        </div>
+                        <button class="btn btn-primary">Apply Now</button>
+                    </div>
+
+                    <div class="opportunity-card">
+                        <div class="opportunity-header">
+                            <h3>Community Outreach Coordinator</h3>
+                            <span class="badge badge-applied">Applied</span>
+                        </div>
+                        <p>Coordinate with local communities to identify and validate potential projects.</p>
+                        <div style="margin: 1rem 0;">
+                            <span class="skill-tag">Communication</span>
+                            <span class="skill-tag">Project Management</span>
+                            <span class="skill-tag">Local Knowledge</span>
+                        </div>
+                        <button class="btn btn-primary" disabled>Application Pending</button>
+                    </div>
+                </div>
+
+                <!-- Schedule Section -->
+                <div class="volunteer-section" id="schedule">
+                    <div class="form-group">
+                        <label>Availability</label>
+                        <div style="margin-top: 1rem;">
+                            <div class="time-log">
+                                <div>
+                                    <strong>Monday</strong>
+                                    <div style="color: var(--gray-600)">9:00 AM - 5:00 PM</div>
+                                </div>
+                                <button class="btn btn-primary">Edit</button>
+                            </div>
+                            <div class="time-log">
+                                <div>
+                                    <strong>Wednesday</strong>
+                                    <div style="color: var(--gray-600)">1:00 PM - 6:00 PM</div>
+                                </div>
+                                <button class="btn btn-primary">Edit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">Add Availability</button>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="volunteer-section" id="skills">
+                    <form id="skillsForm">
+                        <div class="form-group">
+                            <label>Languages</label>
+                            <div class="skill-tags" id="languageSkills">
+                                <input type="text" id="languageInput" placeholder="Type a language and press Enter">
+                                <div class="selected-skills" id="languages"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Professional Skills</label>
+                            <div class="skill-tags" id="professionalSkills">
+                                <input type="text" id="skillInput" placeholder="Type a skill and press Enter">
+                                <div class="selected-skills" id="selectedSkills"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Areas of Interest</label>
+                            <select multiple id="interests">
+                                <option value="water_access">Water Access Projects</option>
+                                <option value="education">Education Initiatives</option>
+                                <option value="healthcare">Healthcare Programs</option>
+                                <option value="environmental">Environmental Projects</option>
+                                <option value="community">Community Development</option>
+                                <option value="technology">Technology Education</option>
+                                <option value="agriculture">Agricultural Projects</option>
+                                <option value="renewable_energy">Renewable Energy</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Certifications</label>
+                            <div id="certificationsContainer">
+                                <div id="certifications" class="certification-list"></div>
+                                <div class="certification-upload">
+                                    <label>Add New Certification</label>
+                                    <input type="text" id="certName" placeholder="Certification Name">
+                                    <input type="text" id="certIssuer" placeholder="Issuing Organization">
+                                    <input type="date" id="certDate" placeholder="Issue Date">
+                                    <input type="file" id="certFile" accept=".pdf,.jpg,.png">
+                                    <button type="button" class="btn btn-primary" onclick="app.uploadCertification()">Upload Certification</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Skills</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+
+    const app = {
+        data: {
+            volunteer: null,
+            opportunities: [],
+            schedule: [],
+            skills: null
+        },
+        state: {
+            currentSection: 'overview',
+            loading: false,
+            saveStatus: null
+        },
+        init() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            this.bindEvents();
+            this.loadVolunteerData();
+        },
+        bindEvents() {
+            $$('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.changeSection(item.dataset.section);
+                });
+            });
+
+            $('#skillsForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveSkills();
+            });
+        },
+        async loadVolunteerData() {
+            try {
+                this.state.loading = true;
+                this.render();
+
+                const [volunteer, opportunities] = await Promise.all([
+                    app.volunteerManager.getProfile(),
+                    app.volunteerManager.getOpportunities()
+                ]);
+
+                this.data.volunteer = volunteer;
+                this.data.opportunities = opportunities;
+
+                this.state.loading = false;
+                this.render();
+            } catch (error) {
+                console.error('Error loading volunteer data:', error);
+                this.showError('Failed to load volunteer data');
+            }
+        },
+        async saveSkills() {
+            try {
+                const formData = {
+                    languages: $('#languages').value,
+                    professionalSkills: $('#professionalSkills').value,
+                    interests: Array.from($('#interests').selectedOptions).map(opt => opt.value),
+                    certifications: $('#certifications').value
+                };
+
+                await app.volunteerManager.updateSkills(formData);
+                this.showSuccess('Skills updated successfully');
+            } catch (error) {
+                console.error('Error saving skills:', error);
+                this.showError('Failed to save skills');
+            }
+        },
+        async applyForOpportunity(opportunityId) {
+            try {
+                await app.volunteerManager.applyForOpportunity(opportunityId);
+                this.showSuccess('Application submitted successfully');
+                await this.loadVolunteerData(); // Reload to update status
+            } catch (error) {
+                console.error('Error applying for opportunity:', error);
+                this.showError('Failed to submit application');
+            }
+        },
+        async updateSchedule(scheduleData) {
+            try {
+                await app.volunteerManager.updateSchedule(scheduleData);
+                this.showSuccess('Schedule updated successfully');
+                await this.loadVolunteerData();
+            } catch (error) {
+                console.error('Error updating schedule:', error);
+                this.showError('Failed to update schedule');
+            }
+        },
+        changeSection(section) {
+            this.state.currentSection = section;
+            this.render();
+        },
+        showSuccess(message) {
+            this.state.saveStatus = { type: 'success', message };
+            this.render();
+            setTimeout(() => {
+                this.state.saveStatus = null;
+                this.render();
+            }, 3000);
+        },
+        showError(message) {
+            this.state.saveStatus = { type: 'error', message };
+            this.render();
+        },
+        render() {
+            // Update active section
+            $$('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.section === this.state.currentSection);
+            });
+            $$('.volunteer-section').forEach(section => {
+                section.classList.toggle('active', section.id === this.state.currentSection);
+            });
+
+            // Update save status message
+            const statusEl = $('#saveStatus');
+            if (this.state.saveStatus) {
+                statusEl.textContent = this.state.saveStatus.message;
+                statusEl.className = `success-message ${this.state.saveStatus.type}`;
+                statusEl.style.display = 'block';
+            } else {
+                statusEl.style.display = 'none';
+            }
+
+            // Update form fields if data is loaded
+            if (this.data.volunteer && !this.state.loading) {
+                // Overview section stats
+                $('#hoursContributed').textContent = this.data.volunteer.stats.hoursContributed || '0';
+                $('#projectsSupported').textContent = this.data.volunteer.stats.projectsSupported || '0';
+                $('#activeApplications').textContent = this.data.volunteer.stats.activeApplications || '0';
+
+                // Skills section
+                $('#languages').value = this.data.volunteer.skills?.languages || '';
+                $('#selectedSkills').value = this.data.volunteer.skills?.professionalSkills || '';
+                $('#certifications').value = this.data.volunteer.skills?.certifications || '';
+
+                // Set selected interests
+                const interests = this.data.volunteer.skills?.interests || [];
+                Array.from($('#interests').options).forEach(option => {
+                    option.selected = interests.includes(option.value);
+                });
+            }
+
+            // Update opportunities section
+            if (this.data.opportunities?.length) {
+                const opportunitiesContainer = $('#opportunities');
+                opportunitiesContainer.innerHTML = this.data.opportunities.map(opp => `
+                    <div class="opportunity-card">
+                        <div class="opportunity-header">
+                            <h3>${opp.title}</h3>
+                            <span class="badge badge-${opp.status}">${opp.status}</span>
+                        </div>
+                        <p>${opp.description}</p>
+                        <div style="margin: 1rem 0;">
+                            ${app.skills && opp.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                        </div>
+                        <button 
+                            class="btn btn-primary" 
+                            ${opp.status === 'applied' ? 'disabled' : ''}
+                            onclick="app.applyForOpportunity('${opp.id}')"
+                        >
+                            ${opp.status === 'applied' ? 'Application Pending' : 'Apply Now'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // Update loading state
+            document.body.classList.toggle('loading', this.state.loading);
+        }
+    };
+
+    window.app = app;
+    document.addEventListener('DOMContentLoaded', () => app.init());
+})();
+</script>
+<script>
+// Initialize our global app object
+window.app = window.app || {};
+</script>
+<script src="/lib/APIConfig.js"></script>
+<script src="/lib/UserManager.js"></script>
+<script src="/lib/VolunteerManager.js"></script>
+</body>
+</html>

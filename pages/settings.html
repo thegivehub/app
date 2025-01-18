@@ -281,9 +281,23 @@
                             <label for="displayName">Display Name</label>
                             <input type="text" id="displayName" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="display:flex">
+                            <span style="display:inline-block;width:49%">
+                                <label for="displayName">First Name</label>
+                                <input style="width:98%;display:inline-block;" type="text" id="first_name" name="first_name" required>
+                            </span>
+                            <span style="display:inline-block;width:-webkit-fill-available">
+                                <label for="displayName">Last Name</label>
+                                <input style="width:100%;display:inline-block;" type="text" id="last_name" name="last_name" required>
+                            </span>
+                        </div>
+                         <div class="form-group">
+                            <label for="email">Phone</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" required>
+                            <input type="email" id="email" name="email" required>
                         </div>
                         <div class="form-group">
                             <label for="bio">Bio</label>
@@ -293,7 +307,7 @@
                             <label for="location">Location</label>
                             <input type="text" id="location">
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
 
@@ -377,7 +391,6 @@
             </div>
         </div>
     </div>
-
 <script>
 (function() {
     const $ = str => document.querySelector(str);
@@ -398,6 +411,13 @@
             apiBase: 'https://app.thegivehub.com/api'
         },
         init() {
+            // First check if user is authenticated
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
             this.bindEvents();
             this.loadUserData();
         },
@@ -409,12 +429,14 @@
                 });
             });
 
-            // Form submissions
-            $('#profileForm')?.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveProfile();
-            });
-
+            // Remove the form event listener and just use the button click
+            const saveButton = $('button.btn-primary');
+            if (saveButton) {
+                saveButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.saveProfile();
+                });
+            }
             // Notification toggles
             $$('input[type="checkbox"]').forEach(toggle => {
                 toggle.addEventListener('change', () => {
@@ -427,63 +449,94 @@
                 this.state.loading = true;
                 this.render();
 
-                // Fetch user data
-                const userId = this.getCurrentUserId();
-                const [user, preferences, payments] = await Promise.all([
-                    this.fetchData('users', userId),
-                    this.fetchData('preferences', userId),
-                    this.fetchData('payment_methods', userId)
+                // Use our manager classes for consistent SDK handling
+                const [user, preferences] = await Promise.all([
+                    app.settingsManager.getUserProfile(), // This calls /api/user/me
+                    app.settingsManager.getPreferences()  // This calls /api/user/preferences
                 ]);
+
+                if (!user) {
+                    throw new Error('Failed to load user data');
+                }
+
+                console.log('Loaded user data:', user);
+                console.log('Loaded preferences:', preferences);
 
                 this.data.user = user;
                 this.data.preferences = preferences;
-                this.data.paymentMethods = payments;
 
                 this.state.loading = false;
                 this.render();
             } catch (error) {
                 console.error('Error loading user data:', error);
                 this.showError('Failed to load user data');
+                
+                // If token is invalid/missing, redirect to login
+                if (error.message.includes('No authentication token')) {
+                    window.location.href = '/login.html';
+                }
             }
         },
-        async fetchData(collection, id) {
+
+       async fetchData(collection, id) {
             const url = `${this.config.apiBase}/${collection}${id ? `?id=${id}` : ''}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         },
-        async saveProfile() {
+
+        async saveProfile(evt) {
             try {
+                if (evt) evt.preventDefault();
+
                 const formData = {
                     displayName: $('#displayName').value,
+                    personalInfo: {
+                        firstName: $('#first_name').value,
+                        lastName: $('#last_name').value,
+                        phone: $('#phone').value,
+                        email: $('#email').value,
+                        location: $('#location').value
+                    },
                     email: $('#email').value,
-                    bio: $('#bio').value,
-                    location: $('#location').value
+                    profile: {
+                        bio: $('#bio').value,
+                    }
                 };
-
-                await this.updateData('users', this.getCurrentUserId(), formData);
+                
+                console.log("Saving profile:", formData);
+                await app.settingsManager.updateProfile(formData);
                 this.showSuccess('Profile updated successfully');
+                
+                // Reload user data to ensure we have latest state
+                await this.loadUserData();
             } catch (error) {
                 console.error('Error saving profile:', error);
                 this.showError('Failed to save profile');
             }
+
+            return false;
         },
+
         async savePreferences() {
             try {
                 const preferences = {
-                    campaignUpdates: $('#notifCampaign').checked,
-                    newDonations: $('#notifDonations').checked,
-                    milestones: $('#notifMilestones').checked,
-                    marketing: $('#notifMarketing').checked
+                    emailNotifications: {
+                        campaignUpdates: $('#notifCampaign').checked,
+                        newDonations: $('#notifDonations').checked,
+                        milestones: $('#notifMilestones').checked,
+                        marketing: $('#notifMarketing').checked
+                    }
                 };
 
-                await this.updateData('preferences', this.getCurrentUserId(), preferences);
+                await app.settingsManager.updatePreferences(preferences);
                 this.showSuccess('Preferences updated successfully');
             } catch (error) {
                 console.error('Error saving preferences:', error);
                 this.showError('Failed to save preferences');
             }
         },
+
         async updateData(collection, id, data) {
             const url = `${this.config.apiBase}/${collection}?id=${id}`;
             const response = await fetch(url, {
@@ -496,13 +549,21 @@
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         },
+
         changeSection(section) {
             this.state.currentSection = section;
             this.render();
         },
+
         getCurrentUserId() {
-            // This should be replaced with actual user authentication logic
-            return localStorage.getItem('userId') || '123';
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            
+            const decoded = app.api.decodeToken(token);
+            return decoded?.sub; // 'sub' is the standard JWT claim for user ID
         },
         showSuccess(message) {
             this.state.saveStatus = { type: 'success', message };
@@ -538,9 +599,12 @@
             // Update form fields if data is loaded
             if (this.data.user && !this.state.loading) {
                 $('#displayName').value = this.data.user.displayName || '';
+                $('#first_name').value = this.data.user.personalInfo?.firstName || '';
+                $('#last_name').value = this.data.user.personalInfo?.lastName || '';
+                $('#phone').value = this.data.user.personalInfo?.phone || '';
                 $('#email').value = this.data.user.email || '';
-                $('#bio').value = this.data.user.bio || '';
-                $('#location').value = this.data.user.location || '';
+                $('#bio').value = this.data.user.profile?.bio || '';
+                $('#location').value = this.data.user.personalInfo?.location || '';
             }
 
             // Update loading state
@@ -552,5 +616,8 @@
     document.addEventListener('DOMContentLoaded', () => app.init());
 })();
 </script>
+<script src="/lib/APIConfig.js"></script>
+<script src="/lib/UserManager.js"></script>
+<script src="/lib/SettingsManager.js"></script>
 </body>
 </html>

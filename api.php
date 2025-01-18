@@ -46,7 +46,7 @@ spl_autoload_register(function ($className) {
     $filePath = __DIR__ . "/lib/$className.php";
     if (file_exists($filePath)) {
         require_once $filePath;
-    } else if (preg_match('/^[A-Za-z0-9]+$/', $className)) { // Only allow alphanumeric collection names
+    } else if (preg_match('/^[A-Za-z0-9_]+$/', $className)) { // Only allow alphanumeric collection names
         // Check if this might be a dynamic collection
         $baseCollectionPath = __DIR__ . "/lib/Collection.php";
         if (file_exists($baseCollectionPath)) {
@@ -87,14 +87,39 @@ $posted = json_decode(file_get_contents('php://input'), true);
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
+// Instantiate the required class dynamically
+$instance = new $endpoint();
+
 // Verify that the endpoint class exists
 if (!$endpoint || !class_exists($endpoint)) {
     logMessage("Invalid endpoint", ['endpoint' => $endpoint], 'error');
     sendJson(400, ["error" => "Invalid endpoint"]);
 }
+$pathParts = preg_split("/\//", $_SERVER['PATH_INFO']);
+array_shift($pathParts);
 
-// Instantiate the required class dynamically
-$instance = new $endpoint();
+if ($endpoint === 'User' && isset($pathParts) && count($pathParts) > 0) {
+        switch ($pathParts[1]) {
+            case 'profile':
+                if ($method === 'PUT') {
+                    $result = $instance->updateProfile($instance->getUserIdFromToken(), $posted);
+                    sendJson(200, $result);
+                }
+                break;
+            case 'me':
+                if ($method === 'PUT') {
+                    $result = $instance->updateProfile($instance->getUserIdFromToken(), $posted);
+                    sendJson(200, $result);
+                }
+                
+                if ($method === 'GET') {
+                    $result = $instance->me();
+                    sendJson(200, $result);
+                }
+                break;
+        }
+}
+
 
 if (count($actions)) {
     foreach ($actions as $action) {
