@@ -2,7 +2,12 @@
     Require all denied
 </FilesMatch>
 
+<Files "volunteer">
+    ForceType application/x-httpd-php
+</Files>
 <Files "api">
     ForceType application/x-httpd-php
 </Files>
-
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
