@@ -7,9 +7,9 @@ require_once "db.php";
 require_once "Mailer.php";
 
 class Auth {
-    private $db;
+    public $db;
     private $mail;
-    private $config;
+    public $config;
 
     public function __construct() {
         $this->db = new Database();
@@ -81,7 +81,7 @@ class Auth {
 
             if ($existingUser) {
                 // If user exists but isn't verified, update their info
-                if ($existingUser['status'] === 'pending' || !$existingUser['auth']['verified']) {
+                if ($existingUser['status'] === 'pending' || !isset($existingUser['auth']['verified']) || !$existingUser['auth']['verified']) {
                     $result = $this->db->users->updateOne(
                         ['email' => $data['email']],
                         [
@@ -89,12 +89,15 @@ class Auth {
                             '$setOnInsert' => [
                                 'created' => new MongoDB\BSON\UTCDateTime()
                             ]
-                        ]
+                        ],
+                        ['upsert' => true]
                     );
 
-                    if (!$result->getModifiedCount() && !$result->getUpsertedCount()) {
-                        throw new Exception('Failed to update user');
+                    if (!$result['success']) {
+                        throw new Exception($result['error'] ?? 'Failed to update user');
                     }
+
+                    $userId = $existingUser['_id'];
                 } else {
                     throw new Exception('Email already registered');
                 }
@@ -103,9 +106,11 @@ class Auth {
                 $userData['created'] = new MongoDB\BSON\UTCDateTime();
                 $result = $this->db->users->insertOne($userData);
 
-                if (!$result->getInsertedCount()) {
-                    throw new Exception('Failed to create user');
+                if (!$result['success']) {
+                    throw new Exception($result['error'] ?? 'Failed to create user');
                 }
+
+                $userId = $result['id'];
             }
 
             // Send verification email
@@ -114,7 +119,7 @@ class Auth {
             return [
                 'success' => true,
                 'message' => 'Registration successful. Please check your email for verification code.',
-                'userId' => (string)($result->getInsertedId() ?? $existingUser['_id'])
+                'userId' => $userId
             ];
 
         } catch (Exception $e) {
@@ -127,51 +132,53 @@ class Auth {
     }
 
     public function sendVerification($data) {
-        $verificationCode = random_int(100000, 999999);
-        $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
+        try {
+            $verificationCode = random_int(100000, 999999);
+            $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
 
-        // Prepare the data for upsert
-        $update = [
-            '$set' => [
+            $user = $this->db->users->findOne(['email' => $data['email']]);
+            
+            $updateData = [
                 'email' => $data['email'],
                 'personalInfo.email' => $data['email'],
                 'auth.verificationCode' => $verificationCode,
                 'auth.verificationExpires' => $verificationExpires,
                 'auth.verified' => false,
                 'auth.twoFactorEnabled' => false
-            ],
-            '$setOnInsert' => [
-                'created' => new MongoDB\BSON\UTCDateTime(),
-                'status' => 'pending',
-                'roles' => ['user']
-            ]
-        ];
+            ];
 
-        // Set options for findOneAndUpdate
-        $options = [
-            'upsert' => true,
-            'returnDocument' => MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER
-        ];
+            if ($user) {
+                $result = $this->db->users->updateOne(
+                    ['email' => $data['email']], 
+                    ['$set' => $updateData]
+                );
+            } else {
+                $userData = array_merge($updateData, [
+                    'status' => 'pending',
+                    'created' => new MongoDB\BSON\UTCDateTime(),
+                    'roles' => ['user']
+                ]);
+                
+                $result = $this->db->users->insertOne($userData);
+            }
 
-        $result = $this->db->users->findOneAndUpdate(
-            ['email' => $data['email']],  // Changed to use email as primary filter
-            $update,
-            $options
-        );
+            if (!$result['success']) {
+                throw new Exception($result['error'] ?? 'Failed to process verification');
+            }
 
-        // Send verification email if we have a result
-        if ($result) {
             $this->mail->sendVerification($data['email'], $verificationCode);
+            
             return [
                 'success' => true,
                 'message' => 'Verification email sent successfully. Please check your email for verification code.'
             ];
+        } catch (Exception $e) {
+            error_log("Send verification error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
         }
-
-        return [
-            'success' => false,
-            'message' => 'Failed to process verification request.'
-        ];
     }
 
     public function requestVerification($data) {
@@ -371,7 +378,23 @@ class Auth {
             'expires' => $expire
         ];
     }
-        /**
+    
+    public function getJwtSecret() {
+        return $this->config['jwt_secret'];
+    }
+
+    public function decodeToken($token) {
+        try {
+            return JWT::decode(
+                $token,
+                new Key($this->config['jwt_secret'], 'HS256')
+            );
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+    
+    /**
      * Generates a password reset token and sends reset email
      */
     public function handleForgotPassword($email) {
@@ -472,6 +495,28 @@ class Auth {
         $stmt->execute([$reset['user_id']]);
         
         return ['success' => true];
+    }
+    private function getUserIdFromToken() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+        
+        if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            throw new Exception('No bearer token found');
+        }
+        
+        $token = $matches[1];
+        try {
+            // Verify and decode the JWT token
+            $decoded = JWT::decode($token, new Key($this->config['jwt_secret'], 'HS256'));
+            return $decoded->sub; // Get user ID from token
+        } catch (Exception $e) {
+            throw new Exception('Invalid token');
+        }
+    }
+
+    public function getCurrentUser() {
+        $userId = $this->getUserIdFromToken();
+        return $this->db->users->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
     }
 }
 
