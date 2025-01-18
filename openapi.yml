@@ -1,0 +1,378 @@
+openapi: 3.0.0
+info:
+  title: The Give Hub API
+  description: API for The Give Hub crowdfunding platform connecting donors with remote projects
+  version: 1.0.0
+  contact:
+    name: The Give Hub Support
+    email: support@thegivehub.com
+    url: https://thegivehub.com
+
+servers:
+  - url: https://api.thegivehub.com/v1
+    description: Production server
+  - url: https://staging-api.thegivehub.com/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Campaign:
+      type: object
+      required:
+        - title
+        - description
+        - targetAmount
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        targetAmount:
+          type: number
+          format: decimal
+        currentAmount:
+          type: number
+          format: decimal
+        category:
+          type: string
+          enum: [education, water, health, agriculture, infrastructure]
+        status:
+          type: string
+          enum: [draft, active, funded, completed, cancelled]
+        location:
+          type: object
+          properties:
+            country:
+              type: string
+            region:
+              type: string
+            coordinates:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+        creator:
+          $ref: '#/components/schemas/User'
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+
+    Milestone:
+      type: object
+      required:
+        - description
+        - amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, verified, completed, failed]
+        verificationDocs:
+          type: array
+          items:
+            type: string
+            format: uri
+        verifiedBy:
+          type: string
+          format: uuid
+        completedAt:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      required:
+        - email
+        - username
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        role:
+          type: string
+          enum: [donor, creator, nomad, admin]
+        profile:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            avatar:
+              type: string
+              format: uri
+        wallet:
+          type: object
+          properties:
+            stellarAddress:
+              type: string
+            totalDonated:
+              type: number
+              format: decimal
+
+    Donation:
+      type: object
+      required:
+        - campaignId
+        - amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        campaignId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+              format: decimal
+            currency:
+              type: string
+        transaction:
+          type: object
+          properties:
+            txHash:
+              type: string
+            status:
+              type: string
+              enum: [pending, completed, failed]
+        type:
+          type: string
+          enum: [one-time, recurring]
+        created:
+          type: string
+          format: date-time
+
+    ImpactMetric:
+      type: object
+      required:
+        - name
+        - value
+        - unit
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        verificationMethod:
+          type: string
+        verifiedBy:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+
+paths:
+  /campaigns:
+    get:
+      summary: List campaigns
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campaign'
+    post:
+      summary: Create a new campaign
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+      responses:
+        '201':
+          description: Campaign created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+
+  /campaigns/{campaignId}:
+    get:
+      summary: Get campaign details
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Campaign details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+
+  /campaigns/{campaignId}/milestones:
+    post:
+      summary: Add milestone to campaign
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+      responses:
+        '201':
+          description: Milestone added successfully
+
+  /donations:
+    post:
+      summary: Create a donation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Donation'
+      responses:
+        '201':
+          description: Donation processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donation'
+
+  /impact/metrics/{campaignId}:
+    post:
+      summary: Add impact metrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImpactMetric'
+      responses:
+        '201':
+          description: Impact metrics added successfully
+
+  /auth/login:
+    post:
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+security:
+  - ApiKeyAuth: []
