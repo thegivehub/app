@@ -1,17 +1,22 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-class Model {
-    private $collection;
+abstract class Model {
+    protected $collection;
+    protected $db;
 
     public function __construct() {
-        $db = new Database();
+        $this->db = new Database();
         $collection = strtolower(get_class($this));
         
-        if (!preg_match("/s$/", $collection)) {
-            $collection .= 's';
+        // Remove 's' if it exists and add it back to ensure consistent plural form
+        $collection = rtrim($collection, 's') . 's';
+        
+        $this->collection = $this->db->getCollection($collection);
+        
+        if (!$this->collection) {
+            throw new Exception("Failed to initialize collection for " . get_class($this));
         }
-        $this->collection = $db->getCollection($collection);
     }
 
     public function create($data) {
@@ -34,20 +39,24 @@ class Model {
         if ($obj) {
             return $this->collection->find($obj);
         } 
+        return [];
     }
 
     public function findOne($obj) {
         if ($obj) {
             return $this->collection->findOne($obj);            
         } 
+        return null;
     }
 
     public function update($id, $data) {
-        return $this->collection->updateOne(['_id' => new MongoDB\BSON\ObjectId($id)], ['$set' => $data]);
+        return $this->collection->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($id)], 
+            ['$set' => $data]
+        );
     }
 
     public function delete($id) {
         return $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
     }
 }
-

@@ -37,5 +37,31 @@ class Collection {
     public function delete($id) {
         return $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
     }
+    
+    public function me() {
+        $userId = $this->getUserIdFromToken(); // You could move this to Collection class
+        if (!$userId) return null;
+
+        return $this->collection->findOne([
+            'userId' => new MongoDB\BSON\ObjectId($userId)
+        ]);
+    }
+
+    private function getUserIdFromToken() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+
+        if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            return null;
+        }
+
+        $token = $matches[1];
+        try {
+            $decoded = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
+            return $decoded->sub;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
 }
 
