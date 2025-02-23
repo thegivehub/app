@@ -18,23 +18,21 @@
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <img src="/img/white-logo.svg" width="32" height="32">
+                <img src="/img/white-logo.svg" width="32" height="32" alt="GiveHub Logo">
                 <span style="font-weight: 600; font-size: 1.25rem;">The Give Hub</span>
             </div>
             <div class="user-section">
                 <button class="new-campaign-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>Create Campaign</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Create Campaign</span>
                 </button>
                 <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
-                    <!-- Moon icon for light mode -->
                     <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
-                    <!-- Sun icon for dark mode (hidden by default) -->
                     <svg class="sun-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -64,7 +62,7 @@
             <div class="nav-title">Dashboard</div>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="/pages/dashboard.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
+                    <a href="/pages/dashboard.html" class="nav-link">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
@@ -75,53 +73,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/pages/browse.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2l9 4-9 4-9-4 9-4z"/>
-                            <path d="M12 22v-8"/>
-                            <path d="M3 10v8l9 4"/>
-                            <path d="M21 10v8l-9 4"/>
-                        </svg>
+                    <a href="/pages/browse.html" class="nav-link">
+                        <div style="height:20px;width:20px;overflow:visible;position:relative;left:-5px;top:-5px;">
+                            <svg fill="currentColor" height="32" width="32" viewBox="0 0 483.656 483.656">
+                                <!-- Campaign icon path -->
+                            </svg>
+                        </div>
                         Campaigns
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="/pages/donors.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                        Donors
-                    </a>
-                </li>
+                <!-- Additional nav items... -->
             </ul>
-
-            <div class="nav-title" style="margin-top: 2rem;">Management</div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/pages/settings.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                        </svg>
-                        Settings
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/pages/account.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
-                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 128a80 80 0 1 0 -160 0 80 80 0 1 0 160 0zM96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM49.3 464l349.5 0c-8.9-63.3-63.3-112-129-112l-91.4 0c-65.7 0-120.1 48.7-129 112zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3z"/></svg>
-                        Account
-                    </a>
-                </li>
-                 <li class="nav-item">
-                    <a href="/pages/account.html" onclick="app.loadContent(this.getAttribute('href'));return false" class="nav-link">
-                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
-                        Logout
-                    </a>
-                </li>
-             </ul>
         </nav>
     </aside>
 
@@ -135,265 +97,277 @@
             <div class="frame-error-content">
                 <h2>Unable to Load Content</h2>
                 <p>There was a problem loading the requested page. Please try again.</p>
-                <button class="retry-button" onclick="reloadFrame()">Retry</button>
+                <button class="retry-button" onclick="app.reloadFrame()">Retry</button>
             </div>
         </div>
-        <iframe 
-            id="contentFrame" 
-            class="content-frame" 
-            src="about:blank"
-            title="Content Area">
-        </iframe>
+        <iframe id="contentFrame" class="content-frame" src="about:blank" title="Content Area"></iframe>
     </main>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBD46eiABWftJ6WdJpFsQxF5iUknUoTFIo",
-    authDomain: "the-givehub.firebaseapp.com",
-    projectId: "the-givehub",
-    storageBucket: "the-givehub.firebasestorage.app",
-    messagingSenderId: "503214679990",
-    appId: "1:503214679990:web:88bb2bc6116709931ec317",
-    measurementId: "G-8SWNP3PJ94"
-  };
+    <script type="module">
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD46eiABWftJ6WdJpFsQxF5iUknUoTFIo",
+            authDomain: "the-givehub.firebaseapp.com",
+            projectId: "the-givehub",
+            storageBucket: "the-givehub.firebasestorage.app",
+            messagingSenderId: "503214679990",
+            appId: "1:503214679990:web:88bb2bc6116709931ec317",
+            measurementId: "G-8SWNP3PJ94"
+        };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+        const app = {
+            async init() {
+                try {
+                    // Initialize Firebase
+                    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js');
+                    const firebaseApp = initializeApp(firebaseConfig);
+                    
+                    // Initialize auth first
+                    await this.auth.init(firebaseApp);
+                    
+                    // Then initialize analytics
+                    try {
+                        const { getAnalytics } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js');
+                        this.analytics = getAnalytics(firebaseApp);
+                    } catch (analyticsError) {
+                        console.warn('Analytics initialization failed:', analyticsError);
+                    }
+                    
+                    // Set up the rest of the app
+                    this.setupEventListeners();
+                    this.theme.init();
+                    
+                    // Load initial content only if authenticated
+                    if (this.auth.isAuthenticated()) {
+                        this.loadContent('/pages/browse.html');
+                    }
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    this.handleInitError(error);
+                }
+            },
 
-    <script>
-    (function() {
-const $ = str => document.querySelector(str);
-const $$ = str => document.querySelectorAll(str);
-        let app = {
-            init() {
-                // Handle navigation clicks
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    link.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        
-                        // Remove active class from all links
-                        document.querySelectorAll('.nav-link').forEach(l => 
-                            l.classList.remove('active'));
-                        
-                        // Add active class to clicked link
-                        link.classList.add('active');
+            handleInitError(error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'init-error';
+                errorDiv.innerHTML = `
+                    <h2>Initialization Error</h2>
+                    <p>There was a problem starting the application. Please refresh the page or try again later.</p>
+                    <button onclick="location.reload()">Refresh Page</button>
+                `;
+                document.body.appendChild(errorDiv);
+            },
 
-                        // Close sidebar on mobile
-                        if (window.innerWidth <= 768) {
-                            app.elements.sidebar.classList.remove('active');
-                            app.elements.overlay.classList.remove('active');
+            auth: {
+                async init(firebaseApp) {
+                    try {
+                        const { getAuth } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js');
+                        const auth = getAuth(firebaseApp);
+
+                        return new Promise((resolve, reject) => {
+                            auth.onAuthStateChanged((user) => {
+                                if (user) {
+                                    this.handleAuthSuccess(user);
+                                    resolve(user);
+                                } else {
+                                    this.handleAuthFailure();
+                                    resolve(null);
+                                }
+                            }, reject);
+                        });
+                    } catch (error) {
+                        console.error('Error initializing Firebase Auth:', error);
+                        throw error;
+                    }
+                },
+
+                handleAuthSuccess(user) {
+                    localStorage.setItem('authStatus', 'authenticated');
+                    document.body.setAttribute('data-auth-status', 'authenticated');
+                    
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL
+                    };
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    this.updateUIWithUserData(userData);
+                },
+
+                handleAuthFailure() {
+                    localStorage.removeItem('authStatus');
+                    localStorage.removeItem('userData');
+                    document.body.removeAttribute('data-auth-status');
+                    window.location.href = '/login.html';
+                },
+
+                updateUIWithUserData(userData) {
+                    if (userData.photoURL) {
+                        const avatar = document.querySelector('.user-avatar');
+                        if (avatar) {
+                            avatar.innerHTML = `<img src="${userData.photoURL}" alt="${userData.displayName}" class="w-full h-full rounded-full">`;
                         }
+                    }
+                },
 
-                        // Load content based on href
-                        const url = link.getAttribute('href');
-                        if (url && url !== '#') {
-                            app.loadContent(url);
+                isAuthenticated() {
+                    return localStorage.getItem('authStatus') === 'authenticated';
+                },
+
+                getCurrentUser() {
+                    const userData = localStorage.getItem('userData');
+                    return userData ? JSON.parse(userData) : null;
+                }
+            },
+
+            theme: {
+                init() {
+                    const themeToggle = document.getElementById('themeToggle');
+                    const moonIcon = themeToggle.querySelector('.moon-icon');
+                    const sunIcon = themeToggle.querySelector('.sun-icon');
+                    
+                    const savedTheme = localStorage.getItem('theme');
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                        this.setDarkTheme(moonIcon, sunIcon);
+                    }
+                    
+                    themeToggle.addEventListener('click', () => {
+                        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                        if (isDark) {
+                            this.setLightTheme(moonIcon, sunIcon);
+                        } else {
+                            this.setDarkTheme(moonIcon, sunIcon);
                         }
                     });
-                });
-                $(".new-campaign-btn").addEventListener("click", function(e) {
-                    e.preventDefault();
-                    app.loadContent("/pages/new-campaign.html");
-                    return false;
-                });
-                app.auth.init();
+                },
 
-                app.theme.init();
-                // Initialize with default content
-                app.loadContent('/browse.html');
-                // Event listeners
-                app.elements.menuTrigger.addEventListener('click', app.toggleSidebar);
-                app.elements.overlay.addEventListener('click', app.toggleSidebar);
-
-                // Close sidebar on window resize if in mobile view
-                window.addEventListener('resize', () => {
-                    if (window.innerWidth > 768 && app.elements.sidebar.classList.contains('active')) {
-                        app.elements.sidebar.classList.remove('active');
-                        app.elements.overlay.classList.remove('active');
-                    }
-                });
-
-            },
-            theme: {
-        init() {
-            const themeToggle = document.getElementById('themeToggle');
-            const moonIcon = themeToggle.querySelector('.moon-icon');
-            const sunIcon = themeToggle.querySelector('.sun-icon');
-
-            // Check for saved theme preference or system preference
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-            // Set initial theme
-            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                moonIcon.classList.add('hidden');
-                sunIcon.classList.remove('hidden');
-            }
-
-            // Toggle theme
-            themeToggle.addEventListener('click', () => {
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                
-                if (isDark) {
-                    document.documentElement.removeAttribute('data-theme');
-                    localStorage.setItem('theme', 'light');
-                    moonIcon.classList.remove('hidden');
-                    sunIcon.classList.add('hidden');
-                } else {
+                setDarkTheme(moonIcon, sunIcon) {
                     document.documentElement.setAttribute('data-theme', 'dark');
                     localStorage.setItem('theme', 'dark');
                     moonIcon.classList.add('hidden');
                     sunIcon.classList.remove('hidden');
-                }
-            });
-        }
-    },
-
-
-            config: {
-                account: {
-                    id: 1,
-                    name: "Better Living"
                 },
-                user: {
-                    id: 1,
-                    name: "Chris Robison",
-                    username: "cdr",
-                    pic: "/img/profilepics/cdr.png"
-                },
-                navUrls: {
-                    'overview': '/dashboard.html',
-                    'campaigns': '/browse.html',
-                    'donors': '/donors.html',
-                    'settings': '/settings.html'
+
+                setLightTheme(moonIcon, sunIcon) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
                 }
             },
 
-            elements: {
-                menuTrigger: document.getElementById('menuTrigger'),
-                sidebar: document.getElementById('sidebar'),
-                overlay: document.getElementById('overlay'),
-                contentFrame: document.getElementById('contentFrame'),
-                frameLoader: document.getElementById('frameLoader'),
-                frameError: document.getElementById('frameError'),
+            setupEventListeners() {
+                // Navigation clicks
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.handleNavClick(e.currentTarget);
+                    });
+                });
+
+                // New campaign button
+                const newCampaignBtn = document.querySelector(".new-campaign-btn");
+                if (newCampaignBtn) {
+                    newCampaignBtn.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        this.loadContent("/pages/new-campaign.html");
+                    });
+                }
+
+                // Menu and overlay
+                const menuTrigger = document.getElementById('menuTrigger');
+                const overlay = document.getElementById('overlay');
+                const sidebar = document.getElementById('sidebar');
+
+                if (menuTrigger && overlay && sidebar) {
+                    menuTrigger.addEventListener('click', () => this.toggleSidebar(sidebar, overlay));
+                    overlay.addEventListener('click', () => this.toggleSidebar(sidebar, overlay));
+                }
+
+                // Responsive handling
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 768 && sidebar && sidebar.classList.contains('active')) {
+                        this.toggleSidebar(sidebar, overlay);
+                    }
+                });
             },
 
-            state: {
-                loaded: false
+            handleNavClick(link) {
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                link.classList.add('active');
+                
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('overlay');
+                    if (sidebar && overlay) {
+                        this.toggleSidebar(sidebar, overlay);
+                    }
+                }
+                
+                // Load content
+                const url = link.getAttribute('href');
+                if (url && url !== '#') {
+                    this.loadContent(url);
+                }
             },
 
-            data: {
-                mycampaigns:[],
-            },
-
-            // Toggle sidebar
-            toggleSidebar() {
-                app.elements.sidebar.classList.toggle('active');
-                app.elements.overlay.classList.toggle('active');
+            toggleSidebar(sidebar, overlay) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
             },
 
             loadContent(url) {
-                app.elements.frameLoader.classList.add('active');
-                app.elements.frameError.classList.remove('active');
-                app.elements.contentFrame.onload = () => {
-                    app.elements.frameLoader.classList.remove('active');
-                };
+                const frameLoader = document.getElementById('frameLoader');
+                const frameError = document.getElementById('frameError');
+                const contentFrame = document.getElementById('contentFrame');
 
-                app.elements.contentFrame.onerror = () => {
-                    app.elements.frameLoader.classList.remove('active');
-                    app.elements.frameError.classList.add('active');
-                };
+                if (frameLoader && frameError && contentFrame) {
+                    frameLoader.classList.add('active');
+                    frameError.classList.remove('active');
 
-                try {
-                    app.elements.contentFrame.src = url;
-                } catch (error) {
-                    app.elements.frameLoader.classList.remove('active');
-                    app.elements.frameError.classList.add('active');
+                    contentFrame.onload = () => {
+                        frameLoader.classList.remove('active');
+                    };
+
+                    contentFrame.onerror = () => {
+                        frameLoader.classList.remove('active');
+                        frameError.classList.add('active');
+                    };
+
+                    try {
+                        contentFrame.src = url;
+                    } catch (error) {
+                        console.error('Error loading content:', error);
+                        frameLoader.classList.remove('active');
+                        frameError.classList.add('active');
+                    }
                 }
             },
 
             reloadFrame() {
-                if (app.elements.contentFrame.src !== 'about:blank') {
-                    app.loadContent(app.elements.contentFrame.src);
+                const contentFrame = document.getElementById('contentFrame');
+                if (contentFrame && contentFrame.src !== 'about:blank') {
+                    this.loadContent(contentFrame.src);
                 }
-            },
-        };
-        // Add this to your app object
-        app.auth = {
-            init() {
-                // Import Firebase auth when using modules
-                import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')
-                    .then((firebaseAuth) => {
-                        const auth = firebaseAuth.getAuth(app);
-
-                        // Set up auth state listener
-                        auth.onAuthStateChanged((user) => {
-                            if (user) {
-                                // User is signed in
-                                localStorage.setItem('authStatus', 'authenticated');
-                                document.body.setAttribute('data-auth-status', 'authenticated');
-
-                                // Store user info if needed
-                                const userData = {
-                                    uid: user.uid,
-                                    email: user.email,
-                                    displayName: user.displayName,
-                                    photoURL: user.photoURL
-                                };
-                                localStorage.setItem('userData', JSON.stringify(userData));
-
-                                // Update UI elements if needed
-                                if (user.photoURL) {
-                                    const avatar = document.querySelector('.user-avatar');
-                                    if (avatar) {
-                                        avatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}" class="w-full h-full rounded-full">`;
-                                    }
-                                }
-
-                                console.log('User is authenticated:', user);
-                            } else {
-                                // User is signed out
-                                localStorage.removeItem('authStatus');
-                                localStorage.removeItem('userData');
-                                document.body.removeAttribute('data-auth-status');
-                                console.log('User is not authenticated');
-
-                                // Redirect to login if needed
-                                window.location.href = '/login.html';
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading Firebase Auth:', error);
-                    });
-            },
-
-            // Helper method to check current auth status
-            isAuthenticated() {
-                return localStorage.getItem('authStatus') === 'authenticated';
-            },
-
-            // Helper to get current user data
-            getCurrentUser() {
-                const userData = localStorage.getItem('userData');
-                return userData ? JSON.parse(userData) : null;
             }
         };
 
-
-        window.app = app;
-        app.init();
-    })();
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = app;
+            app.init().catch(error => {
+                console.error('Failed to initialize app:', error);
+                app.handleInitError(error);
+            });
+        });
     </script>
 </body>
 </html>
