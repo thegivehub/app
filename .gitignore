@@ -32,3 +32,5 @@ oauth.txt
 info.php
 img/avatars/*.jpeg
 img/avatars/**
+.openapi-generator
+.openapi-generator-ignore
