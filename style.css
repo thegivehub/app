@@ -373,6 +373,73 @@ button.icon-button:hover {
     background: var(--primary-dark);
 }
 
+/* Add these styles to your existing CSS file (style.css) */
+
+/* Submenu styles */
+.has-submenu {
+    position: relative;
+}
+
+.submenu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.submenu-arrow {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.has-submenu.active .submenu-arrow {
+    transform: rotate(180deg);
+}
+
+.submenu {
+    padding-left: 30px;
+    max-height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    margin-left: 1em;
+}
+
+.has-submenu.active .submenu {
+    max-height: 500px;
+    visibility: visible;
+    opacity: 1;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.submenu-item {
+    margin-bottom: 0.5rem;
+    list-style: none;
+}
+
+.submenu-link {
+    display: block;
+    padding: 0.25rem 0;
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+.submenu-link:hover {
+    color: var(--text-color-primary);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .submenu-link {
+    color: var(--text-color-secondary);
+}
+
+[data-theme="dark"] .submenu-link:hover {
+    color: var(--text-color-primary);
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
     .menu-trigger {

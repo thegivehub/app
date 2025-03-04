@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8">
+    <title>Edit Campaign</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        :root {
+            --background-color: #f4f4f9;
+            --text-color: #333;
+            --header-background: #666;
+            --header-color: #fff;
+            --primary-color: #2563eb;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            box-sizing: border-box;
+            font-family: "Lexend", "Helvetica Neue", "Helvetica", sans-serif;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                font-size: 14px;
+            }
+        }
+
+        * {
+            box-sizing: inherit;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1024px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            gap: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .campaign-header {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 2fr 1fr;
+        }
+
+        @media (max-width: 768px) {
+            .campaign-header {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .campaign-title {
+            font-size: 2.5rem;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: var(--text-color);
+        }
+
+        .campaign-description {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: var(--border-radius);
+            margin-top: 16px;
+        }
+
+        .progress-container {
+            margin: 24px 0;
+        }
+
+        .progress-bar {
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 24px;
+            margin: 8px 0;
+        }
+
+        .progress-bar div {
+            height: 100%;
+            background-color: var(--success-color);
+            transition: width 1s ease-in-out;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .impact-metrics, .milestones {
+            list-style: none;
+        }
+
+        .impact-metrics li, .milestones li {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .impact-metrics li:last-child, .milestones li:last-child {
+            border-bottom: none;
+        }
+
+        .media-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            background: #f8fafc;
+        }
+
+        .media-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .media-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .media-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-completed {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-pending {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .link {
+            color: #339;
+            text-decoration: none;
+            background-color: #0099ff00;
+            transition: all 300ms linear;
+        }
+        
+        .link:hover {
+            color: #fff;
+            text-decoration: underline;
+            background-color: #0066ffcc;
+        }
+
+        /* Edit mode styles */
+        .edit-mode input[type="text"],
+        .edit-mode input[type="number"],
+        .edit-mode textarea,
+        .edit-mode select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            background-color: #f9fafb;
+            transition: border-color 0.2s;
+        }
+
+        .edit-mode input:focus,
+        .edit-mode textarea:focus,
+        .edit-mode select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .edit-mode textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .edit-title {
+            font-size: 2.5rem;
+            width: 100%;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        .edit-description {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            color: white;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .notification.success {
+            background-color: var(--success-color);
+        }
+
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+        }
+
+        .upload-area p {
+            margin-top: 8px;
+            color: #6b7280;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .edit-mode input[type="text"],
+            .edit-mode input[type="number"],
+            .edit-mode textarea,
+            .edit-mode select {
+                background-color: #1f2937;
+                border-color: #4b5563;
+                color: #e5e7eb;
+            }
+
+            .modal-content {
+                background-color: #1f2937;
+                color: #e5e7eb;
+            }
+
+            .btn-secondary {
+                background-color: #374151;
+                color: #e5e7eb;
+            }
+
+            .btn-secondary:hover {
+                background-color: #4b5563;
+            }
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+</head>
+<body>
+<main>
+    <div class="container">
+        <div class="action-buttons" style="margin-bottom: 16px;">
+            <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
+            <div style="flex: 1;"></div>
+            <button id="edit-campaign-btn" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Campaign</button>
+            <button id="save-campaign-btn" class="btn btn-success" style="display: none;"><i class="fas fa-save"></i> Save Changes</button>
+            <button id="cancel-edit-btn" class="btn btn-secondary" style="display: none;"><i class="fas fa-times"></i> Cancel</button>
+        </div>
+
+        <div class="card campaign-header">
+            <div class="campaign-info">
+                <h1 id="campaign-title" class="campaign-title">Campaign Title</h1>
+                <div id="campaign-title-edit" class="edit-mode" style="display: none;">
+                    <input type="text" id="title-input" class="edit-title" placeholder="Campaign Title">
+                </div>
+                
+                <p id="campaign-description" class="campaign-description"></p>
+                <div id="campaign-description-edit" class="edit-mode" style="display: none;">
+                    <textarea id="description-input" class="edit-description" placeholder="Campaign Description"></textarea>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-donors">0</div>
+                        <div class="stat-label">Total Donors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-location">Unknown</div>
+                        <div id="location-edit" class="edit-mode" style="display: none;">
+                            <div class="form-group">
+                                <label for="location-region">Region</label>
+                                <input type="text" id="location-region" placeholder="Region">
+                            </div>
+                            <div class="form-group">
+                                <label for="location-country">Country</label>
+                                <input type="text" id="location-country" placeholder="Country">
+                            </div>
+                        </div>
+                        <div class="stat-label">Location</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-goal">$0</div>
+                        <div id="goal-edit" class="edit-mode" style="display: none;">
+                            <div class="form-group">
+                                <label for="goal-amount">Goal Amount</label>
+                                <input type="number" id="goal-amount" placeholder="0" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="goal-currency">Currency</label>
+                                <select id="goal-currency">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="XLM">XLM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="stat-label">Goal Amount</div>
+                    </div>
+                </div>
+            </div>
+            <div id="map"></div>
+            <div id="coordinates-edit" class="edit-mode" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lat-input">Latitude</label>
+                        <input type="number" id="lat-input" step="0.000001" placeholder="0.000000">
+                    </div>
+                    <div class="form-group">
+                        <label for="lng-input">Longitude</label>
+                        <input type="number" id="lng-input" step="0.000001" placeholder="0.000000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="progress-container">
+                <div class="progress-stats">
+                    <span>Progress</span>
+                    <span id="campaign-raised">$0</span>
+                    <div id="raised-edit" class="edit-mode" style="display: none;">
+                        <input type="number" id="raised-amount" placeholder="0" min="0" step="1">
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">
+                Impact Metrics
+                <div class="section-title-actions">
+                    <button id="add-metric-btn" class="btn btn-primary btn-icon" style="display: none;"><i class="fas fa-plus"></i></button>
+                </div>
+            </h2>
+            <ul id="impact-metrics" class="impact-metrics"></ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">
+                Milestones
+                <div class="section-title-actions">
+                    <button id="add-milestone-btn" class="btn btn-primary btn-icon" style="display: none;"><i class="fas fa-plus"></i></button>
+                </div>
+            </h2>
+            <ul id="milestones" class="milestones"></ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">
+                Media Gallery
+                <div class="section-title-actions">
+                    <button id="add-media-btn" class="btn btn-primary btn-icon" style="display: none;"><i class="fas fa-plus"></i></button>
+                </div>
+            </h2>
+            <div id="media-gallery" class="media-gallery"></div>
+        </div>
+    </div>
+</main>
+
+<!-- Notification -->
+<div id="notification" class="notification">
+    <span id="notification-message"></span>
+</div>
+
+<!-- Modals -->
+<!-- Add/Edit Metric Modal -->
+<div id="metric-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="metric-modal-title">Add Impact Metric</h3>
+            <button class="modal-close" onclick="app.closeModal('metric-modal')">&times;</button>
+        </div>
+        <form id="metric-form">
+            <input type="hidden" id="metric-id">
+            <div class="form-group">
+                <label for="metric-name">Metric Name</label>
+                <input type="text" id="metric-name" required placeholder="e.g., Water Access Hours">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="metric-baseline">Baseline</label>
+                    <input type="number" id="metric-baseline" required placeholder="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="metric-current">Current</label>
+                    <input type="number" id="metric-current" required placeholder="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="metric-target">Target</label>
+                    <input type="number" id="metric-target" required placeholder="100" min="0" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="metric-unit">Unit</label>
+                <input type="text" id="metric-unit" required placeholder="e.g., hours/day">
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('metric-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Metric</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Milestone Modal -->
+<div id="milestone-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="milestone-modal-title">Add Milestone</h3>
+            <button class="modal-close" onclick="app.closeModal('milestone-modal')">&times;</button>
+        </div>
+        <form id="milestone-form">
+            <input type="hidden" id="milestone-id">
+            <div class="form-group">
+                <label for="milestone-title">Title</label>
+                <input type="text" id="milestone-title" required placeholder="e.g., Dig Well">
+            </div>
+            <div class="form-group">
+                <label for="milestone-description">Description</label>
+                <textarea id="milestone-description" required placeholder="Milestone description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="milestone-status">Status</label>
+                <select id="milestone-status" required>
+                    <option value="pending">Pending</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('milestone-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Milestone</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Media Modal -->
+<div id="media-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="media-modal-title">Add Media</h3>
+            <button class="modal-close" onclick="app.closeModal('media-modal')">&times;</button>
+        </div>
+        <form id="media-form">
+            <input type="hidden" id="media-id">
+            <div class="form-group">
+                <label for="media-type">Media Type</label>
+                <select id="media-type" required>
+                    <option value="image">Image</option>
+                    <option value="document">Document</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="media-url">URL</label>
+                <input type="url" id="media-url" required placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="form-group">
+                <label for="media-caption">Caption</label>
+                <input type="text" id="media-caption" required placeholder="Media caption">
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('media-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Media</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+    
+    const app = {
+        data: {},
+        state: {
+            loaded: false,
+            map: null,
+            editMode: false,
+            editingItem: null,
+            marker: null
+        },
+        
+        init() {
+            this.bindEvents();
+            const query = this.utils.parseSearch();
+            const campaignId = query.id;
+            this.fetch(`/api/campaign?id=${campaignId}`);
+        },
+        
+        bindEvents() {
+            // Edit mode buttons
+            $('#edit-campaign-btn').addEventListener('click', () => this.toggleEditMode(true));
+            $('#save-campaign-btn').addEventListener('click', () => this.saveCampaign());
+            $('#cancel-edit-btn').addEventListener('click', () => this.toggleEditMode(false));
+            
+            // Add item buttons
+            $('#add-metric-btn').addEventListener('click', () => this.openMetricModal());
+            $('#add-milestone-btn').addEventListener('click', () => this.openMilestoneModal());
+            $('#add-media-btn').addEventListener('click', () => this.openMediaModal());
+            
+            // Form submissions
+            $('#metric-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveMetric();
+            });
+            
+            $('#milestone-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveMilestone();
+            });
+            
+            $('#media-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveMedia();
+            });
+            
+            // Map click for coordinate editing in edit mode
+            $('#map').addEventListener('click', (e) => {
+                if (this.state.editMode && this.state.map) {
+                    this.handleMapClick(e);
+                }
+            });
+        },
+        
+        utils: {
+            parseSearch() {
+                const qs = document.location.search.replace(/^\?/, '');
+                const items = qs.split(/&/);
+                const query = {};
+                for (let item of items) {
+                    const parts = item.split(/=/, 2);
+                    if (parts && parts[0]) query[parts[0]] = parts[1];
+                }
+                return query;
+            },
+            
+            formatCurrency(amount, currency = 'USD') {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: currency
+                }).format(amount);
+            },
+            
+            getStatusClass(status) {
+                const statusMap = {
+                    'active': 'status-active',
+                    'completed': 'status-completed',
+                    'pending': 'status-pending'
+                };
+                return statusMap[status.toLowerCase()] || 'status-pending';
+            },
+            
+            showNotification(message, type = 'success') {
+                const notification = $('#notification');
+                $('#notification-message').textContent = message;
+                
+                notification.className = 'notification';
+                notification.classList.add(type);
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            },
+            
+            generateId() {
+                return 'temp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            }
+        },
+        
+        fetch(url) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    this.data = data;
+                    this.state.loaded = true;
+                    this.render();
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    this.utils.showNotification('Failed to load campaign data', 'error');
+                });
+        },
+        
+        toggleEditMode(isEditing) {
+            this.state.editMode = isEditing;
+            
+            // Toggle edit buttons
+            $('#edit-campaign-btn').style.display = isEditing ? 'none' : 'block';
+            $('#save-campaign-btn').style.display = isEditing ? 'block' : 'none';
+            $('#cancel-edit-btn').style.display = isEditing ? 'block' : 'none';
+            
+            // Toggle add buttons
+            $('#add-metric-btn').style.display = isEditing ? 'block' : 'none';
+            $('#add-milestone-btn').style.display = isEditing ? 'block' : 'none';
+            $('#add-media-btn').style.display = isEditing ? 'block' : 'none';
+            
+            // Toggle display/edit fields
+            $('#campaign-title').style.display = isEditing ? 'none' : 'block';
+            $('#campaign-title-edit').style.display = isEditing ? 'block' : 'none';
+            
+            $('#campaign-description').style.display = isEditing ? 'none' : 'block';
+            $('#campaign-description-edit').style.display = isEditing ? 'block' : 'none';
+            
+            $('#campaign-location').style.display = isEditing ? 'none' : 'block';
+            $('#location-edit').style.display = isEditing ? 'block' : 'none';
+            
+            $('#campaign-goal').style.display = isEditing ? 'none' : 'block';
+            $('#goal-edit').style.display = isEditing ? 'block' : 'none';
+            
+            $('#coordinates-edit').style.display = isEditing ? 'block' : 'none';
+            
+            $('#campaign-raised').style.display = isEditing ? 'none' : 'block';
+            $('#raised-edit').style.display = isEditing ? 'block' : 'none';
+            
+            // Show/hide edit buttons on items
+            const itemActions = $$('.item-actions');
+            if (itemActions) {
+                itemActions.forEach(el => {
+                    el.style.display = isEditing ? 'flex' : 'none';
+                });
+            }
+
+            if (isEditing) {
+                // Populate edit fields with current values
+                $('#title-input').value = this.data.title || '';
+                $('#description-input').value = this.data.description || '';
+                $('#location-region').value = this.data.location?.region || '';
+                $('#location-country').value = this.data.location?.country || '';
+                $('#goal-amount').value = this.data.funding?.goalAmount || 0;
+                $('#goal-currency').value = this.data.funding?.currency || 'USD';
+                $('#raised-amount').value = this.data.funding?.raisedAmount || 0;
+                
+                if (this.data.location?.coordinates) {
+                    $('#lat-input').value = this.data.location.coordinates.latitude || 0;
+                    $('#lng-input').value = this.data.location.coordinates.longitude || 0;
+                }
+            } else {
+                // If canceling, revert to original data
+                this.render();
+            }
+        },
+        
+        render() {
+            const data = this.data;
+            
+            // Basic Info
+            $('#campaign-title').textContent = data.title || "Campaign Title";
+            $('#campaign-description').textContent = data.description || "Campaign Description";
+            $('#campaign-location').textContent = data.location?.region ? `${data.location.region}, ${data.location.country}` : "Unknown";
+            $('#campaign-goal').textContent = this.utils.formatCurrency(data.funding?.goalAmount || 0, data.funding?.currency || 'USD');
+            $('#campaign-raised').textContent = this.utils.formatCurrency(data.funding?.raisedAmount || 0, data.funding?.currency || 'USD');
+            $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding?.donorCount || 0);
+
+            // Map
+            if (data.location?.coordinates) {
+                this.renderMap(data.location.coordinates.latitude, 
+                            data.location.coordinates.longitude, 
+                            `${data.location.region}, ${data.location.country}`);
+            }
+
+            // Progress Bar
+            const progress = data.funding ? (data.funding.raisedAmount / data.funding.goalAmount) * 100 : 0;
+            $('#progress-bar-fill').style.width = `${progress}%`;
+
+            // Impact Metrics
+            this.renderImpactMetrics();
+
+            // Milestones
+            this.renderMilestones();
+
+            // Media Gallery
+            this.renderMediaGallery();
+        },
+        
+        renderImpactMetrics() {
+            const metricsContainer = $('#impact-metrics');
+            metricsContainer.innerHTML = '';
+            
+            if (!this.data.impact || !this.data.impact.metrics || !this.data.impact.metrics.length) {
+                metricsContainer.innerHTML = '<li>No impact metrics defined</li>';
+                return;
+            }
+            
+            this.data.impact.metrics.forEach((metric, index) => {
+                const li = document.createElement('li');
+                
+                const itemContent = document.createElement('div');
+                itemContent.className = 'item-content';
+                
+                const strongName = document.createElement('strong');
+                strongName.textContent = metric.name;
+                
+                const spanValue = document.createElement('span');
+                spanValue.textContent = `${metric.current}/${metric.target} ${metric.unit}`;
+                
+                const divBaseline = document.createElement('div');
+                divBaseline.className = 'text-sm text-gray-600';
+                divBaseline.textContent = `Baseline: ${metric.baseline} ${metric.unit}`;
+                
+                itemContent.appendChild(strongName);
+                itemContent.appendChild(document.createTextNode(' '));
+                itemContent.appendChild(spanValue);
+                itemContent.appendChild(divBaseline);
+                
+                const itemActions = document.createElement('div');
+                itemActions.className = 'item-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-secondary btn-icon';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.addEventListener('click', () => this.openMetricModal(index));
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-icon';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => this.deleteItem('metric', index));
+                
+                itemActions.appendChild(editBtn);
+                itemActions.appendChild(deleteBtn);
+                
+                li.appendChild(itemContent);
+                li.appendChild(itemActions);
+                
+                // Hide actions if not in edit mode
+                if (!this.state.editMode) {
+                    itemActions.style.display = 'none';
+                }
+                
+                metricsContainer.appendChild(li);
+            });
+        },
+        
+        renderMilestones() {
+            const milestonesContainer = $('#milestones');
+            milestonesContainer.innerHTML = '';
+            
+            if (!this.data.timeline || !this.data.timeline.milestones || !this.data.timeline.milestones.length) {
+                milestonesContainer.innerHTML = '<li>No milestones defined</li>';
+                return;
+            }
+            
+            this.data.timeline.milestones.forEach((milestone, index) => {
+                const li = document.createElement('li');
+                
+                const itemContent = document.createElement('div');
+                itemContent.className = 'item-content';
+                
+                const titleRow = document.createElement('div');
+                titleRow.style.display = 'flex';
+                titleRow.style.justifyContent = 'space-between';
+                
+                const strongTitle = document.createElement('strong');
+                strongTitle.textContent = milestone.title;
+                
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `status-badge ${this.utils.getStatusClass(milestone.status)}`;
+                statusBadge.textContent = milestone.status;
+                
+                titleRow.appendChild(strongTitle);
+                titleRow.appendChild(statusBadge);
+                
+                const description = document.createElement('p');
+                description.className = 'text-gray-600 mt-2';
+                description.textContent = milestone.description;
+                
+                itemContent.appendChild(titleRow);
+                itemContent.appendChild(description);
+                
+                const itemActions = document.createElement('div');
+                itemActions.className = 'item-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-secondary btn-icon';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.addEventListener('click', () => this.openMilestoneModal(index));
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-icon';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => this.deleteItem('milestone', index));
+                
+                itemActions.appendChild(editBtn);
+                itemActions.appendChild(deleteBtn);
+                
+                li.appendChild(itemContent);
+                li.appendChild(itemActions);
+                
+                // Hide actions if not in edit mode
+                if (!this.state.editMode) {
+                    itemActions.style.display = 'none';
+                }
+                
+                milestonesContainer.appendChild(li);
+            });
+        },
+        
+        renderMediaGallery() {
+            const mediaGallery = $('#media-gallery');
+            mediaGallery.innerHTML = '';
+            
+            if (!this.data.media || !this.data.media.length) {
+                mediaGallery.innerHTML = '<div>No media items available</div>';
+                return;
+            }
+            
+            this.data.media.forEach((media, index) => {
+                const mediaItem = document.createElement('div');
+                mediaItem.className = 'media-item';
+                
+                if (media.type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = media.url;
+                    img.alt = media.caption;
+                    
+                    const caption = document.createElement('div');
+                    caption.className = 'media-caption';
+                    caption.textContent = media.caption;
+                    
+                    mediaItem.appendChild(img);
+                    mediaItem.appendChild(caption);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = media.url;
+                    link.target = '_blank';
+                    link.className = 'flex items-center justify-center h-full';
+                    
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-file-alt fa-2x';
+                    
+                    const caption = document.createElement('div');
+                    caption.className = 'media-caption';
+                    caption.textContent = media.caption;
+                    
+                    link.appendChild(icon);
+                    link.appendChild(caption);
+                    mediaItem.appendChild(link);
+                }
+                
+                // Add edit controls
+                if (this.state.editMode) {
+                    const controls = document.createElement('div');
+                    controls.className = 'item-actions';
+                    controls.style.position = 'absolute';
+                    controls.style.top = '5px';
+                    controls.style.right = '5px';
+                    controls.style.display = 'flex';
+                    controls.style.gap = '5px';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn btn-secondary btn-icon';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.addEventListener('click', () => this.openMediaModal(index));
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-danger btn-icon';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteBtn.addEventListener('click', () => this.deleteItem('media', index));
+                    
+                    controls.appendChild(editBtn);
+                    controls.appendChild(deleteBtn);
+                    mediaItem.appendChild(controls);
+                }
+                
+                mediaGallery.appendChild(mediaItem);
+            });
+        },
+        
+        renderMap(lat, lng, popupText) {
+            if (this.state.map) {
+                this.state.map.remove();
+            }
+            
+            this.state.map = L.map('map').setView([lat, lng], 4);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.state.map);
+            
+            // Create marker at the location
+            this.state.marker = L.marker([lat, lng], {
+                draggable: this.state.editMode // Make marker draggable in edit mode
+            }).addTo(this.state.map)
+              .bindPopup(popupText);
+            
+            // Open popup
+            this.state.marker.openPopup();
+            
+            // Add marker drag end event for edit mode
+            if (this.state.editMode) {
+                this.state.marker.on('dragend', (event) => {
+                    const marker = event.target;
+                    const position = marker.getLatLng();
+                    $('#lat-input').value = position.lat;
+                    $('#lng-input').value = position.lng;
+                });
+            }
+        },
+        
+        handleMapClick(event) {
+            // Get click coordinates
+            const containerPoint = this.state.map.mouseEventToContainerPoint(event.originalEvent);
+            const latlng = this.state.map.containerPointToLatLng(containerPoint);
+            
+            // Update marker position
+            if (this.state.marker) {
+                this.state.marker.setLatLng(latlng);
+            } else {
+                this.state.marker = L.marker(latlng, {
+                    draggable: true
+                }).addTo(this.state.map);
+            }
+            
+            // Update form fields
+            $('#lat-input').value = latlng.lat;
+            $('#lng-input').value = latlng.lng;
+        },
+        
+        // Modal handling methods
+        openModal(modalId) {
+            $(`#${modalId}`).classList.add('open');
+        },
+        
+        closeModal(modalId) {
+            $(`#${modalId}`).classList.remove('open');
+        },
+        
+        openMetricModal(index = null) {
+            const modal = $('#metric-modal');
+            const title = $('#metric-modal-title');
+            const form = $('#metric-form');
+            
+            // Reset form
+            form.reset();
+            
+            if (index !== null) {
+                // Edit existing metric
+                title.textContent = 'Edit Impact Metric';
+                const metric = this.data.impact.metrics[index];
+                
+                $('#metric-id').value = index;
+                $('#metric-name').value = metric.name;
+                $('#metric-baseline').value = metric.baseline;
+                $('#metric-current').value = metric.current;
+                $('#metric-target').value = metric.target;
+                $('#metric-unit').value = metric.unit;
+            } else {
+                // Add new metric
+                title.textContent = 'Add Impact Metric';
+                $('#metric-id').value = '';
+            }
+            
+            this.openModal('metric-modal');
+        },
+        
+        openMilestoneModal(index = null) {
+            const modal = $('#milestone-modal');
+            const title = $('#milestone-modal-title');
+            const form = $('#milestone-form');
+            
+            // Reset form
+            form.reset();
+            
+            if (index !== null) {
+                // Edit existing milestone
+                title.textContent = 'Edit Milestone';
+                const milestone = this.data.timeline.milestones[index];
+                
+                $('#milestone-id').value = index;
+                $('#milestone-title').value = milestone.title;
+                $('#milestone-description').value = milestone.description;
+                $('#milestone-status').value = milestone.status;
+            } else {
+                // Add new milestone
+                title.textContent = 'Add Milestone';
+                $('#milestone-id').value = '';
+            }
+            
+            this.openModal('milestone-modal');
+        },
+        
+        openMediaModal(index = null) {
+            const modal = $('#media-modal');
+            const title = $('#media-modal-title');
+            const form = $('#media-form');
+            
+            // Reset form
+            form.reset();
+            
+            if (index !== null) {
+                // Edit existing media
+                title.textContent = 'Edit Media';
+                const media = this.data.media[index];
+                
+                $('#media-id').value = index;
+                $('#media-type').value = media.type;
+                $('#media-url').value = media.url;
+                $('#media-caption').value = media.caption;
+            } else {
+                // Add new media
+                title.textContent = 'Add Media';
+                $('#media-id').value = '';
+            }
+            
+            this.openModal('media-modal');
+        },
+        
+        saveMetric() {
+            const id = $('#metric-id').value;
+            const newMetric = {
+                name: $('#metric-name').value,
+                baseline: parseFloat($('#metric-baseline').value),
+                current: parseFloat($('#metric-current').value),
+                target: parseFloat($('#metric-target').value),
+                unit: $('#metric-unit').value
+            };
+            
+            // Ensure impact structure exists
+            if (!this.data.impact) {
+                this.data.impact = { metrics: [] };
+            } else if (!this.data.impact.metrics) {
+                this.data.impact.metrics = [];
+            }
+            
+            if (id === '') {
+                // Add new metric
+                this.data.impact.metrics.push(newMetric);
+            } else {
+                // Update existing metric
+                this.data.impact.metrics[parseInt(id)] = newMetric;
+            }
+            
+            // Update UI
+            this.renderImpactMetrics();
+            this.closeModal('metric-modal');
+            this.utils.showNotification('Metric saved successfully');
+        },
+        
+        saveMilestone() {
+            const id = $('#milestone-id').value;
+            const newMilestone = {
+                title: $('#milestone-title').value,
+                description: $('#milestone-description').value,
+                status: $('#milestone-status').value
+            };
+            
+            // Ensure timeline structure exists
+            if (!this.data.timeline) {
+                this.data.timeline = { milestones: [] };
+            } else if (!this.data.timeline.milestones) {
+                this.data.timeline.milestones = [];
+            }
+            
+            if (id === '') {
+                // Add new milestone
+                this.data.timeline.milestones.push(newMilestone);
+            } else {
+                // Update existing milestone
+                this.data.timeline.milestones[parseInt(id)] = newMilestone;
+            }
+            
+            // Update UI
+            this.renderMilestones();
+            this.closeModal('milestone-modal');
+            this.utils.showNotification('Milestone saved successfully');
+        },
+        
+        saveMedia() {
+            const id = $('#media-id').value;
+            const newMedia = {
+                type: $('#media-type').value,
+                url: $('#media-url').value,
+                caption: $('#media-caption').value
+            };
+            
+            // Ensure media array exists
+            if (!this.data.media) {
+                this.data.media = [];
+            }
+            
+            if (id === '') {
+                // Add new media item
+                this.data.media.push(newMedia);
+            } else {
+                // Update existing media item
+                this.data.media[parseInt(id)] = newMedia;
+            }
+            
+            // Update UI
+            this.renderMediaGallery();
+            this.closeModal('media-modal');
+            this.utils.showNotification('Media item saved successfully');
+        },
+        
+        deleteItem(type, index) {
+            if (!confirm(`Are you sure you want to delete this ${type}?`)) {
+                return;
+            }
+            
+            switch (type) {
+                case 'metric':
+                    this.data.impact.metrics.splice(index, 1);
+                    this.renderImpactMetrics();
+                    break;
+                case 'milestone':
+                    this.data.timeline.milestones.splice(index, 1);
+                    this.renderMilestones();
+                    break;
+                case 'media':
+                    this.data.media.splice(index, 1);
+                    this.renderMediaGallery();
+                    break;
+            }
+            
+            this.utils.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+        },
+        
+        saveCampaign() {
+            // Collect form data
+            const updatedCampaign = {
+                ...this.data,
+                title: $('#title-input').value,
+                description: $('#description-input').value,
+                location: {
+                    region: $('#location-region').value,
+                    country: $('#location-country').value,
+                    coordinates: {
+                        latitude: parseFloat($('#lat-input').value),
+                        longitude: parseFloat($('#lng-input').value)
+                    }
+                },
+                funding: {
+                    ...this.data.funding,
+                    goalAmount: parseFloat($('#goal-amount').value),
+                    currency: $('#goal-currency').value,
+                    raisedAmount: parseFloat($('#raised-amount').value)
+                }
+            };
+            
+            // Send update to server
+            fetch(`/api/campaign?id=${this.data._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedCampaign)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.data = data;
+                this.toggleEditMode(false);
+                this.utils.showNotification('Campaign updated successfully');
+            })
+            .catch(error => {
+                console.error('Error updating campaign:', error);
+                this.utils.showNotification('Failed to update campaign', 'error');
+            });
+        },
+        
+        // Add animation effects
+        animate() {
+            // Animate progress bar on load
+            const progressBar = $('#progress-bar-fill');
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    progressBar.style.transition = 'width 1s ease-in-out';
+                    const progress = (this.data.funding.raisedAmount / this.data.funding.goalAmount) * 100;
+                    progressBar.style.width = `${progress}%`;
+                }, 100);
+            }
+
+            // Animate stats counting up
+            const stats = $('.stat-value');
+            stats.forEach(stat => {
+                const finalValue = stat.textContent;
+                if (!isNaN(parseInt(finalValue))) {
+                    this.utils.animateNumber(stat, 0, parseInt(finalValue), 1000);
+                }
+            });
+        }
+    };
+
+    // Utils for number animation
+    app.utils.animateNumber = function(element, start, end, duration) {
+        const range = end - start;
+        const startTime = performance.now();
+        
+        const updateNumber = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const currentValue = Math.floor(start + (range * progress));
+            element.textContent = new Intl.NumberFormat().format(currentValue);
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateNumber);
+            }
+        };
+        
+        requestAnimationFrame(updateNumber);
+    };
+
+    window.app = app;
+    document.addEventListener('DOMContentLoaded', () => app.init());
+})();
+</script>
+</body>
+</html>

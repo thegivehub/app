@@ -119,7 +119,20 @@ if ($endpoint === 'User' && isset($pathParts) && count($pathParts) > 0) {
                 break;
         }
 }
-
+/*
+if ($endpoint === 'Campaign') {
+    if (isset($pathParts) && count($pathParts) > 0) {
+        switch ($pathParts[1]) {
+            case 'my':
+                if ($method === 'GET') {
+                    $result = $instance->getMyCampaigns();
+                    sendJson(200, $result);
+                }
+                break;
+        }
+    }
+}
+ */
 
 if (count($actions)) {
     foreach ($actions as $action) {
