@@ -117,6 +117,7 @@ class User extends Model {
             ]
         ]);
     }
+    
     public function getProfile() {
         $auth = new Auth();
         $user = $auth->getCurrentUser();
@@ -125,5 +126,127 @@ class User extends Model {
         }
         return $user;
     }
-}
+    
+    public function register($data) {
+        try {
+            // Existing validation code...
+            
+            // Validate address if provided
+            if (isset($data['address']) && is_array($data['address'])) {
+                require_once __DIR__ . '/AddressValidator.php';
+                $validator = new AddressValidator();
+                
+                $addressResult = $validator->validate($data['address']);
+                
+                if (!$addressResult['valid']) {
+                    return [
+                        'success' => false,
+                        'error' => 'Invalid address: ' . implode(', ', array_values($addressResult['errors'] ?? ['Address validation failed']))
+                    ];
+                }
+                
+                // Use normalized address
+                $data['address'] = $addressResult['normalized'];
+            }
+            
+            // Continue with existing registration logic...
+            // but make sure to include address in the user data structure
+
+            // Example user data structure with address
+            $userData = [
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'type' => $data['type'] ?? 'donor',
+                'status' => 'pending',
+                'personalInfo' => [
+                    'firstName' => $data['firstName'] ?? '',
+                    'lastName' => $data['lastName'] ?? '',
+                    'email' => $data['email'],
+                    'language' => $data['personalInfo']['language'] ?? 'en',
+                    // Add address to personalInfo
+                    'address' => $data['address'] ?? null
+                ],
+                'auth' => [
+                    'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
+                    'verificationCode' => $verificationCode,
+                    'verificationExpires' => $verificationExpires,
+                    'verified' => false,
+                    'twoFactorEnabled' => false,
+                    'lastLogin' => new MongoDB\BSON\UTCDateTime()
+                ],
+                'profile' => array_merge([
+                    'avatar' => null,
+                    'bio' => '',
+                    'preferences' => [
+                        'emailNotifications' => true,
+                        'currency' => 'USD'
+                    ]
+                ], $data['profile'] ?? []),
+                'roles' => ['user'],
+                'created' => new MongoDB\BSON\UTCDateTime(),
+                'updated' => new MongoDB\BSON\UTCDateTime()
+            ];
+            
+            // Continue with user creation and return success response...
+            
+        } catch (Exception $e) {
+            error_log("Registration error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    // Add this method to update a user's address
+    public function updateAddress($userId, $address) {
+        try {
+            if (!$userId) {
+                throw new Exception('Invalid user ID');
+            }
+            
+            // Validate the address
+            require_once __DIR__ . '/AddressValidator.php';
+            $validator = new AddressValidator();
+            
+            $result = $validator->validate($address);
+            
+            if (!$result['valid']) {
+                return [
+                    'success' => false,
+                    'errors' => $result['errors'] ?? ['Invalid address'],
+                    'suggestions' => $result['suggestions'] ?? []
+                ];
+            }
+            
+            // Update the user document with the normalized address
+            $objectId = new MongoDB\BSON\ObjectId($userId);
+            
+            $updateResult = $this->collection->updateOne(
+                ['_id' => $objectId],
+                ['$set' => [
+                    'personalInfo.address' => $result['normalized'],
+                    'updated' => new MongoDB\BSON\UTCDateTime()
+                ]]
+            );
+            
+            if (!$updateResult['success']) {
+                throw new Exception('Failed to update address');
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Address updated successfully',
+                'address' => $result['normalized']
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error updating address: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    }
 

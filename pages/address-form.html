@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Form</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--gray-700);
+            line-height: 1.5;
+            padding: 1rem;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+        }
+
+        .form-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.5rem;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        .form-group label, 
+        .form-col label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, 
+        .form-group select,
+        .form-col input, 
+        .form-col select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-col input:focus,
+        .form-col select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .form-error.active {
+            display: block;
+        }
+
+        .form-group .help-text {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--gray-400);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-50);
+        }
+
+        /* Response messaging */
+        .address-suggestions {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--gray-50);
+            border-radius: 6px;
+            border: 1px solid var(--gray-200);
+            display: none;
+        }
+
+        .address-suggestions.active {
+            display: block;
+        }
+
+        .address-suggestion {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            cursor: pointer;
+        }
+
+        .address-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .address-suggestion:hover {
+            background-color: var(--primary-light);
+        }
+
+        .validation-success {
+            padding: 1rem;
+            background-color: #d1fae5;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .validation-success.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+            display: none;
+        }
+
+        .btn.loading .spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h2>Address Information</h2>
+            <p>Please enter your complete address information below.</p>
+        </div>
+
+        <form id="addressForm">
+            <div class="form-group">
+                <label for="street">Street Address</label>
+                <input type="text" id="street" name="street" required autocomplete="address-line1">
+                <div class="form-error" id="streetError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="unit">Apartment/Suite/Unit (Optional)</label>
+                <input type="text" id="unit" name="unit" autocomplete="address-line2">
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" required autocomplete="address-level2">
+                    <div class="form-error" id="cityError"></div>
+                </div>
+
+                <div class="form-col">
+                    <label for="state">State/Province/Region</label>
+                    <input type="text" id="state" name="state" autocomplete="address-level1">
+                    <div class="form-error" id="stateError"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="zip">ZIP/Postal Code</label>
+                    <input type="text" id="zip" name="zip" autocomplete="postal-code">
+                    <div class="form-error" id="zipError"></div>
+                </div>
+
+                <div class="form-col">
+                    <label for="country">Country</label>
+                    <select id="country" name="country" required autocomplete="country">
+                        <option value="">Select a country</option>
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="AU">Australia</option>
+                        <!-- Add more countries as needed -->
+                    </select>
+                    <div class="form-error" id="countryError"></div>
+                </div>
+            </div>
+
+            <!-- Address validation feedback -->
+            <div class="address-suggestions" id="addressSuggestions">
+                <p>Did you mean one of these addresses?</p>
+                <div id="suggestionsList"></div>
+            </div>
+
+            <div class="validation-success" id="validationSuccess">
+                <p>✓ Address validated successfully</p>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn" id="validateButton">
+                    <span class="spinner"></span>
+                    <span>Validate Address</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const app = {
+                elements: {
+                    form: document.getElementById('addressForm'),
+                    street: document.getElementById('street'),
+                    unit: document.getElementById('unit'),
+                    city: document.getElementById('city'),
+                    state: document.getElementById('state'),
+                    zip: document.getElementById('zip'),
+                    country: document.getElementById('country'),
+                    validateButton: document.getElementById('validateButton'),
+                    streetError: document.getElementById('streetError'),
+                    cityError: document.getElementById('cityError'),
+                    stateError: document.getElementById('stateError'),
+                    zipError: document.getElementById('zipError'),
+                    countryError: document.getElementById('countryError'),
+                    addressSuggestions: document.getElementById('addressSuggestions'),
+                    suggestionsList: document.getElementById('suggestionsList'),
+                    validationSuccess: document.getElementById('validationSuccess')
+                },
+
+                init() {
+                    this.setupEventListeners();
+                    this.setupCountrySpecificFields();
+                },
+
+                setupEventListeners() {
+                    // Form submission
+                    this.elements.form.addEventListener('submit', (e) => this.validateAddress(e));
+                    
+                    // Country change - update field requirements
+                    this.elements.country.addEventListener('change', () => this.setupCountrySpecificFields());
+                    
+                    // Input changes - clear errors
+                    const inputs = [
+                        this.elements.street,
+                        this.elements.city,
+                        this.elements.state,
+                        this.elements.zip,
+                        this.elements.country
+                    ];
+                    
+                    inputs.forEach(input => {
+                        input.addEventListener('input', () => {
+                            const errorElement = document.getElementById(`${input.id}Error`);
+                            if (errorElement) {
+                                errorElement.textContent = '';
+                                errorElement.classList.remove('active');
+                            }
+                        });
+                    });
+                },
+
+                setupCountrySpecificFields() {
+                    const country = this.elements.country.value;
+                    const stateLabel = document.querySelector('label[for="state"]');
+                    const zipLabel = document.querySelector('label[for="zip"]');
+                    
+                    // Reset required attributes
+                    this.elements.state.required = false;
+                    this.elements.zip.required = false;
+                    
+                    // Adjust field names and requirements based on country
+                    switch (country) {
+                        case 'US':
+                            stateLabel.textContent = 'State';
+                            zipLabel.textContent = 'ZIP Code';
+                            this.elements.state.required = true;
+                            this.elements.zip.required = true;
+                            this.elements.zip.placeholder = '12345';
+                            break;
+                            
+                        case 'CA':
+                            stateLabel.textContent = 'Province';
+                            zipLabel.textContent = 'Postal Code';
+                            this.elements.state.required = true;
+                            this.elements.zip.required = true;
+                            this.elements.zip.placeholder = 'A1A 1A1';
+                            break;
+                            
+                        case 'UK':
+                            stateLabel.textContent = 'County (Optional)';
+                            zipLabel.textContent = 'Postcode';
+                            this.elements.zip.required = true;
+                            this.elements.zip.placeholder = '';
+                            break;
+                            
+                        case 'AU':
+                            stateLabel.textContent = 'State/Territory';
+                            zipLabel.textContent = 'Postcode';
+                            this.elements.state.required = true;
+                            this.elements.zip.required = true;
+                            this.elements.zip.placeholder = '1234';
+                            break;
+                            
+                        default:
+                            stateLabel.textContent = 'State/Province/Region';
+                            zipLabel.textContent = 'ZIP/Postal Code';
+                            this.elements.zip.placeholder = '';
+                    }
+                    
+                    // Update required indicators in labels
+                    stateLabel.innerHTML = this.elements.state.required ? 
+                        `${stateLabel.textContent} <span class="required">*</span>` : 
+                        stateLabel.textContent;
+                        
+                    zipLabel.innerHTML = this.elements.zip.required ? 
+                        `${zipLabel.textContent} <span class="required">*</span>` : 
+                        zipLabel.textContent;
+                },
+
+                async validateAddress(e) {
+                    e.preventDefault();
+                    
+                    // Reset UI state
+                    this.clearErrors();
+                    this.clearValidation();
+                    this.setLoading(true);
+                    
+                    // Build address object
+                    const address = {
+                        street: this.elements.street.value,
+                        unit: this.elements.unit.value,
+                        city: this.elements.city.value,
+                        state: this.elements.state.value,
+                        zip: this.elements.zip.value,
+                        country: this.elements.country.value
+                    };
+                    
+                    try {
+                        const response = await fetch('/api/address/validate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(address)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.valid) {
+                            // Address is valid - show success message and update form with normalized address
+                            this.showValidationSuccess();
+                            this.updateFormWithNormalizedAddress(result.normalized);
+                            
+                            // Emit an event that parent forms can listen for
+                            const event = new CustomEvent('addressValidated', {
+                                detail: {
+                                    address: result.normalized
+                                }
+                            });
+                            document.dispatchEvent(event);
+                        } else {
+                            // Handle validation errors
+                            if (result.errors) {
+                                this.showValidationErrors(result.errors);
+                            }
+                            
+                            // Show suggestions if available
+                            if (result.suggestions && result.suggestions.length > 0) {
+                                this.showAddressSuggestions(result.suggestions);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Validation error:', error);
+                        this.showError('An error occurred during address validation. Please try again.');
+                    } finally {
+                        this.setLoading(false);
+                    }
+                },
+
+                showValidationErrors(errors) {
+                    for (const [field, message] of Object.entries(errors)) {
+                        const errorElement = document.getElementById(`${field}Error`);
+                        if (errorElement) {
+                            errorElement.textContent = message;
+                            errorElement.classList.add('active');
+                        }
+                    }
+                },
+
+                showAddressSuggestions(suggestions) {
+                    this.elements.addressSuggestions.classList.add('active');
+                    this.elements.suggestionsList.innerHTML = '';
+                    
+                    suggestions.forEach((suggestion, index) => {
+                        const suggestionElement = document.createElement('div');
+                        suggestionElement.classList.add('address-suggestion');
+                        suggestionElement.innerHTML = this.formatAddressSuggestion(suggestion);
+                        suggestionElement.dataset.index = index;
+                        
+                        suggestionElement.addEventListener('click', () => {
+                            this.selectSuggestion(suggestion);
+                        });
+                        
+                        this.elements.suggestionsList.appendChild(suggestionElement);
+                    });
+                },
+
+                formatAddressSuggestion(address) {
+                    let formatted = address.street;
+                    if (address.unit) formatted += `, ${address.unit}`;
+                    formatted += `<br>${address.city}`;
+                    if (address.state) formatted += `, ${address.state}`;
+                    if (address.zip) formatted += ` ${address.zip}`;
+                    return formatted;
+                },
+
+                selectSuggestion(address) {
+                    // Update form fields with selected suggestion
+                    this.updateFormWithNormalizedAddress(address);
+                    
+                    // Clear suggestions UI
+                    this.elements.addressSuggestions.classList.remove('active');
+                    
+                    // Show success message
+                    this.showValidationSuccess();
+                    
+                    // Emit address validated event
+                    const event = new CustomEvent('addressValidated', {
+                        detail: {
+                            address: address
+                        }
+                    });
+                    document.dispatchEvent(event);
+                },
+
+                updateFormWithNormalizedAddress(address) {
+                    // Update form with normalized address values
+                    this.elements.street.value = address.street || this.elements.street.value;
+                    this.elements.unit.value = address.unit || this.elements.unit.value;
+                    this.elements.city.value = address.city || this.elements.city.value;
+                    this.elements.state.value = address.state || this.elements.state.value;
+                    this.elements.zip.value = address.zip || this.elements.zip.value;
+                    
+                    if (address.country) {
+                        this.elements.country.value = address.country;
+                        this.setupCountrySpecificFields();
+                    }
+                },
+
+                showValidationSuccess() {
+                    this.elements.validationSuccess.classList.add('active');
+                    setTimeout(() => {
+                        this.elements.validationSuccess.classList.remove('active');
+                    }, 5000);
+                },
+
+                clearErrors() {
+                    const errorElements = document.querySelectorAll('.form-error');
+                    errorElements.forEach(el => {
+                        el.textContent = '';
+                        el.classList.remove('active');
+                    });
+                },
+
+                clearValidation() {
+                    this.elements.addressSuggestions.classList.remove('active');
+                    this.elements.validationSuccess.classList.remove('active');
+                },
+
+                setLoading(loading) {
+                    this.elements.validateButton.classList.toggle('loading', loading);
+                    this.elements.validateButton.disabled = loading;
+                },
+
+                // Simple form validation before sending to server
+                validateForm() {
+                    let isValid = true;
+                    
+                    // Check required fields
+                    if (!this.elements.street.value) {
+                        this.showFieldError('street', 'Street address is required');
+                        isValid = false;
+                    }
+                    
+                    if (!this.elements.city.value) {
+                        this.showFieldError('city', 'City is required');
+                        isValid = false;
+                    }
+                    
+                    if (this.elements.state.required && !this.elements.state.value) {
+                        this.showFieldError('state', 'State/Province/Region is required');
+                        isValid = false;
+                    }
+                    
+                    if (this.elements.zip.required && !this.elements.zip.value) {
+                        this.showFieldError('zip', 'ZIP/Postal Code is required');
+                        isValid = false;
+                    }
+                    
+                    if (!this.elements.country.value) {
+                        this.showFieldError('country', 'Country is required');
+                        isValid = false;
+                    }
+                    
+                    return isValid;
+                },
+
+                showFieldError(field, message) {
+                    const errorElement = document.getElementById(`${field}Error`);
+                    if (errorElement) {
+                        errorElement.textContent = message;
+                        errorElement.classList.add('active');
+                    }
+                },
+
+                showError(message) {
+                    // Create a general error message at the top of the form
+                    let errorContainer = document.getElementById('generalError');
+                    
+                    if (!errorContainer) {
+                        errorContainer = document.createElement('div');
+                        errorContainer.id = 'generalError';
+                        errorContainer.classList.add('form-error');
+                        this.elements.form.prepend(errorContainer);
+                    }
+                    
+                    errorContainer.textContent = message;
+                    errorContainer.classList.add('active');
+                }
+            };
+
+            // Initialize the app
+            app.init();
+            
+            // Expose a simplified API for parent forms or external scripts
+            window.addressValidator = {
+                getAddressData: () => {
+                    return {
+                        street: app.elements.street.value,
+                        unit: app.elements.unit.value,
+                        city: app.elements.city.value,
+                        state: app.elements.state.value,
+                        zip: app.elements.zip.value,
+                        country: app.elements.country.value
+                    };
+                },
+                isValid: () => app.elements.validationSuccess.classList.contains('active'),
+                validate: () => app.validateAddress(new Event('submit'))
+            };
+        });
+    </script>
+</body>
+</html>
