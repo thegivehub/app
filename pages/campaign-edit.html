@@ -498,6 +498,280 @@
             display: none;
         }
 
+        /* New styles for preview and social sharing */
+        .preview-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .preview-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .share-btn {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        .share-btn:hover {
+            background-color: #4338ca;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: #374151;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f3f4f6;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: var(--border-radius);
+        }
+
+        /* SEO Preview Card */
+        .seo-preview-card {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin-bottom: 16px;
+        }
+
+        .seo-preview-google {
+            padding: 16px;
+        }
+
+        .seo-preview-title {
+            color: #1a0dab;
+            font-size: 18px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .seo-preview-url {
+            color: #006621;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .seo-preview-description {
+            color: #545454;
+            font-size: 13px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .seo-preview-facebook {
+            border-top: 1px solid #d1d5db;
+        }
+
+        .seo-preview-image {
+            width: 100%;
+            height: 260px;
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+        }
+
+        .seo-preview-facebook-content {
+            padding: 12px;
+            background-color: #f9fafb;
+        }
+
+        .seo-preview-facebook-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .seo-preview-facebook-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .seo-preview-facebook-url {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .seo-preview-twitter {
+            border-top: 1px solid #d1d5db;
+            padding: 16px;
+        }
+
+        .seo-preview-twitter-card {
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .seo-form-group {
+            margin-bottom: 16px;
+        }
+
+        .seo-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .seo-form-group input, .seo-form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .seo-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .share-options {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .share-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            background-color: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .url-input-group {
+            display: flex;
+            margin-bottom: 16px;
+        }
+
+        .url-input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .url-input-group button {
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-left: none;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            cursor: pointer;
+        }
+
+        .preview-devices {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .preview-device-btn {
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .preview-device-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .edit-mode input[type="text"],
@@ -522,6 +796,54 @@
             .btn-secondary:hover {
                 background-color: #4b5563;
             }
+
+            .dropdown-content {
+                background-color: #1f2937;
+            }
+
+            .dropdown-content a {
+                color: #e5e7eb;
+            }
+
+            .dropdown-content a:hover {
+                background-color: #374151;
+            }
+
+            .seo-preview-google {
+                background-color: #1f2937;
+            }
+
+            .seo-preview-title {
+                color: #60a5fa;
+            }
+
+            .seo-preview-url {
+                color: #34d399;
+            }
+
+            .seo-preview-description {
+                color: #d1d5db;
+            }
+
+            .seo-preview-facebook-content,
+            .share-option {
+                background-color: #374151;
+            }
+
+            .seo-preview-facebook-description {
+                color: #d1d5db;
+            }
+
+            .tab-button,
+            .url-input-group button {
+                background-color: #374151;
+                color: #e5e7eb;
+            }
+
+            .preview-device-btn {
+                background-color: #374151;
+                color: #e5e7eb;
+            }
         }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -533,6 +855,33 @@
         <div class="action-buttons" style="margin-bottom: 16px;">
             <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
             <div style="flex: 1;"></div>
+            
+            <!-- Preview button with dropdown -->
+            <div class="dropdown" style="margin-right: 8px;">
+                <button id="preview-btn" class="btn preview-btn"><i class="fas fa-eye"></i> Preview</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="app.openPreviewModal('desktop'); return false;"><i class="fas fa-desktop"></i> Desktop</a>
+                    <a href="#" onclick="app.openPreviewModal('tablet'); return false;"><i class="fas fa-tablet-alt"></i> Tablet</a>
+                    <a href="#" onclick="app.openPreviewModal('mobile'); return false;"><i class="fas fa-mobile-alt"></i> Mobile</a>
+                </div>
+            </div>
+            
+            <!-- Share button with dropdown -->
+            <div class="dropdown" style="margin-right: 8px;">
+                <button id="share-btn" class="btn share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="app.openShareModal('facebook'); return false;"><i class="fab fa-facebook"></i> Facebook</a>
+                    <a href="#" onclick="app.openShareModal('twitter'); return false;"><i class="fab fa-twitter"></i> Twitter</a>
+                    <a href="#" onclick="app.openShareModal('linkedin'); return false;"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    <a href="#" onclick="app.openShareModal('email'); return false;"><i class="fas fa-envelope"></i> Email</a>
+                    <a href="#" onclick="app.openShareModal('link'); return false;"><i class="fas fa-link"></i> Copy Link</a>
+                </div>
+            </div>
+            
+            <!-- SEO button -->
+            <button id="seo-btn" class="btn btn-secondary" style="margin-right: 8px;" onclick="app.openSeoModal()"><i class="fas fa-search"></i> SEO</button>
+            
+            <!-- Edit/Save buttons -->
             <button id="edit-campaign-btn" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Campaign</button>
             <button id="save-campaign-btn" class="btn btn-success" style="display: none;"><i class="fas fa-save"></i> Save Changes</button>
             <button id="cancel-edit-btn" class="btn btn-secondary" style="display: none;"><i class="fas fa-times"></i> Cancel</button>
@@ -762,11 +1111,282 @@
     </div>
 </div>
 
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal">
+    <div class="modal-content" style="max-width: 90%; width: 1200px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Campaign Preview</h3>
+            <button class="modal-close" onclick="app.closeModal('preview-modal')">&times;</button>
+        </div>
+        <div class="preview-devices">
+            <button class="preview-device-btn active" data-device="desktop" onclick="app.changePreviewDevice('desktop')">
+                <i class="fas fa-desktop"></i> Desktop
+            </button>
+            <button class="preview-device-btn" data-device="tablet" onclick="app.changePreviewDevice('tablet')">
+                <i class="fas fa-tablet-alt"></i> Tablet
+            </button>
+            <button class="preview-device-btn" data-device="mobile" onclick="app.changePreviewDevice('mobile')">
+                <i class="fas fa-mobile-alt"></i> Mobile
+            </button>
+        </div>
+        <div id="preview-container" style="width: 100%; overflow: hidden; border-radius: 8px; transition: all 0.3s ease;">
+            <iframe id="preview-frame" class="preview-frame" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- SEO Modal -->
+<div id="seo-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 class="modal-title">SEO & Social Media Preview</h3>
+            <button class="modal-close" onclick="app.closeModal('seo-modal')">&times;</button>
+        </div>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="seo-settings" onclick="app.changeTab('seo-settings')">SEO Settings</button>
+            <button class="tab-button" data-tab="previews" onclick="app.changeTab('previews')">Previews</button>
+        </div>
+        
+        <!-- SEO Settings Tab -->
+        <div class="tab-content active" id="seo-settings">
+            <div class="seo-form-group">
+                <label for="seo-title">SEO Title (60-70 characters)</label>
+                <input type="text" id="seo-title" maxlength="70" placeholder="Help Bring Clean Water to Rural Kenya - GiveHub Campaign">
+                <div style="display: flex; justify-content: flex-end; font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                    <span id="seo-title-counter">0</span>/70
+                </div>
+            </div>
+            
+            <div class="seo-form-group">
+                <label for="seo-description">Meta Description (150-160 characters)</label>
+                <textarea id="seo-description" maxlength="160" placeholder="Join our mission to provide clean water to communities in rural Kenya. Every donation helps us build sustainable water systems and improve lives."></textarea>
+                <div style="display: flex; justify-content: flex-end; font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                    <span id="seo-description-counter">0</span>/160
+                </div>
+            </div>
+            
+            <div class="seo-form-group">
+                <label for="social-title">Social Media Title (may differ from SEO title)</label>
+                <input type="text" id="social-title" placeholder="Help Us Bring Clean Water to Communities in Need">
+            </div>
+            
+            <div class="seo-form-group">
+                <label for="social-description">Social Media Description</label>
+                <textarea id="social-description" placeholder="Every $50 provides clean water access for one person. Join our mission to transform communities in rural Kenya through sustainable water solutions."></textarea>
+            </div>
+            
+            <div class="seo-form-group">
+                <label for="social-image">Social Media Image URL</label>
+                <input type="url" id="social-image" placeholder="https://example.com/campaign-image.jpg">
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                    Recommended size: 1200×630 pixels for Facebook, 1024×512 pixels for Twitter
+                </p>
+            </div>
+            
+            <div class="action-buttons">
+                <button type="button" class="btn btn-primary" onclick="app.saveSeoSettings()">
+                    <i class="fas fa-save"></i> Save SEO Settings
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="app.applySeoFromCampaign()">
+                    <i class="fas fa-sync"></i> Auto-generate from Campaign
+                </button>
+            </div>
+        </div>
+        
+        <!-- Previews Tab -->
+        <div class="tab-content" id="previews">
+            <h4 style="margin-bottom: 12px;">Google Search Result Preview</h4>
+            <div class="seo-preview-card">
+                <div class="seo-preview-google">
+                    <div class="seo-preview-title" id="preview-google-title">Campaign Title - The Give Hub</div>
+                    <div class="seo-preview-url" id="preview-google-url">https://thegivehub.com/campaign/clean-water-kenya</div>
+                    <div class="seo-preview-description" id="preview-google-description">Join our mission to provide clean water to communities in rural Kenya. Every donation helps us build sustainable water systems and improve lives.</div>
+                </div>
+            </div>
+            
+            <h4 style="margin: 16px 0 12px;">Facebook Preview</h4>
+            <div class="seo-preview-card">
+                <div class="seo-preview-facebook">
+                    <div class="seo-preview-image" id="preview-facebook-image">
+                        <span>Campaign Image</span>
+                    </div>
+                    <div class="seo-preview-facebook-content">
+                        <div class="seo-preview-facebook-title" id="preview-facebook-title">Help Us Bring Clean Water to Communities in Need</div>
+                        <div class="seo-preview-facebook-description" id="preview-facebook-description">Every $50 provides clean water access for one person. Join our mission to transform communities in rural Kenya through sustainable water solutions.</div>
+                        <div class="seo-preview-facebook-url" id="preview-facebook-url">THEGIVEHUB.COM</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 style="margin: 16px 0 12px;">Twitter Preview</h4>
+            <div class="seo-preview-card">
+                <div class="seo-preview-twitter">
+                    <div class="seo-preview-twitter-card">
+                        <div class="seo-preview-image" id="preview-twitter-image" style="height: 200px;">
+                            <span>Campaign Image</span>
+                        </div>
+                        <div class="seo-preview-facebook-content">
+                            <div class="seo-preview-facebook-title" id="preview-twitter-title">Help Us Bring Clean Water to Communities in Need</div>
+                            <div class="seo-preview-facebook-url" id="preview-twitter-url">THEGIVEHUB.COM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="share-modal-title">Share on Facebook</h3>
+            <button class="modal-close" onclick="app.closeModal('share-modal')">&times;</button>
+        </div>
+        
+        <div id="share-content-facebook" class="share-content">
+            <div class="seo-preview-card" style="margin-bottom: 16px;">
+                <div class="seo-preview-facebook">
+                    <div class="seo-preview-image" id="share-facebook-image">
+                        <span>Campaign Image</span>
+                    </div>
+                    <div class="seo-preview-facebook-content">
+                        <div class="seo-preview-facebook-title" id="share-facebook-title">Help Us Bring Clean Water to Communities in Need</div>
+                        <div class="seo-preview-facebook-description" id="share-facebook-description">Every $50 provides clean water access for one person. Join our mission to transform communities in rural Kenya through sustainable water solutions.</div>
+                        <div class="seo-preview-facebook-url" id="share-facebook-url">THEGIVEHUB.COM</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="facebook-message">Add a message (optional)</label>
+                <textarea id="facebook-message" placeholder="I'm supporting this important cause. Will you join me?"></textarea>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="app.shareToPlatform('facebook')">
+                    <i class="fab fa-facebook"></i> Share on Facebook
+                </button>
+            </div>
+        </div>
+        
+        <div id="share-content-twitter" class="share-content" style="display: none;">
+            <div class="seo-preview-card" style="margin-bottom: 16px;">
+                <div class="seo-preview-twitter">
+                    <div class="seo-preview-twitter-card">
+                        <div class="seo-preview-image" id="share-twitter-image" style="height: 200px;">
+                            <span>Campaign Image</span>
+                        </div>
+                        <div class="seo-preview-facebook-content">
+                            <div class="seo-preview-facebook-title" id="share-twitter-title">Help Us Bring Clean Water to Communities in Need</div>
+                            <div class="seo-preview-facebook-url" id="share-twitter-url">THEGIVEHUB.COM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="twitter-message">Tweet (280 characters max)</label>
+                <textarea id="twitter-message" maxlength="280" placeholder="Join me in supporting this clean water project in Kenya through @GiveHub! Every donation makes a difference."></textarea>
+                <div style="display: flex; justify-content: flex-end; font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                    <span id="twitter-message-counter">0</span>/280
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="app.shareToPlatform('twitter')">
+                    <i class="fab fa-twitter"></i> Share on Twitter
+                </button>
+            </div>
+        </div>
+        
+        <div id="share-content-linkedin" class="share-content" style="display: none;">
+            <div class="form-group">
+                <label for="linkedin-title">Title</label>
+                <input type="text" id="linkedin-title" value="Help Us Bring Clean Water to Communities in Need">
+            </div>
+            
+            <div class="form-group">
+                <label for="linkedin-message">Message</label>
+                <textarea id="linkedin-message" placeholder="I'm supporting this meaningful clean water project through The Give Hub. Join me in making a difference for communities in need."></textarea>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="app.shareToPlatform('linkedin')">
+                    <i class="fab fa-linkedin"></i> Share on LinkedIn
+                </button>
+            </div>
+        </div>
+        
+        <div id="share-content-email" class="share-content" style="display: none;">
+            <div class="form-group">
+                <label for="email-subject">Email Subject</label>
+                <input type="text" id="email-subject" value="Join me in supporting this important clean water project">
+            </div>
+            
+            <div class="form-group">
+                <label for="email-body">Email Body</label>
+                <textarea id="email-body" rows="6">
+Hello,
+
+I wanted to share this Clean Water Campaign with you from The Give Hub. They're working to provide sustainable water solutions to communities in rural Kenya.
+
+You can learn more and donate here: {{campaign_url}}
+
+Every contribution helps make a real difference in people's lives.
+
+Thanks for considering,
+[Your Name]
+                </textarea>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="app.shareToPlatform('email')">
+                    <i class="fas fa-envelope"></i> Compose Email
+                </button>
+            </div>
+        </div>
+        
+        <div id="share-content-link" class="share-content" style="display: none;">
+            <div class="form-group">
+                <label for="campaign-url">Campaign URL</label>
+                <div class="url-input-group">
+                    <input type="text" id="campaign-url" value="https://thegivehub.com/campaign/clean-water-kenya" readonly>
+                    <button id="copy-url-btn" onclick="app.copyToClipboard('campaign-url')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Share on other platforms</label>
+                <div class="share-options">
+                    <div class="share-option" onclick="app.openShareModal('facebook')">
+                        <i class="fab fa-facebook"></i> Facebook
+                    </div>
+                    <div class="share-option" onclick="app.openShareModal('twitter')">
+                        <i class="fab fa-twitter"></i> Twitter
+                    </div>
+                    <div class="share-option" onclick="app.openShareModal('linkedin')">
+                        <i class="fab fa-linkedin"></i> LinkedIn
+                    </div>
+                    <div class="share-option" onclick="app.openShareModal('email')">
+                        <i class="fas fa-envelope"></i> Email
+                    </div>
+                    <div class="share-option" onclick="app.openShareModal('whatsapp')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
 (function() {
     const $ = str => document.querySelector(str);
     const $$ = str => document.querySelectorAll(str);
-    
+
     const app = {
         data: {},
         state: {
@@ -774,51 +1394,85 @@
             map: null,
             editMode: false,
             editingItem: null,
-            marker: null
+            marker: null,
+            currentPreviewDevice: 'desktop',
+            currentTab: 'seo-settings',
+            seoSettings: {
+                title: '',
+                description: '',
+                socialTitle: '',
+                socialDescription: '',
+                socialImage: ''
+            }
         },
-        
+
         init() {
             this.bindEvents();
             const query = this.utils.parseSearch();
             const campaignId = query.id;
             this.fetch(`/api/campaign?id=${campaignId}`);
+            this.initCharacterCounters();
         },
-        
+
         bindEvents() {
             // Edit mode buttons
             $('#edit-campaign-btn').addEventListener('click', () => this.toggleEditMode(true));
             $('#save-campaign-btn').addEventListener('click', () => this.saveCampaign());
             $('#cancel-edit-btn').addEventListener('click', () => this.toggleEditMode(false));
-            
+
             // Add item buttons
             $('#add-metric-btn').addEventListener('click', () => this.openMetricModal());
             $('#add-milestone-btn').addEventListener('click', () => this.openMilestoneModal());
             $('#add-media-btn').addEventListener('click', () => this.openMediaModal());
-            
+
             // Form submissions
             $('#metric-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveMetric();
             });
-            
+
             $('#milestone-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveMilestone();
             });
-            
+
             $('#media-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveMedia();
             });
-            
+
             // Map click for coordinate editing in edit mode
             $('#map').addEventListener('click', (e) => {
                 if (this.state.editMode && this.state.map) {
                     this.handleMapClick(e);
                 }
             });
+
+            // Character counters for SEO fields
+            $('#seo-title').addEventListener('input', () => this.updateCharacterCount('seo-title'));
+            $('#seo-description').addEventListener('input', () => this.updateCharacterCount('seo-description'));
+            $('#twitter-message').addEventListener('input', () => this.updateCharacterCount('twitter-message'));
+
+            // Update SEO previews on input
+            $$('#seo-title, #seo-description, #social-title, #social-description, #social-image').forEach(el => {
+                el.addEventListener('input', () => this.updateSeoPreviews());
+            });
         },
-        
+
+        initCharacterCounters() {
+            this.updateCharacterCount('seo-title');
+            this.updateCharacterCount('seo-description');
+            this.updateCharacterCount('twitter-message');
+        },
+
+        updateCharacterCount(elementId) {
+            const element = $('#' + elementId);
+            const counter = $('#' + elementId + '-counter');
+            if (element && counter) {
+                counter.textContent = element.value.length;
+            }
+        },
+
         utils: {
             parseSearch() {
                 const qs = document.location.search.replace(/^\?/, '');
@@ -826,18 +1480,18 @@
                 const query = {};
                 for (let item of items) {
                     const parts = item.split(/=/, 2);
-                    if (parts && parts[0]) query[parts[0]] = parts[1];
+                    if (parts && parts[0]) query[parts[0]] = decodeURIComponent(parts[1] || '');
                 }
                 return query;
             },
-            
+
             formatCurrency(amount, currency = 'USD') {
                 return new Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: currency
                 }).format(amount);
             },
-            
+
             getStatusClass(status) {
                 const statusMap = {
                     'active': 'status-active',
@@ -846,25 +1500,49 @@
                 };
                 return statusMap[status.toLowerCase()] || 'status-pending';
             },
-            
+
             showNotification(message, type = 'success') {
                 const notification = $('#notification');
                 $('#notification-message').textContent = message;
-                
+
                 notification.className = 'notification';
                 notification.classList.add(type);
                 notification.classList.add('show');
-                
+
                 setTimeout(() => {
                     notification.classList.remove('show');
                 }, 3000);
             },
-            
+
             generateId() {
                 return 'temp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            },
+
+            truncateText(text, maxLength) {
+                if (!text || text.length <= maxLength) return text;
+                return text.substring(0, maxLength - 3) + '...';
+            },
+
+            getDomainFromUrl(url) {
+                try {
+                    const domain = new URL(url).hostname.toUpperCase();
+                    return domain;
+                } catch (e) {
+                    return 'THEGIVEHUB.COM';
+                }
+            },
+
+            getSlugFromTitle(title) {
+                if (!title) return 'campaign';
+                return title
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '')  // Remove special characters
+                    .replace(/\s+/g, '-')      // Replace spaces with dashes
+                    .replace(/-+/g, '-')       // Remove consecutive dashes
+                    .substring(0, 50);         // Limit length
             }
         },
-        
+
         fetch(url) {
             fetch(url)
                 .then(response => response.json())
@@ -872,44 +1550,47 @@
                     this.data = data;
                     this.state.loaded = true;
                     this.render();
+
+                    // Initialize SEO data from campaign data
+                    this.initSeoFromCampaign();
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
                     this.utils.showNotification('Failed to load campaign data', 'error');
                 });
         },
-        
+
         toggleEditMode(isEditing) {
             this.state.editMode = isEditing;
-            
+
             // Toggle edit buttons
             $('#edit-campaign-btn').style.display = isEditing ? 'none' : 'block';
             $('#save-campaign-btn').style.display = isEditing ? 'block' : 'none';
             $('#cancel-edit-btn').style.display = isEditing ? 'block' : 'none';
-            
+
             // Toggle add buttons
             $('#add-metric-btn').style.display = isEditing ? 'block' : 'none';
             $('#add-milestone-btn').style.display = isEditing ? 'block' : 'none';
             $('#add-media-btn').style.display = isEditing ? 'block' : 'none';
-            
+
             // Toggle display/edit fields
             $('#campaign-title').style.display = isEditing ? 'none' : 'block';
             $('#campaign-title-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             $('#campaign-description').style.display = isEditing ? 'none' : 'block';
             $('#campaign-description-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             $('#campaign-location').style.display = isEditing ? 'none' : 'block';
             $('#location-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             $('#campaign-goal').style.display = isEditing ? 'none' : 'block';
             $('#goal-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             $('#coordinates-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             $('#campaign-raised').style.display = isEditing ? 'none' : 'block';
             $('#raised-edit').style.display = isEditing ? 'block' : 'none';
-            
+
             // Show/hide edit buttons on items
             const itemActions = $$('.item-actions');
             if (itemActions) {
@@ -1453,11 +2134,346 @@
                 this.data = data;
                 this.toggleEditMode(false);
                 this.utils.showNotification('Campaign updated successfully');
+                
+                // Update SEO data after campaign update
+                this.initSeoFromCampaign();
             })
             .catch(error => {
                 console.error('Error updating campaign:', error);
                 this.utils.showNotification('Failed to update campaign', 'error');
             });
+        },
+        
+        // Preview functionality
+        openPreviewModal(device = 'desktop') {
+            this.state.currentPreviewDevice = device;
+            
+            // Set the preview URL to the campaign detail page
+            const previewUrl = `/campaign-detail.html?id=${this.data._id}&preview=true`;
+            $('#preview-frame').src = previewUrl;
+            
+            // Update device buttons
+            $$('.preview-device-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.device === device);
+            });
+            
+            // Adjust frame width based on device
+            const previewContainer = $('#preview-container');
+            switch (device) {
+                case 'mobile':
+                    previewContainer.style.width = '375px';
+                    break;
+                case 'tablet':
+                    previewContainer.style.width = '768px';
+                    break;
+                case 'desktop':
+                default:
+                    previewContainer.style.width = '100%';
+                    break;
+            }
+            
+            this.openModal('preview-modal');
+        },
+        
+        changePreviewDevice(device) {
+            this.state.currentPreviewDevice = device;
+            
+            // Update active button
+            $$('.preview-device-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.device === device);
+            });
+            
+            // Adjust frame width based on device
+            const previewContainer = $('#preview-container');
+            switch (device) {
+                case 'mobile':
+                    previewContainer.style.width = '375px';
+                    break;
+                case 'tablet':
+                    previewContainer.style.width = '768px';
+                    break;
+                case 'desktop':
+                default:
+                    previewContainer.style.width = '100%';
+                    break;
+            }
+        },
+        
+        // SEO functionality
+        initSeoFromCampaign() {
+            // Initialize SEO settings from campaign data
+            this.state.seoSettings = {
+                title: this.data.title ? `${this.data.title} - The Give Hub` : 'Campaign - The Give Hub',
+                description: this.data.description || 'Support this campaign on The Give Hub',
+                socialTitle: this.data.title || 'Campaign',
+                socialDescription: this.data.description || 'Support this campaign on The Give Hub',
+                socialImage: this.data.media && this.data.media.length > 0 && this.data.media[0].type === 'image' ? 
+                    this.data.media[0].url : ''
+            };
+            
+            // Update SEO input fields
+            $('#seo-title').value = this.state.seoSettings.title;
+            $('#seo-description').value = this.state.seoSettings.description;
+            $('#social-title').value = this.state.seoSettings.socialTitle;
+            $('#social-description').value = this.state.seoSettings.socialDescription;
+            $('#social-image').value = this.state.seoSettings.socialImage;
+            
+            // Update character counters
+            this.updateCharacterCount('seo-title');
+            this.updateCharacterCount('seo-description');
+            
+            // Update previews
+            this.updateSeoPreviews();
+        },
+        
+        applySeoFromCampaign() {
+            this.initSeoFromCampaign();
+            this.utils.showNotification('SEO settings updated from campaign');
+        },
+        
+        updateSeoPreviews() {
+            // Get values from form
+            const title = $('#seo-title').value || 'Campaign - The Give Hub';
+            const description = $('#seo-description').value || 'Support this campaign on The Give Hub';
+            const socialTitle = $('#social-title').value || title;
+            const socialDescription = $('#social-description').value || description;
+            const socialImage = $('#social-image').value || '';
+            
+            // Calculate URL and domain
+            const campaignSlug = this.utils.getSlugFromTitle(this.data.title || 'campaign');
+            const previewUrl = `https://thegivehub.com/campaign/${campaignSlug}`;
+            const domain = this.utils.getDomainFromUrl(previewUrl);
+            
+            // Update Google preview
+            $('#preview-google-title').textContent = title;
+            $('#preview-google-url').textContent = previewUrl;
+            $('#preview-google-description').textContent = description;
+            
+            // Update Facebook preview
+            $('#preview-facebook-title').textContent = socialTitle;
+            $('#preview-facebook-description').textContent = socialDescription;
+            $('#preview-facebook-url').textContent = domain;
+            
+            // Update Facebook preview image if provided
+            if (socialImage) {
+                $('#preview-facebook-image').innerHTML = `<img src="${socialImage}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                $('#preview-facebook-image').innerHTML = '<span>Campaign Image</span>';
+            }
+            
+            // Update Twitter preview
+            $('#preview-twitter-title').textContent = socialTitle;
+            $('#preview-twitter-url').textContent = domain;
+            
+            // Update Twitter preview image if provided
+            if (socialImage) {
+                $('#preview-twitter-image').innerHTML = `<img src="${socialImage}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                $('#preview-twitter-image').innerHTML = '<span>Campaign Image</span>';
+            }
+            
+            // Update share modal content
+            $('#share-facebook-title').textContent = socialTitle;
+            $('#share-facebook-description').textContent = socialDescription;
+            $('#share-facebook-url').textContent = domain;
+            
+            if (socialImage) {
+                $('#share-facebook-image').innerHTML = `<img src="${socialImage}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                $('#share-facebook-image').innerHTML = '<span>Campaign Image</span>';
+            }
+            
+            $('#share-twitter-title').textContent = socialTitle;
+            $('#share-twitter-url').textContent = domain;
+            
+            if (socialImage) {
+                $('#share-twitter-image').innerHTML = `<img src="${socialImage}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                $('#share-twitter-image').innerHTML = '<span>Campaign Image</span>';
+            }
+            
+            // Update share link
+            $('#campaign-url').value = previewUrl;
+        },
+        
+        openSeoModal() {
+            // Reset to the settings tab
+            this.changeTab('seo-settings');
+            
+            // Make sure previews are up to date
+            this.updateSeoPreviews();
+            
+            this.openModal('seo-modal');
+        },
+        
+        changeTab(tabId) {
+            // Update active tab button
+            $$('.tab-button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+            
+            // Show selected tab content
+            $$('.tab-content').forEach(tab => {
+                tab.classList.toggle('active', tab.id === tabId);
+            });
+            
+            this.state.currentTab = tabId;
+        },
+        
+        saveSeoSettings() {
+            // Save the current SEO settings from the form
+            this.state.seoSettings = {
+                title: $('#seo-title').value,
+                description: $('#seo-description').value,
+                socialTitle: $('#social-title').value,
+                socialDescription: $('#social-description').value,
+                socialImage: $('#social-image').value
+            };
+            
+            // Update previews
+            this.updateSeoPreviews();
+            
+            // TODO: In a real implementation, we would send this to the server
+            this.utils.showNotification('SEO settings saved successfully');
+            
+            // Close the modal
+            this.closeModal('seo-modal');
+        },
+        
+        // Share functionality
+        openShareModal(platform) {
+            // Update modal title
+            const titleMap = {
+                'facebook': 'Share on Facebook',
+                'twitter': 'Share on Twitter',
+                'linkedin': 'Share on LinkedIn',
+                'email': 'Share via Email',
+                'link': 'Share Campaign Link',
+                'whatsapp': 'Share on WhatsApp'
+            };
+            
+            $('#share-modal-title').textContent = titleMap[platform] || 'Share Campaign';
+            
+            // Hide all share content sections
+            $$('.share-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Show the selected platform content
+            $(`#share-content-${platform}`).style.display = 'block';
+            
+            // If it's WhatsApp, we'll just redirect
+            if (platform === 'whatsapp') {
+                const campaignUrl = $('#campaign-url').value;
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out this campaign on The Give Hub: ${campaignUrl}`)}`;
+                window.open(whatsappUrl, '_blank');
+                return;
+            }
+            
+            // Prepare share content
+            this.prepareShareContent(platform);
+            
+            this.openModal('share-modal');
+        },
+        
+        prepareShareContent(platform) {
+            const title = this.state.seoSettings.socialTitle || this.data.title || 'Campaign';
+            const description = this.state.seoSettings.socialDescription || this.data.description || 'Support this campaign on The Give Hub';
+            const campaignSlug = this.utils.getSlugFromTitle(this.data.title || 'campaign');
+            const campaignUrl = `https://thegivehub.com/campaign/${campaignSlug}`;
+            
+            // Update URL field
+            $('#campaign-url').value = campaignUrl;
+            
+            // Platform-specific preparations
+            switch (platform) {
+                case 'twitter':
+                    // Prepare Twitter message with title and URL
+                    $('#twitter-message').value = `${title} ${campaignUrl} via @GiveHub`;
+                    this.updateCharacterCount('twitter-message');
+                    break;
+                    
+                case 'linkedin':
+                    // Set LinkedIn title and message
+                    $('#linkedin-title').value = title;
+                    $('#linkedin-message').value = description;
+                    break;
+                    
+                case 'email':
+                    // Set email subject and prepare body
+                    $('#email-subject').value = `Check out this campaign: ${title}`;
+                    $('#email-body').value = `Hello,\n\nI wanted to share this campaign with you from The Give Hub. \n\n${title}\n${description}\n\nYou can learn more and donate here: ${campaignUrl}\n\nThanks,\n[Your Name]`;
+                    break;
+            }
+        },
+        
+        shareToPlatform(platform) {
+            const title = this.state.seoSettings.socialTitle || this.data.title || 'Campaign';
+            const description = this.state.seoSettings.socialDescription || this.data.description;
+            const campaignUrl = $('#campaign-url').value;
+            
+            switch (platform) {
+                case 'facebook':
+                    const fbMessage = $('#facebook-message').value;
+                    // Open Facebook share dialog
+                    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}&quote=${encodeURIComponent(fbMessage)}`;
+                    window.open(fbShareUrl, '_blank', 'width=600,height=400');
+                    break;
+                    
+                case 'twitter':
+                    const tweetText = $('#twitter-message').value;
+                    // Open Twitter share dialog
+                    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+                    window.open(twitterShareUrl, '_blank', 'width=600,height=400');
+                    break;
+                    
+                case 'linkedin':
+                    const liTitle = $('#linkedin-title').value;
+                    const liSummary = $('#linkedin-message').value;
+                    // Open LinkedIn share dialog
+                    const linkedinShareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(campaignUrl)}&title=${encodeURIComponent(liTitle)}&summary=${encodeURIComponent(liSummary)}`;
+                    window.open(linkedinShareUrl, '_blank', 'width=600,height=400');
+                    break;
+                    
+                case 'email':
+                    const emailSubject = $('#email-subject').value;
+                    const emailBody = $('#email-body').value.replace('{{campaign_url}}', campaignUrl);
+                    // Open email client
+                    window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+                    break;
+            }
+            
+            // Close the modal
+            this.closeModal('share-modal');
+            this.utils.showNotification(`Campaign shared on ${platform.charAt(0).toUpperCase() + platform.slice(1)}`);
+        },
+        
+        copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            // Select the text
+            element.select();
+            element.setSelectionRange(0, 99999); // For mobile devices
+            
+            // Copy the text
+            document.execCommand('copy');
+            
+            // Deselect
+            element.blur();
+            
+            // Show confirmation
+            this.utils.showNotification('Link copied to clipboard');
+            
+            // Update button text temporarily
+            const copyBtn = $('#copy-url-btn');
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+            }, 2000);
         },
         
         // Add animation effects
@@ -1475,7 +2491,7 @@
             }
 
             // Animate stats counting up
-            const stats = $('.stat-value');
+            const stats = $$('.stat-value');
             stats.forEach(stat => {
                 const finalValue = stat.textContent;
                 if (!isNaN(parseInt(finalValue))) {
