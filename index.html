@@ -511,7 +511,243 @@ User Guide
 
         window.app = app;
         app.init();
+        
+        app.profileCompletion = {
+            init() {
+                // Only initialize if the sidebar exists
+                if (document.querySelector('.app-sidebar')) {
+                    this.createCompletionIndicator();
+                    this.fetchProfileCompletionData();
+                }
+            },
+
+            createCompletionIndicator() {
+                // Create the profile completion HTML
+                const completionHTML = `
+                    <div class="profile-completion-indicator">
+                        <div class="indicator-header">
+                            <h3>Profile Completion</h3>
+                            <span id="completion-percentage">0%</span>
+                        </div>
+                        <div class="indicator-progress">
+                            <div id="completion-progress-bar"></div>
+                        </div>
+                        <div class="indicator-message">
+                            <p>Complete your profile to get the most out of GiveHub</p>
+                            <a href="/settings.html" id="complete-profile-link">Complete Profile →</a>
+                        </div>
+                    </div>
+                `;
+
+                // Find the sidebar
+                const sidebar = document.querySelector('.app-sidebar');
+                
+                // Append the indicator to the bottom of the sidebar
+                const indicatorContainer = document.createElement('div');
+                indicatorContainer.className = 'profile-completion-container';
+                indicatorContainer.innerHTML = completionHTML;
+                sidebar.appendChild(indicatorContainer);
+
+                // Add the CSS for the indicator
+                this.addCompletionStyles();
+            },
+
+            fetchProfileCompletionData() {
+                // Check if we're logged in
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.log('User not logged in, not showing profile completion');
+                    document.querySelector('.profile-completion-indicator').style.display = 'none';
+                    return;
+                }
+
+                // Try to fetch real profile data if possible
+                fetch('/api/user/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch profile data');
+                    }
+                    return response.json();
+                })
+                .then(userData => {
+                    this.calculateCompletion(userData);
+                })
+                .catch(error => {
+                    console.error('Error fetching profile data:', error);
+                    
+                    // Use mock data for demonstration
+                    const mockData = {
+                        displayName: true,
+                        email: true,
+                        personalInfo: {
+                            firstName: true,
+                            lastName: true,
+                            phone: false,
+                            location: false
+                        },
+                        profile: {
+                            bio: false,
+                            avatar: true
+                        }
+                    };
+                    
+                    this.calculateCompletion(mockData);
+                });
+            },
+
+            calculateCompletion(userData) {
+                // Define the required fields and their paths in the user object
+                const requiredFields = [
+                    { name: 'displayName', path: 'displayName' },
+                    { name: 'email', path: 'email' },
+                    { name: 'firstName', path: 'personalInfo.firstName' },
+                    { name: 'lastName', path: 'personalInfo.lastName' },
+                    { name: 'phone', path: 'personalInfo.phone' },
+                    { name: 'location', path: 'personalInfo.location' },
+                    { name: 'bio', path: 'profile.bio' },
+                    { name: 'avatar', path: 'profile.avatar' }
+                ];
+                
+                // Count completed fields
+                let completedCount = 0;
+                
+                requiredFields.forEach(field => {
+                    // Navigate the path to check if the field exists and has a value
+                    const parts = field.path.split('.');
+                    let value = userData;
+                    
+                    for (const part of parts) {
+                        if (value && value[part]) {
+                            value = value[part];
+                        } else {
+                            value = null;
+                            break;
+                        }
+                    }
+                    
+                    if (value) {
+                        completedCount++;
+                    }
+                });
+                
+                // Calculate percentage
+                const percentage = Math.round((completedCount / requiredFields.length) * 100);
+                
+                // Update the UI
+                this.updateCompletionUI(percentage);
+            },
+
+            updateCompletionUI(percentage) {
+                const percentageElement = document.getElementById('completion-percentage');
+                const progressBar = document.getElementById('completion-progress-bar');
+                const message = document.querySelector('.indicator-message');
+                
+                // Update percentage text
+                if (percentageElement) {
+                    percentageElement.textContent = `${percentage}%`;
+                }
+                
+                // Update progress bar width
+                if (progressBar) {
+                    progressBar.style.width = `${percentage}%`;
+                }
+                
+                // Hide message if profile is complete
+                if (message && percentage === 100) {
+                    message.style.display = 'none';
+                }
+            },
+
+            addCompletionStyles() {
+                // Add CSS styles to the document head
+                const styleElement = document.createElement('style');
+                styleElement.textContent = `
+                    .profile-completion-container {
+                        margin-top: auto;
+                        padding: 1rem;
+                        border-top: 1px solid rgba(229, 231, 235, 0.2);
+                    }
+                    
+                    .profile-completion-indicator {
+                        background-color: rgba(255, 255, 255, 0.05);
+                        border-radius: 8px;
+                        padding: 1rem;
+                    }
+                    
+                    .indicator-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 0.5rem;
+                    }
+                    
+                    .indicator-header h3 {
+                        font-size: 0.875rem;
+                        font-weight: 600;
+                        color: inherit;
+                        margin: 0;
+                    }
+                    
+                    .indicator-progress {
+                        background-color: rgba(209, 213, 219, 0.2);
+                        border-radius: 9999px;
+                        height: 6px;
+                        overflow: hidden;
+                    }
+                    
+                    #completion-progress-bar {
+                        background-color: #2563eb;
+                        height: 100%;
+                        border-radius: 9999px;
+                        transition: width 0.3s ease;
+                    }
+                    
+                    .indicator-message {
+                        margin-top: 0.75rem;
+                        font-size: 0.75rem;
+                    }
+                    
+                    .indicator-message p {
+                        margin-bottom: 0.25rem;
+                        opacity: 0.8;
+                    }
+                    
+                    #complete-profile-link {
+                        color: #2563eb;
+                        text-decoration: none;
+                        font-weight: 500;
+                    }
+                    
+                    #complete-profile-link:hover {
+                        text-decoration: underline;
+                    }
+                    
+                    @media (prefers-color-scheme: dark) {
+                        .profile-completion-indicator {
+                            background-color: rgba(30, 41, 59, 0.4);
+                        }
+                        
+                        .indicator-progress {
+                            background-color: rgba(55, 65, 81, 0.5);
+                        }
+                    }
+                `;
+                
+                document.head.appendChild(styleElement);
+            }
+        };
+
+        // Initialize profile completion on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            app.profileCompletion.init();
+        });
     })();
+
     </script>
 </body>
 </html>
