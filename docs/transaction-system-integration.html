@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>transaction-system-integration</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdr2.com/pandoc.css" />
+</head>
+<body>
+<h1 id="the-give-hub-transaction-system-integration-guide">The Give Hub
+Transaction System Integration Guide</h1>
+<p>This guide provides instructions for integrating the transaction
+system into your application, covering setup, configuration, best
+practices, and common integration patterns.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#integrating-with-frontend-applications">Integrating with
+Frontend Applications</a></li>
+<li><a href="#integrating-with-backend-services">Integrating with
+Backend Services</a></li>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#deployment">Deployment</a></li>
+<li><a href="#monitoring">Monitoring</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before integrating the transaction system, ensure you have:</p>
+<ol type="1">
+<li><strong>Stellar Account</strong>: A funded Stellar account for
+testing</li>
+<li><strong>MongoDB Database</strong>: For storing transaction
+records</li>
+<li><strong>Node.js &gt;= 14.x</strong> (for JavaScript
+implementation)</li>
+<li><strong>PHP &gt;= 7.4</strong> (for PHP implementation)</li>
+<li><strong>Stellar SDK</strong>:
+<ul>
+<li>JavaScript: <code>stellar-sdk</code> npm package</li>
+<li>PHP: <code>stellar/stellar-sdk</code> composer package</li>
+</ul></li>
+</ol>
+<h2 id="installation">Installation</h2>
+<h3 id="javascript-implementation">JavaScript Implementation</h3>
+<pre><code>
+## Testing
+
+Thorough testing of blockchain transactions is essential before deploying to production.
+
+### Setting Up a Test Environment
+
+1. **Use Stellar Testnet**:
+   - Set `useTestnet: true` in your configuration
+   - Get test XLM from [Stellar Laboratory](https://laboratory.stellar.org/)
+   - Use testnet addresses for all accounts
+
+2. **Mock Database**:
+   - Create a test MongoDB database
+   - Seed with test campaigns, donors, and other required data
+
+3. **Test Accounts**:
+   - Create multiple Stellar test accounts for different scenarios
+   - Label accounts clearly (donor, campaign, escrow)
+
+### Unit Testing
+
+```javascript
+// tests/unit/TransactionService.test.js
+const mongoose = require(&#39;mongoose&#39;);
+const TransactionService = require(&#39;../../services/TransactionService&#39;);
+const StellarSdk = require(&#39;stellar-sdk&#39;);
+const { MongoMemoryServer } = require(&#39;mongodb-memory-server&#39;);
+
+describe(&#39;TransactionService&#39;, () =&gt; {
+  let mongoServer;
+  let transactionService;
+  let testAccounts = {};
+  
+  beforeAll(async () =&gt; {
+    // Set up in-memory MongoDB for tests
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+    
+    // Create test Stellar accounts
+    const donorKeyPair = StellarSdk.Keypair.random();
+    const campaignKeyPair = StellarSdk.Keypair.random();
+    
+    testAccounts = {
+      donor: {
+        publicKey: donorKeyPair.publicKey(),
+        secretKey: donorKeyPair.secret()
+      },
+      campaign: {
+        publicKey: campaignKeyPair.publicKey(),
+        secretKey: campaignKeyPair.secret() 
+      }
+    };
+    
+    // Fund test accounts on testnet
+    await fundTestAccount(testAccounts.donor.publicKey);
+    await fundTestAccount(testAccounts.campaign.publicKey);
+    
+    // Initialize transaction service with test config
+    transactionService = new TransactionService(mongoose.connection, {
+      useTestnet: true,
+      enableLogging: false
+    });
+    
+    // Seed test data
+    await seedTestData();
+  });
+  
+  afterAll(async () =&gt; {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+  
+  // Helper to fund testnet accounts
+  async function fundTestAccount(publicKey) {
+    try {
+      const response = await fetch(
+        `https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`
+      );
+      return await response.json();
+    } catch (error) {
+      console.error(&#39;Error funding account:&#39;, error);
+      throw error;
+    }
+  }
+  
+  // Seed test data
+  async function seedTestData() {
+    // Create test campaign
+    const campaign = new mongoose.models.Campaign({
+      _id: new mongoose.Types.ObjectId(),
+      title: &#39;Test Campaign&#39;,
+      stellarAddress: testAccounts.campaign.publicKey,
+      status: &#39;active&#39;,
+      creator: new mongoose.Types.ObjectId(),
+      funding: {
+        targetAmount: 1000,
+        raisedAmount: 0,
+        donorCount: 0
+      }
+    });
+    
+    await campaign.save();
+    
+    // Create test donor
+    const donor = new mongoose.models.Donor({
+      _id: new mongoose.Types.ObjectId(),
+      name: &#39;Test Donor&#39;,
+      status: &#39;active&#39;,
+      totalDonated: 0
+    });
+    
+    await donor.save();
+    
+    testAccounts.campaignId = campaign._id.toString();
+    testAccounts.donorId = donor._id.toString();
+  }
+  
+  test(&#39;should process a donation successfully&#39;, async () =&gt; {
+    const result = await transactionService.processDonation({
+      donorId: testAccounts.donorId,
+      campaignId: testAccounts.campaignId,
+      amount: &#39;10.5&#39;,
+      sourceSecret: testAccounts.donor.secretKey,
+      isAnonymous: false,
+      message: &#39;Test donation&#39;
+    });
+    
+    expect(result.success).toBe(true);
+    expect(result.transactionRecord).toBeDefined();
+    expect(result.transactionRecord.status).toBe(&#39;completed&#39;);
+    
+    // Verify donation was recorded in database
+    const donation = await mongoose.models.Donation.findById(
+      result.transactionRecord._id
+    );
+    
+    expect(donation).toBeDefined();
+    expect(donation.amount.value).toBe(10.5);
+    
+    // Verify campaign funding was updated
+    const campaign = await mongoose.models.Campaign.findById(
+      testAccounts.campaignId
+    );
+    
+    expect(campaign.funding.raisedAmount).toBe(10.5);
+    expect(campaign.funding.donorCount).toBe(1);
+  });
+  
+  // Add more tests for other transaction types
+});</code></pre>
+<h3 id="integration-testing">Integration Testing</h3>
+<p>For PHP integration tests with PHPUnit:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// tests/Integration/TransactionProcessorTest.php</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">T</span>ests\<span class="cn">I</span>ntegration<span class="ot">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">P</span>HPUnit\<span class="cn">F</span>ramework\<span class="cn">T</span>estCase<span class="ot">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">A</span>pp\<span class="cn">S</span>ervices\<span class="cn">T</span>ransactionProcessor<span class="ot">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="bu">MongoDB</span>\<span class="cn">C</span>lient<span class="ot">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">T</span>ransactionProcessorTest <span class="kw">extends</span> <span class="cn">T</span>estCase</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="va">$processor</span><span class="ot">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="va">$db</span><span class="ot">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="va">$testAccounts</span> <span class="op">=</span> []<span class="ot">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> setUp()<span class="ot">:</span> <span class="dt">void</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">parent</span>::setUp()<span class="ot">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Connect to test database</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;db <span class="op">=</span> <span class="kw">new</span> <span class="cn">C</span>lient(<span class="st">&#39;mongodb://localhost:27017&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Initialize transaction processor</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;processor <span class="op">=</span> <span class="kw">new</span> <span class="cn">T</span>ransactionProcessor(<span class="kw">true</span>)<span class="ot">;</span> <span class="co">// use testnet</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create and fund test accounts</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;createTestAccounts()<span class="ot">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Seed test data</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;seedTestData()<span class="ot">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> tearDown()<span class="ot">:</span> <span class="dt">void</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Clean up test database</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)-&gt;drop()<span class="ot">;</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">parent</span>::tearDown()<span class="ot">;</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="kw">function</span> createTestAccounts()</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create Stellar keypairs</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        <span class="va">$donorKeypair</span> <span class="op">=</span> \<span class="cn">Z</span>uluCrypto\<span class="cn">S</span>tellarSdk\<span class="cn">K</span>eypair::newFromRandom()<span class="ot">;</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        <span class="va">$campaignKeypair</span> <span class="op">=</span> \<span class="cn">Z</span>uluCrypto\<span class="cn">S</span>tellarSdk\<span class="cn">K</span>eypair::newFromRandom()<span class="ot">;</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;testAccounts <span class="op">=</span> [</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;donor&#39;</span> =&gt; [</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;publicKey&#39;</span> =&gt; <span class="va">$donorKeypair</span>-&gt;getPublicKey()<span class="ot">,</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;secretKey&#39;</span> =&gt; <span class="va">$donorKeypair</span>-&gt;getSecret()</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>            ]<span class="ot">,</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaign&#39;</span> =&gt; [</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;publicKey&#39;</span> =&gt; <span class="va">$campaignKeypair</span>-&gt;getPublicKey()<span class="ot">,</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;secretKey&#39;</span> =&gt; <span class="va">$campaignKeypair</span>-&gt;getSecret()</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Fund test accounts</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;fundTestAccount(<span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;donor&#39;</span>][<span class="st">&#39;publicKey&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;fundTestAccount(<span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;campaign&#39;</span>][<span class="st">&#39;publicKey&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="kw">function</span> fundTestAccount(<span class="va">$publicKey</span>)</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>        <span class="va">$response</span> <span class="op">=</span> <span class="fu">file_get_contents</span>(</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;https://friendbot.stellar.org?addr=&quot;</span> <span class="op">.</span> <span class="fu">urlencode</span>(<span class="va">$publicKey</span>)</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>        )<span class="ot">;</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span><span class="va">$response</span>) {</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> \<span class="bu">Exception</span>(<span class="st">&quot;Failed to fund test account: </span>{<span class="va">$publicKey</span>}<span class="st">&quot;</span>)<span class="ot">;</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">json_decode</span>(<span class="va">$response</span><span class="ot">,</span> <span class="kw">true</span>)<span class="ot">;</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="kw">function</span> seedTestData()</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create test campaign</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>        <span class="va">$campaignId</span> <span class="op">=</span> <span class="kw">new</span> \<span class="bu">MongoDB</span>\<span class="cn">BSON</span>\<span class="cn">O</span>bjectId()<span class="ot">;</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)-&gt;campaigns-&gt;insertOne([</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;_id&#39;</span> =&gt; <span class="va">$campaignId</span><span class="ot">,</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;title&#39;</span> =&gt; <span class="st">&#39;Test Campaign&#39;</span><span class="ot">,</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;stellarAddress&#39;</span> =&gt; <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;campaign&#39;</span>][<span class="st">&#39;publicKey&#39;</span>]<span class="ot">,</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;status&#39;</span> =&gt; <span class="st">&#39;active&#39;</span><span class="ot">,</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;creator&#39;</span> =&gt; <span class="kw">new</span> \<span class="bu">MongoDB</span>\<span class="cn">BSON</span>\<span class="cn">O</span>bjectId()<span class="ot">,</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;funding&#39;</span> =&gt; [</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;targetAmount&#39;</span> =&gt; <span class="dv">1000</span><span class="ot">,</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;raisedAmount&#39;</span> =&gt; <span class="dv">0</span><span class="ot">,</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;donorCount&#39;</span> =&gt; <span class="dv">0</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create test donor</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>        <span class="va">$donorId</span> <span class="op">=</span> <span class="kw">new</span> \<span class="bu">MongoDB</span>\<span class="cn">BSON</span>\<span class="cn">O</span>bjectId()<span class="ot">;</span></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)-&gt;donors-&gt;insertOne([</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;_id&#39;</span> =&gt; <span class="va">$donorId</span><span class="ot">,</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;name&#39;</span> =&gt; <span class="st">&#39;Test Donor&#39;</span><span class="ot">,</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;status&#39;</span> =&gt; <span class="st">&#39;active&#39;</span><span class="ot">,</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;totalDonated&#39;</span> =&gt; <span class="dv">0</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;campaignId&#39;</span>] <span class="op">=</span> <span class="dt">(string)</span><span class="va">$campaignId</span><span class="ot">;</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;donorId&#39;</span>] <span class="op">=</span> <span class="dt">(string)</span><span class="va">$donorId</span><span class="ot">;</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> testProcessDonation()</span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>        <span class="va">$result</span> <span class="op">=</span> <span class="va">$this</span>-&gt;processor-&gt;processDonation([</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;donorId&#39;</span> =&gt; <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;donorId&#39;</span>]<span class="ot">,</span></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> =&gt; <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;campaignId&#39;</span>]<span class="ot">,</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;amount&#39;</span> =&gt; <span class="st">&#39;10.5&#39;</span><span class="ot">,</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;sourceSecret&#39;</span> =&gt; <span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;donor&#39;</span>][<span class="st">&#39;secretKey&#39;</span>]<span class="ot">,</span></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;isAnonymous&#39;</span> =&gt; <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;message&#39;</span> =&gt; <span class="st">&#39;Test donation&#39;</span></span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertTrue(<span class="va">$result</span>[<span class="st">&#39;success&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertArrayHasKey(<span class="st">&#39;transactionHash&#39;</span><span class="ot">,</span> <span class="va">$result</span>)<span class="ot">;</span></span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify donation was recorded in database</span></span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a>        <span class="va">$donation</span> <span class="op">=</span> <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)-&gt;donations-&gt;findOne([</span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;transaction.txHash&#39;</span> =&gt; <span class="va">$result</span>[<span class="st">&#39;transactionHash&#39;</span>]</span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertNotNull(<span class="va">$donation</span>)<span class="ot">;</span></span>
+<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertEquals(<span class="fl">10.5</span><span class="ot">,</span> <span class="va">$donation</span>[<span class="st">&#39;amount&#39;</span>][<span class="st">&#39;value&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify campaign funding was updated</span></span>
+<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a>        <span class="va">$campaign</span> <span class="op">=</span> <span class="va">$this</span>-&gt;db-&gt;selectDatabase(<span class="st">&#39;givehub_test&#39;</span>)-&gt;campaigns-&gt;findOne([</span>
+<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;_id&#39;</span> =&gt; <span class="kw">new</span> \<span class="bu">MongoDB</span>\<span class="cn">BSON</span>\<span class="cn">O</span>bjectId(<span class="va">$this</span>-&gt;testAccounts[<span class="st">&#39;campaignId&#39;</span>])</span>
+<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertEquals(<span class="fl">10.5</span><span class="ot">,</span> <span class="va">$campaign</span>[<span class="st">&#39;funding&#39;</span>][<span class="st">&#39;raisedAmount&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;assertEquals(<span class="dv">1</span><span class="ot">,</span> <span class="va">$campaign</span>[<span class="st">&#39;funding&#39;</span>][<span class="st">&#39;donorCount&#39;</span>])<span class="ot">;</span></span>
+<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add more test methods for other transaction types</span></span>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="deployment">Deployment</h2>
+<h3 id="preparing-for-production">Preparing for Production</h3>
+<ol type="1">
+<li><strong>Create Mainnet Accounts</strong>:
+<ul>
+<li>Generate new Stellar keypairs for production use</li>
+<li>Secure private keys using a vault service or hardware security
+module</li>
+<li>Fund accounts with adequate XLM for operations</li>
+</ul></li>
+<li><strong>Update Configuration</strong>:
+<ul>
+<li>Set <code>useTestnet: false</code> in configuration</li>
+<li>Update Horizon URL to production endpoint</li>
+<li>Adjust fee settings if needed</li>
+</ul></li>
+<li><strong>Data Migration</strong>:
+<ul>
+<li>Migrate testing data to production (if applicable)</li>
+<li>Create initial campaigns in production database</li>
+</ul></li>
+</ol>
+<h3 id="deployment-checklist">Deployment Checklist</h3>
+<p>Before deployment to production:</p>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+All tests pass (unit, integration, acceptance)</li>
+<li><input type="checkbox" disabled="" />
+Security audit completed</li>
+<li><input type="checkbox" disabled="" />
+Performance testing completed</li>
+<li><input type="checkbox" disabled="" />
+Production Stellar accounts created and funded</li>
+<li><input type="checkbox" disabled="" />
+Database indexes created for performance</li>
+<li><input type="checkbox" disabled="" />
+Configuration updated for production</li>
+<li><input type="checkbox" disabled="" />
+Logging and monitoring set up</li>
+<li><input type="checkbox" disabled="" />
+Backup and recovery procedures documented</li>
+<li><input type="checkbox" disabled="" />
+Legal compliance checked (financial regulations)</li>
+</ul>
+<h3 id="deployment-process">Deployment Process</h3>
+<ol type="1">
+<li>Deploy backend services (Node.js/PHP):</li>
+</ol>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy Node.js backend</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run build</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pm2</span> start ecosystem.config.js <span class="at">--env</span> production</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy PHP backend</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">composer</span> install <span class="at">--no-dev</span> <span class="at">--optimize-autoloader</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan migrate</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan config:cache</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan route:cache</span></code></pre></div>
+<ol start="2" type="1">
+<li>Set up scheduled tasks for recurring donations:</li>
+</ol>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to crontab (Linux)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">0</span> 0 <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> /usr/bin/php /path/to/project/artisan schedule:run <span class="op">&gt;&gt;</span> /dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or for Node.js</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">0</span> 0 <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> cd /path/to/project <span class="kw">&amp;&amp;</span> <span class="ex">node</span> scripts/process-recurring-donations.js <span class="op">&gt;&gt;</span> /var/log/recurring-donations.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code></pre></div>
+<h2 id="monitoring">Monitoring</h2>
+<h3 id="key-metrics-to-monitor">Key Metrics to Monitor</h3>
+<ol type="1">
+<li><strong>Transaction Success Rate</strong>:
+<ul>
+<li>Track percentage of successful vs. failed transactions</li>
+<li>Alert on sudden drops in success rate</li>
+</ul></li>
+<li><strong>Transaction Latency</strong>:
+<ul>
+<li>Measure time from submission to blockchain confirmation</li>
+<li>Track median and 95th percentile response times</li>
+</ul></li>
+<li><strong>Account Balances</strong>:
+<ul>
+<li>Monitor Stellar account balances</li>
+<li>Alert when balances fall below threshold</li>
+</ul></li>
+<li><strong>Error Rates</strong>:
+<ul>
+<li>Track different error types (validation, blockchain, database)</li>
+<li>Set up alerts for critical errors</li>
+</ul></li>
+</ol>
+<h3 id="monitoring-tools">Monitoring Tools</h3>
+<p>Set up monitoring with:</p>
+<ol type="1">
+<li><strong>Prometheus + Grafana</strong>: For metrics collection and
+visualization</li>
+<li><strong>Sentry</strong>: For error tracking and reporting</li>
+<li><strong>Stellar Horizon Dashboard</strong>: For blockchain health
+monitoring</li>
+<li><strong>Custom health check endpoints</strong>: To verify system
+components</li>
+</ol>
+<p>Example health check endpoint:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// routes/health.js</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/transaction-system&#39;</span><span class="op">,</span> <span class="kw">async</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check database connection</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dbStatus <span class="op">=</span> <span class="cf">await</span> <span class="fu">checkDatabaseConnection</span>()<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check Stellar connection</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> stellarStatus <span class="op">=</span> <span class="cf">await</span> <span class="fu">checkStellarConnection</span>()<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check account balances</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> balanceStatus <span class="op">=</span> <span class="cf">await</span> <span class="fu">checkAccountBalances</span>()<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Overall status</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> overallStatus <span class="op">=</span> </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      dbStatus<span class="op">.</span><span class="at">healthy</span> <span class="op">&amp;&amp;</span> </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      stellarStatus<span class="op">.</span><span class="at">healthy</span> <span class="op">&amp;&amp;</span> </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      balanceStatus<span class="op">.</span><span class="at">healthy</span> <span class="op">?</span> <span class="st">&#39;healthy&#39;</span> <span class="op">:</span> <span class="st">&#39;unhealthy&#39;</span><span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">status</span><span class="op">:</span> overallStatus<span class="op">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">components</span><span class="op">:</span> {</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">database</span><span class="op">:</span> dbStatus<span class="op">,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">stellar</span><span class="op">:</span> stellarStatus<span class="op">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">accounts</span><span class="op">:</span> balanceStatus</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      <span class="dt">timestamp</span><span class="op">:</span> <span class="kw">new</span> <span class="bu">Date</span>()<span class="op">.</span><span class="fu">toISOString</span>()</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error) {</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">500</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">status</span><span class="op">:</span> <span class="st">&#39;error&#39;</span><span class="op">,</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">message</span><span class="op">:</span> error<span class="op">.</span><span class="at">message</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues-and-solutions">Common Issues and Solutions</h3>
+<h4 id="transaction-submission-failures">1. Transaction Submission
+Failures</h4>
+<p><strong>Issue</strong>: Transactions fail to submit to the Stellar
+network.</p>
+<p><strong>Solutions</strong>: - Check account balances (source account
+may not have enough XLM) - Verify transaction sequence numbers (might be
+out of sync) - Check if destination account exists - Ensure the
+transaction is properly signed</p>
+<h4 id="database-consistency-issues">2. Database Consistency Issues</h4>
+<p><strong>Issue</strong>: Database state doesn’t match blockchain
+state.</p>
+<p><strong>Solutions</strong>: - Implement reconciliation process
+between database and blockchain - Add transaction status verification
+job - Fix data inconsistencies with manual reconciliation tool</p>
+<h4 id="recurring-donation-processing-failures">3. Recurring Donation
+Processing Failures</h4>
+<p><strong>Issue</strong>: Recurring donations fail to process
+automatically.</p>
+<p><strong>Solutions</strong>: - Check scheduler/cron configuration -
+Verify donor account balances - Implement retry mechanism with
+exponential backoff - Send notification to donors about upcoming
+charges</p>
+<h3 id="debugging-tools">Debugging Tools</h3>
+<ol type="1">
+<li><strong>Stellar Laboratory</strong>: For manual transaction
+inspection</li>
+<li><strong>Horizon API Explorer</strong>: For querying transactions and
+accounts</li>
+<li><strong>MongoDB Compass</strong>: For inspecting database state</li>
+<li><strong>Log Analysis</strong>: Use centralized logging solution</li>
+</ol>
+<p>Example debugging script for transaction verification:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// scripts/verify-transaction.js</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> StellarSdk <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;stellar-sdk&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mongoose <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;mongoose&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">require</span>(<span class="st">&#39;dotenv&#39;</span>)<span class="op">.</span><span class="fu">config</span>()<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Connect to database</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>mongoose<span class="op">.</span><span class="fu">connect</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">MONGODB_URI</span>)<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">verifyTransaction</span>(txHash) {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get transaction from database</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> dbTx <span class="op">=</span> <span class="cf">await</span> mongoose<span class="op">.</span><span class="at">models</span><span class="op">.</span><span class="at">Donation</span><span class="op">.</span><span class="fu">findOne</span>({</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;transaction.txHash&#39;</span><span class="op">:</span> txHash</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>dbTx) {</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Transaction not found in database&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get transaction from Stellar</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> server <span class="op">=</span> <span class="kw">new</span> StellarSdk<span class="op">.</span><span class="fu">Server</span>(</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">NODE_ENV</span> <span class="op">===</span> <span class="st">&#39;production&#39;</span> </span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">?</span> <span class="st">&#39;https://horizon.stellar.org&#39;</span> </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> <span class="st">&#39;https://horizon-testnet.stellar.org&#39;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> stellarTx <span class="op">=</span> <span class="cf">await</span> server<span class="op">.</span><span class="fu">transactions</span>()<span class="op">.</span><span class="fu">transaction</span>(txHash)<span class="op">.</span><span class="fu">call</span>()<span class="op">;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Database transaction:&#39;</span><span class="op">,</span> {</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">id</span><span class="op">:</span> dbTx<span class="op">.</span><span class="at">_id</span><span class="op">,</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">amount</span><span class="op">:</span> dbTx<span class="op">.</span><span class="at">amount</span><span class="op">,</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>      <span class="dt">status</span><span class="op">:</span> dbTx<span class="op">.</span><span class="at">status</span><span class="op">,</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">hash</span><span class="op">:</span> dbTx<span class="op">.</span><span class="at">transaction</span><span class="op">.</span><span class="at">txHash</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Stellar transaction:&#39;</span><span class="op">,</span> {</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      <span class="dt">hash</span><span class="op">:</span> stellarTx<span class="op">.</span><span class="at">hash</span><span class="op">,</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      <span class="dt">successful</span><span class="op">:</span> stellarTx<span class="op">.</span><span class="at">successful</span><span class="op">,</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>      <span class="dt">ledger</span><span class="op">:</span> stellarTx<span class="op">.</span><span class="at">ledger</span><span class="op">,</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>      <span class="dt">created_at</span><span class="op">:</span> stellarTx<span class="op">.</span><span class="at">created_at</span><span class="op">,</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>      <span class="dt">memo</span><span class="op">:</span> stellarTx<span class="op">.</span><span class="at">memo</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify consistency</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (dbTx<span class="op">.</span><span class="at">status</span> <span class="op">===</span> <span class="st">&#39;completed&#39;</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>stellarTx<span class="op">.</span><span class="at">successful</span>) {</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;INCONSISTENCY: Database shows successful but blockchain shows failed&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (dbTx<span class="op">.</span><span class="at">status</span> <span class="op">===</span> <span class="st">&#39;failed&#39;</span> <span class="op">&amp;&amp;</span> stellarTx<span class="op">.</span><span class="at">successful</span>) {</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;INCONSISTENCY: Database shows failed but blockchain shows successful&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Transaction status is consistent&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error) {</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Error verifying transaction:&#39;</span><span class="op">,</span> error)<span class="op">;</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">finally</span> {</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    mongoose<span class="op">.</span><span class="fu">disconnect</span>()<span class="op">;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co">// Get transaction hash from command line</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> txHash <span class="op">=</span> <span class="bu">process</span><span class="op">.</span><span class="at">argv</span>[<span class="dv">2</span>]<span class="op">;</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="op">!</span>txHash) {</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Please provide a transaction hash&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>  <span class="bu">process</span><span class="op">.</span><span class="fu">exit</span>(<span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="fu">verifyTransaction</span>(txHash)<span class="op">;</span></span></code></pre></div>
+<p>Run with:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> scripts/verify-transaction.js TX_HASH</span></code></pre></div>
+<p>This concludes the integration guide for The Give Hub Transaction
+System. For additional support, please refer to the API documentation or
+contact the development team.bash # Install dependencies npm install
+stellar-sdk</p>
+<h1 id="copy-transaction-modules-to-your-project">Copy transaction
+modules to your project</h1>
+<p>cp StellarTransactionBuilder.js /path/to/your/project/lib/ cp
+TransactionService.js /path/to/your/project/services/</p>
+<pre><code>
+### PHP Implementation
+
+```bash
+# Install dependencies
+composer require stellar/stellar-sdk mongodb/mongodb
+
+# Copy transaction modules to your project
+cp TransactionProcessor.php /path/to/your/project/lib/</code></pre>
+<h2 id="configuration">Configuration</h2>
+<h3 id="javascript-configuration">JavaScript Configuration</h3>
+<p>Create configuration files for different environments:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// config/transaction.js</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> {</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">development</span><span class="op">:</span> {</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">useTestnet</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">horizonUrl</span><span class="op">:</span> <span class="st">&#39;https://horizon-testnet.stellar.org&#39;</span><span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">enableLogging</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">baseFee</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timeout</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">maxRetries</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">retryDelay</span><span class="op">:</span> <span class="dv">2000</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">production</span><span class="op">:</span> {</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">useTestnet</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">horizonUrl</span><span class="op">:</span> <span class="st">&#39;https://horizon.stellar.org&#39;</span><span class="op">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">enableLogging</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">baseFee</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timeout</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">maxRetries</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">retryDelay</span><span class="op">:</span> <span class="dv">3000</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Initialize the transaction service:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mongoose <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;mongoose&#39;</span>)<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> TransactionService <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;./services/TransactionService&#39;</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;./config/transaction&#39;</span>)[<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">NODE_ENV</span> <span class="op">||</span> <span class="st">&#39;development&#39;</span>]<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize database connection</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>mongoose<span class="op">.</span><span class="fu">connect</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">MONGODB_URI</span>)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Create transaction service instance</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> transactionService <span class="op">=</span> <span class="kw">new</span> <span class="fu">TransactionService</span>(mongoose<span class="op">.</span><span class="at">connection</span><span class="op">,</span> config)<span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> transactionService<span class="op">;</span></span></code></pre></div>
+<h3 id="php-configuration">PHP Configuration</h3>
+<p>Create configuration files for different environments:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// config/transaction.php</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span><span class="ot">?</span>php</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> [</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;development&#39;</span> =&gt; [</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;useTestnet&#39;</span> =&gt; <span class="kw">true</span><span class="ot">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;horizonUrl&#39;</span> =&gt; <span class="st">&#39;https://horizon-testnet.stellar.org&#39;</span><span class="ot">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;enableLogging&#39;</span> =&gt; <span class="kw">true</span><span class="ot">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;baseFee&#39;</span> =&gt; <span class="dv">100</span><span class="ot">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;timeout&#39;</span> =&gt; <span class="dv">30</span><span class="ot">,</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;maxRetries&#39;</span> =&gt; <span class="dv">3</span><span class="ot">,</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;retryDelay&#39;</span> =&gt; <span class="dv">2000</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;production&#39;</span> =&gt; [</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;useTestnet&#39;</span> =&gt; <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;horizonUrl&#39;</span> =&gt; <span class="st">&#39;https://horizon.stellar.org&#39;</span><span class="ot">,</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;enableLogging&#39;</span> =&gt; <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;baseFee&#39;</span> =&gt; <span class="dv">100</span><span class="ot">,</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;timeout&#39;</span> =&gt; <span class="dv">30</span><span class="ot">,</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;maxRetries&#39;</span> =&gt; <span class="dv">5</span><span class="ot">,</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;retryDelay&#39;</span> =&gt; <span class="dv">3000</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<p>Initialize the transaction processor:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">require_once</span> <span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/vendor/autoload.php&#39;</span><span class="ot">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">require_once</span> <span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/lib/TransactionProcessor.php&#39;</span><span class="ot">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Load configuration</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="va">$env</span> <span class="op">=</span> <span class="fu">getenv</span>(<span class="st">&#39;APP_ENV&#39;</span>) <span class="ot">?:</span> <span class="st">&#39;development&#39;</span><span class="ot">;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span> <span class="op">=</span> <span class="kw">include</span>(<span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/config/transaction.php&#39;</span>)[<span class="va">$env</span>]<span class="ot">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize transaction processor</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="va">$processor</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">T</span>ransactionProcessor(<span class="va">$config</span>[<span class="st">&#39;useTestnet&#39;</span>])<span class="ot">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Use processor in your application</span></span></code></pre></div>
+<h2 id="integrating-with-frontend-applications">Integrating with
+Frontend Applications</h2>
+<h3 id="user-wallet-management">User Wallet Management</h3>
+<p>For a secure user experience, implement a wallet management
+system:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// client/services/wallet.js</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> WalletService {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>() {</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">StellarSdk</span> <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;stellar-sdk&#39;</span>)<span class="op">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Generate a new Stellar keypair</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">generateKeypair</span>() {</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">StellarSdk</span><span class="op">.</span><span class="at">Keypair</span><span class="op">.</span><span class="fu">random</span>()<span class="op">;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Create a keypair from an existing secret</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">keypairFromSecret</span>(secret) {</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">StellarSdk</span><span class="op">.</span><span class="at">Keypair</span><span class="op">.</span><span class="fu">fromSecret</span>(secret)<span class="op">;</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Encrypt a private key with a user password</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">encryptPrivateKey</span>(privateKey<span class="op">,</span> password) {</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implement secure encryption</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Example: Use the Web Crypto API</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> encoder <span class="op">=</span> <span class="kw">new</span> <span class="fu">TextEncoder</span>()<span class="op">;</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> salt <span class="op">=</span> crypto<span class="op">.</span><span class="fu">getRandomValues</span>(<span class="kw">new</span> <span class="bu">Uint8Array</span>(<span class="dv">16</span>))<span class="op">;</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> keyMaterial <span class="op">=</span> <span class="cf">await</span> crypto<span class="op">.</span><span class="at">subtle</span><span class="op">.</span><span class="fu">importKey</span>(</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;raw&#39;</span><span class="op">,</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>      encoder<span class="op">.</span><span class="fu">encode</span>(password)<span class="op">,</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>      { <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;PBKDF2&#39;</span> }<span class="op">,</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>      <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>      [<span class="st">&#39;deriveBits&#39;</span><span class="op">,</span> <span class="st">&#39;deriveKey&#39;</span>]</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> key <span class="op">=</span> <span class="cf">await</span> crypto<span class="op">.</span><span class="at">subtle</span><span class="op">.</span><span class="fu">deriveKey</span>(</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;PBKDF2&#39;</span><span class="op">,</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        salt<span class="op">,</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>        <span class="dt">iterations</span><span class="op">:</span> <span class="dv">100000</span><span class="op">,</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        <span class="dt">hash</span><span class="op">:</span> <span class="st">&#39;SHA-256&#39;</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>      keyMaterial<span class="op">,</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>      { <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;AES-GCM&#39;</span><span class="op">,</span> <span class="dt">length</span><span class="op">:</span> <span class="dv">256</span> }<span class="op">,</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>      <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>      [<span class="st">&#39;encrypt&#39;</span><span class="op">,</span> <span class="st">&#39;decrypt&#39;</span>]</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> iv <span class="op">=</span> crypto<span class="op">.</span><span class="fu">getRandomValues</span>(<span class="kw">new</span> <span class="bu">Uint8Array</span>(<span class="dv">12</span>))<span class="op">;</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> encryptedData <span class="op">=</span> <span class="cf">await</span> crypto<span class="op">.</span><span class="at">subtle</span><span class="op">.</span><span class="fu">encrypt</span>(</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>        <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;AES-GCM&#39;</span><span class="op">,</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>        iv</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>      key<span class="op">,</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>      encoder<span class="op">.</span><span class="fu">encode</span>(privateKey)</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>      <span class="dt">encryptedKey</span><span class="op">:</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">from</span>(encryptedData)<span class="op">.</span><span class="fu">toString</span>(<span class="st">&#39;base64&#39;</span>)<span class="op">,</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>      <span class="dt">salt</span><span class="op">:</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">from</span>(salt)<span class="op">.</span><span class="fu">toString</span>(<span class="st">&#39;base64&#39;</span>)<span class="op">,</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>      <span class="dt">iv</span><span class="op">:</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">from</span>(iv)<span class="op">.</span><span class="fu">toString</span>(<span class="st">&#39;base64&#39;</span>)</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Decrypt a private key</span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">decryptPrivateKey</span>(encryptedData<span class="op">,</span> password) {</span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implement secure decryption</span></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a><span class="co">     * Release milestone funds</span></span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="fu">releaseMilestone</span>(Request $request)</span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate request</span></span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>        $validated <span class="op">=</span> $request<span class="op">-&gt;</span><span class="fu">validate</span>([</span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;required|string&#39;</span><span class="op">,</span></span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;milestoneId&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;required|string&#39;</span><span class="op">,</span></span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;amount&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;numeric|nullable&#39;</span></span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>        ])<span class="op">;</span></span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get the campaign</span></span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>        $campaign <span class="op">=</span> <span class="dt">Campaign</span><span class="op">::</span><span class="fu">findOrFail</span>($validated[<span class="st">&#39;campaignId&#39;</span>])<span class="op">;</span></span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check authorization</span></span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a>        $userId <span class="op">=</span> <span class="fu">auth</span>()<span class="op">-&gt;</span><span class="fu">id</span>()<span class="op">;</span></span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ($campaign<span class="op">-&gt;</span>creator <span class="op">!==</span> $userId <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu">auth</span>()<span class="op">-&gt;</span><span class="fu">user</span>()<span class="op">-&gt;</span><span class="fu">hasRole</span>(<span class="st">&#39;admin&#39;</span>)) {</span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="fu">response</span>()<span class="op">-&gt;</span><span class="fu">json</span>([</span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;success&#39;</span> <span class="kw">=&gt;</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;error&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;Not authorized to release milestone funds&#39;</span></span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>            ]<span class="op">,</span> <span class="dv">403</span>)<span class="op">;</span></span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Process milestone release</span></span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>        $result <span class="op">=</span> $this<span class="op">-&gt;</span>transactionProcessor<span class="op">-&gt;</span><span class="fu">releaseMilestoneFunding</span>([</span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;campaignId&#39;</span>]<span class="op">,</span></span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;milestoneId&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;milestoneId&#39;</span>]<span class="op">,</span></span>
+<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;authorizedBy&#39;</span> <span class="kw">=&gt;</span> $userId<span class="op">,</span></span>
+<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;amount&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;amount&#39;</span>] <span class="op">??</span> <span class="kw">null</span></span>
+<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a>        ])<span class="op">;</span></span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">response</span>()<span class="op">-&gt;</span><span class="fu">json</span>($result)<span class="op">;</span></span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a><span class="co">     * Cancel a recurring donation</span></span>
+<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="fu">cancelRecurring</span>(Request $request)</span>
+<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate request</span></span>
+<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a>        $validated <span class="op">=</span> $request<span class="op">-&gt;</span><span class="fu">validate</span>([</span>
+<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;donorId&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;required|string&#39;</span><span class="op">,</span></span>
+<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;required|string&#39;</span><span class="op">,</span></span>
+<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;sourceSecret&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;required|string&#39;</span></span>
+<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a>        ])<span class="op">;</span></span>
+<span id="cb13-115"><a href="#cb13-115" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-116"><a href="#cb13-116" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check authorization</span></span>
+<span id="cb13-117"><a href="#cb13-117" aria-hidden="true" tabindex="-1"></a>        $userId <span class="op">=</span> <span class="fu">auth</span>()<span class="op">-&gt;</span><span class="fu">id</span>()<span class="op">;</span></span>
+<span id="cb13-118"><a href="#cb13-118" aria-hidden="true" tabindex="-1"></a>        $isAdmin <span class="op">=</span> <span class="fu">auth</span>()<span class="op">-&gt;</span><span class="fu">user</span>()<span class="op">-&gt;</span><span class="fu">hasRole</span>(<span class="st">&#39;admin&#39;</span>)<span class="op">;</span></span>
+<span id="cb13-119"><a href="#cb13-119" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-120"><a href="#cb13-120" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ($validated[<span class="st">&#39;donorId&#39;</span>] <span class="op">!==</span> $userId <span class="op">&amp;&amp;</span> <span class="op">!</span>$isAdmin) {</span>
+<span id="cb13-121"><a href="#cb13-121" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="fu">response</span>()<span class="op">-&gt;</span><span class="fu">json</span>([</span>
+<span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;success&#39;</span> <span class="kw">=&gt;</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;error&#39;</span> <span class="kw">=&gt;</span> <span class="st">&#39;Not authorized to cancel this recurring donation&#39;</span></span>
+<span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a>            ]<span class="op">,</span> <span class="dv">403</span>)<span class="op">;</span></span>
+<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-127"><a href="#cb13-127" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Process cancellation</span></span>
+<span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a>        $result <span class="op">=</span> $this<span class="op">-&gt;</span>transactionProcessor<span class="op">-&gt;</span><span class="fu">cancelRecurringDonation</span>([</span>
+<span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;donorId&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;donorId&#39;</span>]<span class="op">,</span></span>
+<span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;campaignId&#39;</span>]<span class="op">,</span></span>
+<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;userId&#39;</span> <span class="kw">=&gt;</span> $userId<span class="op">,</span></span>
+<span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;sourceSecret&#39;</span> <span class="kw">=&gt;</span> $validated[<span class="st">&#39;sourceSecret&#39;</span>]</span>
+<span id="cb13-133"><a href="#cb13-133" aria-hidden="true" tabindex="-1"></a>        ])<span class="op">;</span></span>
+<span id="cb13-134"><a href="#cb13-134" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-135"><a href="#cb13-135" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">response</span>()<span class="op">-&gt;</span><span class="fu">json</span>($result)<span class="op">;</span></span>
+<span id="cb13-136"><a href="#cb13-136" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-137"><a href="#cb13-137" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="donation-form-integration">Donation Form Integration</h3>
+<p>Integrate the transaction system with your donation form:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// client/components/DonationForm.js</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> React<span class="op">,</span> { useState } <span class="im">from</span> <span class="st">&#39;react&#39;</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { WalletService } <span class="im">from</span> <span class="st">&#39;../services/wallet&#39;</span><span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">DonationForm</span>({ campaignId<span class="op">,</span> userId }) {</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [amount<span class="op">,</span> setAmount] <span class="op">=</span> <span class="fu">useState</span>(<span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [isAnonymous<span class="op">,</span> setIsAnonymous] <span class="op">=</span> <span class="fu">useState</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [message<span class="op">,</span> setMessage] <span class="op">=</span> <span class="fu">useState</span>(<span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [isRecurring<span class="op">,</span> setIsRecurring] <span class="op">=</span> <span class="fu">useState</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [frequency<span class="op">,</span> setFrequency] <span class="op">=</span> <span class="fu">useState</span>(<span class="st">&#39;monthly&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [isSubmitting<span class="op">,</span> setIsSubmitting] <span class="op">=</span> <span class="fu">useState</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [error<span class="op">,</span> setError] <span class="op">=</span> <span class="fu">useState</span>(<span class="kw">null</span>)<span class="op">;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> walletService <span class="op">=</span> <span class="kw">new</span> <span class="fu">WalletService</span>()<span class="op">;</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> handleSubmit <span class="op">=</span> <span class="kw">async</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    e<span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">setIsSubmitting</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">setError</span>(<span class="kw">null</span>)<span class="op">;</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Get user&#39;s encrypted private key from localStorage or secure storage</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> encryptedKey <span class="op">=</span> localStorage<span class="op">.</span><span class="fu">getItem</span>(<span class="st">&#39;stellarKey&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> password <span class="op">=</span> <span class="fu">prompt</span>(<span class="st">&#39;Enter your wallet password&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Decrypt key</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> privateKey <span class="op">=</span> <span class="cf">await</span> walletService<span class="op">.</span><span class="fu">decryptPrivateKey</span>(</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">JSON</span><span class="op">.</span><span class="fu">parse</span>(encryptedKey)<span class="op">,</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        password</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>      )<span class="op">;</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Submit donation via API</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;/api/donations&#39;</span><span class="op">,</span> {</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>        <span class="dt">headers</span><span class="op">:</span> {</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>        <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>({</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>          <span class="dt">donorId</span><span class="op">:</span> userId<span class="op">,</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>          campaignId<span class="op">,</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>          amount<span class="op">,</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>          <span class="dt">sourceSecret</span><span class="op">:</span> privateKey<span class="op">,</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>          isAnonymous<span class="op">,</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>          message<span class="op">,</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>          <span class="dt">recurring</span><span class="op">:</span> isRecurring<span class="op">,</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>          <span class="dt">recurringFrequency</span><span class="op">:</span> frequency</span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>      })<span class="op">;</span></span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="op">!</span>result<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(result<span class="op">.</span><span class="at">error</span>)<span class="op">;</span></span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Handle success</span></span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>      <span class="fu">alert</span>(<span class="st">&#39;Donation successful!&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Reset form</span></span>
+<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a>      <span class="fu">setAmount</span>(<span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>      <span class="fu">setMessage</span>(<span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (err) {</span>
+<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a>      <span class="fu">setError</span>(err<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">finally</span> {</span>
+<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a>      <span class="fu">setIsSubmitting</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (</span>
+<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;</span>form onSubmit<span class="op">=</span>{handleSubmit}<span class="op">&gt;</span></span>
+<span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a>      {<span class="co">/* Form inputs */</span>}</span>
+<span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a>      {error <span class="op">&amp;&amp;</span> <span class="op">&lt;</span>div className<span class="op">=</span><span class="st">&quot;error&quot;</span><span class="op">&gt;</span>{error}<span class="op">&lt;/</span>div<span class="op">&gt;</span>}</span>
+<span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a>      <span class="op">&lt;</span>button type<span class="op">=</span><span class="st">&quot;submit&quot;</span> disabled<span class="op">=</span>{isSubmitting}<span class="op">&gt;</span></span>
+<span id="cb14-74"><a href="#cb14-74" aria-hidden="true" tabindex="-1"></a>        {isSubmitting <span class="op">?</span> <span class="st">&#39;Processing...&#39;</span> <span class="op">:</span> <span class="st">&#39;Donate&#39;</span>}</span>
+<span id="cb14-75"><a href="#cb14-75" aria-hidden="true" tabindex="-1"></a>      <span class="op">&lt;/</span>button<span class="op">&gt;</span></span>
+<span id="cb14-76"><a href="#cb14-76" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;/</span>form<span class="op">&gt;</span></span>
+<span id="cb14-77"><a href="#cb14-77" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb14-78"><a href="#cb14-78" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="integrating-with-backend-services">Integrating with Backend
+Services</h2>
+<h3 id="express.js-api-routes">Express.js API Routes</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// routes/donations.js</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> express <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;express&#39;</span>)<span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> router <span class="op">=</span> express<span class="op">.</span><span class="fu">Router</span>()<span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> transactionService <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;../services/transaction&#39;</span>)<span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> auth <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;../middleware/auth&#39;</span>)<span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Process a donation</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/&#39;</span><span class="op">,</span> auth<span class="op">.</span><span class="at">required</span><span class="op">,</span> <span class="kw">async</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> {</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>      donorId<span class="op">,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>      campaignId<span class="op">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>      amount<span class="op">,</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>      sourceSecret<span class="op">,</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>      isAnonymous<span class="op">,</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>      message<span class="op">,</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>      recurring<span class="op">,</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>      recurringFrequency</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ensure the authenticated user matches the donor</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">id</span> <span class="op">!==</span> donorId) {</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">403</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">error</span><span class="op">:</span> <span class="st">&#39;Not authorized to make donations for another user&#39;</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>      })<span class="op">;</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">processDonation</span>({</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>      donorId<span class="op">,</span></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>      campaignId<span class="op">,</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>      amount<span class="op">,</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>      sourceSecret<span class="op">,</span></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>      isAnonymous<span class="op">,</span></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>      message<span class="op">,</span></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>      recurring<span class="op">,</span></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>      recurringFrequency</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">json</span>(result)<span class="op">;</span></span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error) {</span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Donation processing error:&#39;</span><span class="op">,</span> error)<span class="op">;</span></span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">500</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>      <span class="dt">error</span><span class="op">:</span> error<span class="op">.</span><span class="at">message</span></span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a><span class="co">// Get user transaction history</span></span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/user/:userId&#39;</span><span class="op">,</span> auth<span class="op">.</span><span class="at">required</span><span class="op">,</span> <span class="kw">async</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { userId } <span class="op">=</span> req<span class="op">.</span><span class="at">params</span><span class="op">;</span></span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { page<span class="op">,</span> limit<span class="op">,</span> type<span class="op">,</span> status } <span class="op">=</span> req<span class="op">.</span><span class="at">query</span><span class="op">;</span></span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ensure the authenticated user matches the requested user</span></span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">id</span> <span class="op">!==</span> userId <span class="op">&amp;&amp;</span> <span class="op">!</span>req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">isAdmin</span>) {</span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">403</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a>        <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>        <span class="dt">error</span><span class="op">:</span> <span class="st">&#39;Not authorized to view another user</span><span class="sc">\&#39;</span><span class="st">s transactions&#39;</span></span>
+<span id="cb15-61"><a href="#cb15-61" aria-hidden="true" tabindex="-1"></a>      })<span class="op">;</span></span>
+<span id="cb15-62"><a href="#cb15-62" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-63"><a href="#cb15-63" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-64"><a href="#cb15-64" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">getUserTransactionHistory</span>(userId<span class="op">,</span> {</span>
+<span id="cb15-65"><a href="#cb15-65" aria-hidden="true" tabindex="-1"></a>      <span class="dt">page</span><span class="op">:</span> <span class="pp">parseInt</span>(page) <span class="op">||</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a>      <span class="dt">limit</span><span class="op">:</span> <span class="pp">parseInt</span>(limit) <span class="op">||</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>      type<span class="op">,</span></span>
+<span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a>      status</span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">json</span>(result)<span class="op">;</span></span>
+<span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error) {</span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Transaction history error:&#39;</span><span class="op">,</span> error)<span class="op">;</span></span>
+<span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">500</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a>      <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a>      <span class="dt">error</span><span class="op">:</span> error<span class="op">.</span><span class="at">message</span></span>
+<span id="cb15-77"><a href="#cb15-77" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-78"><a href="#cb15-78" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-79"><a href="#cb15-79" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb15-80"><a href="#cb15-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-81"><a href="#cb15-81" aria-hidden="true" tabindex="-1"></a><span class="co">// Process milestone release</span></span>
+<span id="cb15-82"><a href="#cb15-82" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/milestones/release&#39;</span><span class="op">,</span> auth<span class="op">.</span><span class="at">required</span><span class="op">,</span> <span class="kw">async</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb15-83"><a href="#cb15-83" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb15-84"><a href="#cb15-84" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> {</span>
+<span id="cb15-85"><a href="#cb15-85" aria-hidden="true" tabindex="-1"></a>      campaignId<span class="op">,</span></span>
+<span id="cb15-86"><a href="#cb15-86" aria-hidden="true" tabindex="-1"></a>      milestoneId<span class="op">,</span></span>
+<span id="cb15-87"><a href="#cb15-87" aria-hidden="true" tabindex="-1"></a>      amount</span>
+<span id="cb15-88"><a href="#cb15-88" aria-hidden="true" tabindex="-1"></a>    } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb15-89"><a href="#cb15-89" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-90"><a href="#cb15-90" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get campaign details</span></span>
+<span id="cb15-91"><a href="#cb15-91" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> campaign <span class="op">=</span> <span class="cf">await</span> Campaign<span class="op">.</span><span class="fu">findById</span>(campaignId)<span class="op">;</span></span>
+<span id="cb15-92"><a href="#cb15-92" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-93"><a href="#cb15-93" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check authorization</span></span>
+<span id="cb15-94"><a href="#cb15-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (campaign<span class="op">.</span><span class="at">creator</span><span class="op">.</span><span class="fu">toString</span>() <span class="op">!==</span> req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">id</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">isAdmin</span>) {</span>
+<span id="cb15-95"><a href="#cb15-95" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">403</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-96"><a href="#cb15-96" aria-hidden="true" tabindex="-1"></a>        <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-97"><a href="#cb15-97" aria-hidden="true" tabindex="-1"></a>        <span class="dt">error</span><span class="op">:</span> <span class="st">&#39;Not authorized to release milestone funds&#39;</span></span>
+<span id="cb15-98"><a href="#cb15-98" aria-hidden="true" tabindex="-1"></a>      })<span class="op">;</span></span>
+<span id="cb15-99"><a href="#cb15-99" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-100"><a href="#cb15-100" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-101"><a href="#cb15-101" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">releaseMilestoneFunding</span>({</span>
+<span id="cb15-102"><a href="#cb15-102" aria-hidden="true" tabindex="-1"></a>      campaignId<span class="op">,</span></span>
+<span id="cb15-103"><a href="#cb15-103" aria-hidden="true" tabindex="-1"></a>      milestoneId<span class="op">,</span></span>
+<span id="cb15-104"><a href="#cb15-104" aria-hidden="true" tabindex="-1"></a>      <span class="dt">authorizedBy</span><span class="op">:</span> req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">id</span><span class="op">,</span></span>
+<span id="cb15-105"><a href="#cb15-105" aria-hidden="true" tabindex="-1"></a>      amount</span>
+<span id="cb15-106"><a href="#cb15-106" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-107"><a href="#cb15-107" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-108"><a href="#cb15-108" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">json</span>(result)<span class="op">;</span></span>
+<span id="cb15-109"><a href="#cb15-109" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error) {</span>
+<span id="cb15-110"><a href="#cb15-110" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Milestone release error:&#39;</span><span class="op">,</span> error)<span class="op">;</span></span>
+<span id="cb15-111"><a href="#cb15-111" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> res<span class="op">.</span><span class="fu">status</span>(<span class="dv">500</span>)<span class="op">.</span><span class="fu">json</span>({</span>
+<span id="cb15-112"><a href="#cb15-112" aria-hidden="true" tabindex="-1"></a>      <span class="dt">success</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb15-113"><a href="#cb15-113" aria-hidden="true" tabindex="-1"></a>      <span class="dt">error</span><span class="op">:</span> error<span class="op">.</span><span class="at">message</span></span>
+<span id="cb15-114"><a href="#cb15-114" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-115"><a href="#cb15-115" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-116"><a href="#cb15-116" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb15-117"><a href="#cb15-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-118"><a href="#cb15-118" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> router<span class="op">;</span></span></code></pre></div>
+<h3 id="php-laravel-controller-example">PHP Laravel Controller
+Example</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">// app/Http/Controllers/DonationController.php</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">A</span>pp\<span class="cn">H</span>ttp\<span class="cn">C</span>ontrollers<span class="ot">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">I</span>lluminate\<span class="cn">H</span>ttp\<span class="cn">R</span>equest<span class="ot">;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">A</span>pp\<span class="cn">S</span>ervices\<span class="cn">T</span>ransactionProcessor<span class="ot">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">D</span>onationController <span class="kw">extends</span> <span class="cn">C</span>ontroller</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="va">$transactionProcessor</span><span class="ot">;</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="cn">T</span>ransactionProcessor <span class="va">$transactionProcessor</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;transactionProcessor <span class="op">=</span> <span class="va">$transactionProcessor</span><span class="ot">;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;middleware(<span class="st">&#39;auth&#39;</span>)<span class="ot">;</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co">     * Process a donation</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> process(<span class="cn">R</span>equest <span class="va">$request</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate request</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">$validated</span> <span class="op">=</span> <span class="va">$request</span>-&gt;validate([</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> =&gt; <span class="st">&#39;required|string&#39;</span><span class="ot">,</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;amount&#39;</span> =&gt; <span class="st">&#39;required|numeric|min:0.0000001&#39;</span><span class="ot">,</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;sourceSecret&#39;</span> =&gt; <span class="st">&#39;required|string&#39;</span><span class="ot">,</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;isAnonymous&#39;</span> =&gt; <span class="st">&#39;boolean&#39;</span><span class="ot">,</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;message&#39;</span> =&gt; <span class="st">&#39;string|nullable&#39;</span><span class="ot">,</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;recurring&#39;</span> =&gt; <span class="st">&#39;boolean&#39;</span><span class="ot">,</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;recurringFrequency&#39;</span> =&gt; <span class="st">&#39;string|in:weekly,monthly,quarterly,annually&#39;</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Ensure authenticated user is the donor</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>        <span class="va">$donorId</span> <span class="op">=</span> auth()-&gt;id()<span class="ot">;</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Process donation</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>        <span class="va">$result</span> <span class="op">=</span> <span class="va">$this</span>-&gt;transactionProcessor-&gt;processDonation([</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;donorId&#39;</span> =&gt; <span class="va">$donorId</span><span class="ot">,</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;campaignId&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;campaignId&#39;</span>]<span class="ot">,</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;amount&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;amount&#39;</span>]<span class="ot">,</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;sourceSecret&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;sourceSecret&#39;</span>]<span class="ot">,</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;isAnonymous&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;isAnonymous&#39;</span>] <span class="op">??</span> <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;message&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;message&#39;</span>] <span class="op">??</span> <span class="st">&#39;&#39;</span><span class="ot">,</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;recurring&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;recurring&#39;</span>] <span class="op">??</span> <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;frequency&#39;</span> =&gt; <span class="va">$validated</span>[<span class="st">&#39;recurringFrequency&#39;</span>] <span class="op">??</span> <span class="st">&#39;monthly&#39;</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response()-&gt;json(<span class="va">$result</span>)<span class="ot">;</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a><span class="co">     * Get user transaction history</span></span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> userHistory(<span class="cn">R</span>equest <span class="va">$request</span>)</span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get query parameters</span></span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a>        <span class="va">$page</span> <span class="op">=</span> <span class="va">$request</span>-&gt;input(<span class="st">&#39;page&#39;</span><span class="ot">,</span> <span class="dv">1</span>)<span class="ot">;</span></span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a>        <span class="va">$limit</span> <span class="op">=</span> <span class="va">$request</span>-&gt;input(<span class="st">&#39;limit&#39;</span><span class="ot">,</span> <span class="dv">10</span>)<span class="ot">;</span></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a>        <span class="va">$type</span> <span class="op">=</span> <span class="va">$request</span>-&gt;input(<span class="st">&#39;type&#39;</span>)<span class="ot">;</span></span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>        <span class="va">$status</span> <span class="op">=</span> <span class="va">$request</span>-&gt;input(<span class="st">&#39;status&#39;</span>)<span class="ot">;</span></span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get user ID</span></span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>        <span class="va">$userId</span> <span class="op">=</span> auth()-&gt;id()<span class="ot">;</span></span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get transaction history</span></span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>        <span class="va">$result</span> <span class="op">=</span> <span class="va">$this</span>-&gt;transactionProcessor-&gt;getUserTransactionHistory(<span class="va">$userId</span><span class="ot">,</span> [</span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;page&#39;</span> =&gt; (<span class="dt">int</span>)<span class="va">$page</span><span class="ot">,</span></span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;limit&#39;</span> =&gt; (<span class="dt">int</span>)<span class="va">$limit</span><span class="ot">,</span></span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;type&#39;</span> =&gt; <span class="va">$type</span><span class="ot">,</span></span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;status&#39;</span> =&gt; <span class="va">$status</span></span>
+<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response()-&gt;json(<span class="va">$result</span>)<span class="ot">;</span></span>
+<span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</body>
+</html>

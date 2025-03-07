@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>transaction-system</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdr2.com/pandoc.css" />
+</head>
+<body>
+<h1 id="the-give-hub-transaction-system-documentation">The Give Hub
+Transaction System Documentation</h1>
+<h2 id="overview">Overview</h2>
+<p>The Give Hub transaction system is built on the Stellar blockchain to
+enable secure, transparent donations to social causes. The system
+handles one-time donations, recurring donations, and milestone-based
+funding releases with escrow accounts.</p>
+<p>The transaction system is implemented across three primary
+components:</p>
+<ol type="1">
+<li><strong>StellarTransactionBuilder.js</strong>: JavaScript module for
+building, signing, and submitting Stellar blockchain transactions</li>
+<li><strong>TransactionService.js</strong>: Node.js service for managing
+blockchain transactions</li>
+<li><strong>TransactionProcessor.php</strong>: PHP implementation for
+processing transactions</li>
+</ol>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#transaction-types">Transaction Types</a></li>
+<li><a href="#key-features">Key Features</a></li>
+<li><a href="#implementation-details">Implementation Details</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#security-considerations">Security Considerations</a></li>
+<li><a href="#examples">Examples</a></li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<p>The transaction system follows a layered architecture:</p>
+<ol type="1">
+<li><strong>Blockchain Layer</strong>: Stellar blockchain for
+transaction processing and verification</li>
+<li><strong>Transaction Builder Layer</strong>: Low-level functions to
+create and submit blockchain transactions</li>
+<li><strong>Service Layer</strong>: Business logic handling donation
+processing, escrow management, etc.</li>
+<li><strong>Database Layer</strong>: Persistent storage of transaction
+records, donors, campaigns, etc.</li>
+<li><strong>API Layer</strong>: Endpoints for client applications to
+interact with the transaction system</li>
+</ol>
+<figure>
+<img src="architecture-diagram.png" alt="Architecture Diagram" />
+<figcaption aria-hidden="true">Architecture Diagram</figcaption>
+</figure>
+<h2 id="transaction-types">Transaction Types</h2>
+<p>The system supports several transaction types:</p>
+<h3 id="one-time-donations">One-Time Donations</h3>
+<p>Simple payments from a donor to a campaign with optional metadata: -
+Amount and currency (XLM by default) - Anonymous or public attribution -
+Optional message</p>
+<h3 id="recurring-donations">Recurring Donations</h3>
+<p>Periodic donations set up with a specified frequency: - Weekly,
+monthly, quarterly, or annual - Automated processing - Cancellation
+capability</p>
+<h3 id="milestone-escrow-transactions">Milestone Escrow
+Transactions</h3>
+<p>Multi-phase funding with escrow accounts: - Funds held in escrow
+until milestone conditions are met - Release triggered by campaign
+creator or admin - Notifies all stakeholders upon milestone
+completion</p>
+<h2 id="key-features">Key Features</h2>
+<h3 id="blockchain-integration">Blockchain Integration</h3>
+<ul>
+<li>Native Stellar blockchain transactions</li>
+<li>Full transaction history and verification</li>
+<li>Memo field for storing metadata</li>
+</ul>
+<h3 id="recurring-donations-management">Recurring Donations
+Management</h3>
+<ul>
+<li>Flexible scheduling (weekly, monthly, quarterly, annual)</li>
+<li>Automatic processing</li>
+<li>Donor notifications</li>
+<li>Cancellation management</li>
+</ul>
+<h3 id="milestone-based-funding">Milestone-Based Funding</h3>
+<ul>
+<li>Escrow account creation and management</li>
+<li>Milestone activation based on funding goals</li>
+<li>Controlled fund release</li>
+<li>Stakeholder notifications</li>
+</ul>
+<h3 id="transparency-and-reporting">Transparency and Reporting</h3>
+<ul>
+<li>Full transaction history for campaigns and donors</li>
+<li>Blockchain verification of all transactions</li>
+<li>Campaign donation reports with analytics</li>
+</ul>
+<h2 id="implementation-details">Implementation Details</h2>
+<h3 id="stellartransactionbuilder.js">StellarTransactionBuilder.js</h3>
+<p>The JavaScript builder provides low-level functions for creating and
+submitting Stellar transactions:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Creating a payment transaction</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> tx <span class="op">=</span> <span class="cf">await</span> stellarBuilder<span class="op">.</span><span class="fu">createPayment</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> donor<span class="op">.</span><span class="at">secretKey</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">destinationAddress</span><span class="op">:</span> campaign<span class="op">.</span><span class="at">stellarAddress</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;100&quot;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">memo</span><span class="op">:</span> <span class="st">&quot;Donation for COVID-19 Relief&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Submit the transaction</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> stellarBuilder<span class="op">.</span><span class="fu">submitTransaction</span>(tx)<span class="op">;</span></span></code></pre></div>
+<p>Key methods: - <code>createPayment</code>: Create a simple payment
+transaction - <code>createDonation</code>: Create a donation with
+campaign metadata - <code>createRecurringDonationSetup</code>: Set up
+recurring donations - <code>createRecurringDonationCancellation</code>:
+Cancel recurring donations - <code>createMilestoneEscrow</code>: Create
+escrow for milestone-based funding - <code>releaseMilestoneFunds</code>:
+Release funds from escrow upon milestone completion -
+<code>submitTransaction</code>: Submit transactions to the Stellar
+network</p>
+<h3 id="transactionservice.js">TransactionService.js</h3>
+<p>The Node.js service implements business logic for donation
+processing:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Processing a donation</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">processDonation</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">donorId</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;50&quot;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> <span class="st">&quot;SXXXXXXXXXXXXXXXXXXXXX&quot;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">isAnonymous</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">message</span><span class="op">:</span> <span class="st">&quot;Keep up the good work!&quot;</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">recurring</span><span class="op">:</span> <span class="kw">false</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Key methods: - <code>processDonation</code>: Process one-time or
+recurring donations - <code>processRecurringDonations</code>: Batch
+process due recurring donations - <code>cancelRecurringDonation</code>:
+Cancel a recurring donation - <code>releaseMilestoneFunding</code>:
+Release funds for a completed milestone -
+<code>getUserTransactionHistory</code>: Get transaction history for a
+user - <code>getCampaignTransactionHistory</code>: Get transaction
+history for a campaign</p>
+<h3 id="transactionprocessor.php">TransactionProcessor.php</h3>
+<p>The PHP implementation mirrors the Node.js service for platforms
+using PHP:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Processing a donation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">$result</span> <span class="op">=</span> <span class="va">$transactionProcessor</span>-&gt;processDonation([</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;donorId&#39;</span> =&gt; <span class="st">&#39;user123&#39;</span><span class="ot">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;campaignId&#39;</span> =&gt; <span class="st">&#39;campaign456&#39;</span><span class="ot">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;amount&#39;</span> =&gt; <span class="st">&#39;50&#39;</span><span class="ot">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;sourceSecret&#39;</span> =&gt; <span class="st">&#39;SXXXXXXXXXXXXXXXXXXXXX&#39;</span><span class="ot">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;isAnonymous&#39;</span> =&gt; <span class="kw">false</span><span class="ot">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;message&#39;</span> =&gt; <span class="st">&#39;Keep up the good work!&#39;</span><span class="ot">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;recurring&#39;</span> =&gt; <span class="kw">false</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span></code></pre></div>
+<p>Key methods match those in the Node.js implementation.</p>
+<h2 id="api-reference">API Reference</h2>
+<h3
+id="stellartransactionbuilder.js-1">StellarTransactionBuilder.js</h3>
+<h4 id="constructor">Constructor</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> builder <span class="op">=</span> <span class="kw">new</span> <span class="fu">StellarTransactionBuilder</span>({</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">useTestnet</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span> <span class="co">// Set to false for mainnet</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">horizonUrl</span><span class="op">:</span> <span class="st">&quot;https://horizon-testnet.stellar.org&quot;</span><span class="op">,</span> <span class="co">// Optional custom URL</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">baseFee</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span> <span class="co">// Optional custom fee (in stroops)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">timeout</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span> <span class="co">// Optional timeout in seconds</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">enableLogging</span><span class="op">:</span> <span class="kw">false</span> <span class="co">// Enable detailed logging</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="methods">Methods</h4>
+<h5 id="loadaccountpublickey"><code>loadAccount(publicKey)</code></h5>
+<p>Load a Stellar account for use as a transaction source.</p>
+<p>Parameters: - <code>publicKey</code> (string): Public key of the
+account</p>
+<p>Returns: Promise resolving to an account object</p>
+<h5 id="createpaymentparams"><code>createPayment(params)</code></h5>
+<p>Create a simple payment transaction.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>sourceSecret</code> (string): Secret key of the source account -
+<code>destinationAddress</code> (string): Destination account address -
+<code>amount</code> (string): Amount to send - <code>asset</code>
+(StellarSdk.Asset): Asset to send (default: XLM) - <code>memo</code>
+(string|object): Optional memo</p>
+<p>Returns: Promise resolving to a transaction object</p>
+<h5 id="createdonationparams"><code>createDonation(params)</code></h5>
+<p>Create a donation transaction with campaign-specific metadata.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>sourceSecret</code> (string): Secret key of the source account -
+<code>campaignAddress</code> (string): Campaign’s Stellar address -
+<code>amount</code> (string): Donation amount - <code>campaignId</code>
+(string): Campaign identifier - <code>donorId</code> (string): Optional
+donor identifier - <code>isAnonymous</code> (boolean): Whether the
+donation is anonymous - <code>asset</code> (StellarSdk.Asset): Asset to
+send (default: XLM) - <code>message</code> (string): Optional
+message</p>
+<p>Returns: Promise resolving to a transaction object</p>
+<h5
+id="createrecurringdonationsetupparams"><code>createRecurringDonationSetup(params)</code></h5>
+<p>Create a transaction to set up a recurring donation.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>sourceSecret</code> (string): Secret key of the source account -
+<code>campaignAddress</code> (string): Campaign’s Stellar address -
+<code>amount</code> (string): Donation amount - <code>campaignId</code>
+(string): Campaign identifier - <code>donorId</code> (string): Donor
+identifier - <code>frequency</code> (string): Payment frequency
+(“weekly”, “monthly”, “quarterly”, “annually”) - <code>startDate</code>
+(Date): Start date for recurring payments - <code>asset</code>
+(StellarSdk.Asset): Asset to send (default: XLM)</p>
+<p>Returns: Promise resolving to an object with transaction and
+recurring metadata</p>
+<h5
+id="createrecurringdonationcancellationparams"><code>createRecurringDonationCancellation(params)</code></h5>
+<p>Create a transaction to cancel a recurring donation.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>sourceSecret</code> (string): Secret key of the source account -
+<code>campaignAddress</code> (string): Campaign’s Stellar address -
+<code>campaignId</code> (string): Campaign identifier -
+<code>donorId</code> (string): Donor identifier</p>
+<p>Returns: Promise resolving to a transaction object</p>
+<h5
+id="createmilestoneescrowparams"><code>createMilestoneEscrow(params)</code></h5>
+<p>Create an escrow account for milestone-based funding.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>sourceSecret</code> (string): Secret key of the source account -
+<code>campaignId</code> (string): Campaign identifier -
+<code>milestones</code> (array): Array of milestone objects -
+<code>initialFunding</code> (string): Initial funding amount for
+escrow</p>
+<p>Returns: Promise resolving to an escrow setup result</p>
+<h5
+id="releasemilestonefundsparams"><code>releaseMilestoneFunds(params)</code></h5>
+<p>Release funds from a milestone escrow.</p>
+<p>Parameters: - <code>params</code> (object): -
+<code>escrowSecret</code> (string): Secret key of the escrow account -
+<code>destinationAddress</code> (string): Destination address (campaign)
+- <code>amount</code> (string): Amount to release -
+<code>milestoneId</code> (string): Milestone identifier -
+<code>campaignId</code> (string): Campaign identifier</p>
+<p>Returns: Promise resolving to a transaction result</p>
+<h5
+id="submittransactiontransaction"><code>submitTransaction(transaction)</code></h5>
+<p>Submit a transaction to the Stellar network.</p>
+<p>Parameters: - <code>transaction</code> (object): Signed transaction
+object</p>
+<p>Returns: Promise resolving to a transaction result</p>
+<h3 id="transactionservice.js-1">TransactionService.js</h3>
+<h4 id="constructor-1">Constructor</h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> service <span class="op">=</span> <span class="kw">new</span> <span class="fu">TransactionService</span>(dbClient<span class="op">,</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">useTestnet</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span> <span class="co">// Set to false for mainnet</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">enableLogging</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span> <span class="co">// Enable detailed logging</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">defaultAsset</span><span class="op">:</span> <span class="st">&#39;XLM&#39;</span><span class="op">,</span> <span class="co">// Default asset for transactions</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">maxRetries</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span> <span class="co">// Maximum retry attempts</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">retryDelay</span><span class="op">:</span> <span class="dv">2000</span> <span class="co">// Delay between retries in ms</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="methods-1">Methods</h4>
+<h5 id="processdonationparams"><code>processDonation(params)</code></h5>
+<p>Process a donation to a campaign.</p>
+<p>Parameters: - <code>params</code> (object): - <code>donorId</code>
+(string): Donor identifier - <code>campaignId</code> (string): Campaign
+identifier - <code>amount</code> (string): Donation amount -
+<code>sourceSecret</code> (string): Donor’s private key -
+<code>isAnonymous</code> (boolean): Whether the donation is anonymous -
+<code>message</code> (string): Optional message - <code>recurring</code>
+(boolean): Whether this is a recurring donation -
+<code>recurringFrequency</code> (string): Frequency for recurring
+donations</p>
+<p>Returns: Promise resolving to a donation result</p>
+<h5
+id="releasemilestonefundingparams"><code>releaseMilestoneFunding(params)</code></h5>
+<p>Process milestone funding release.</p>
+<p>Parameters: - <code>params</code> (object): - <code>campaignId</code>
+(string): Campaign identifier - <code>milestoneId</code> (string):
+Milestone identifier - <code>authorizedBy</code> (string): User
+authorizing the release - <code>amount</code> (string): Optional amount
+to release</p>
+<p>Returns: Promise resolving to a release result</p>
+<h5
+id="processrecurringdonations"><code>processRecurringDonations()</code></h5>
+<p>Process recurring donations that are due.</p>
+<p>Returns: Promise resolving to processing results</p>
+<h5
+id="cancelrecurringdonationparams"><code>cancelRecurringDonation(params)</code></h5>
+<p>Cancel a recurring donation.</p>
+<p>Parameters: - <code>params</code> (object): - <code>donorId</code>
+(string): Donor identifier - <code>campaignId</code> (string): Campaign
+identifier - <code>userId</code> (string): User requesting
+cancellation</p>
+<p>Returns: Promise resolving to a cancellation result</p>
+<h5
+id="getusertransactionhistoryuserid-options"><code>getUserTransactionHistory(userId, options)</code></h5>
+<p>Get transaction history for a user.</p>
+<p>Parameters: - <code>userId</code> (string): User identifier -
+<code>options</code> (object): Pagination and filter options</p>
+<p>Returns: Promise resolving to transaction history</p>
+<h5
+id="getcampaigntransactionhistorycampaignid-options"><code>getCampaignTransactionHistory(campaignId, options)</code></h5>
+<p>Get transaction history for a campaign.</p>
+<p>Parameters: - <code>campaignId</code> (string): Campaign identifier -
+<code>options</code> (object): Pagination and filter options</p>
+<p>Returns: Promise resolving to transaction history</p>
+<h3 id="transactionprocessor.php-1">TransactionProcessor.php</h3>
+<p>The PHP implementation mirrors the Node.js service with equivalent
+methods and parameters.</p>
+<h2 id="error-handling">Error Handling</h2>
+<p>The transaction system implements comprehensive error handling:</p>
+<ol type="1">
+<li><strong>Validation Errors</strong>: Returned when required
+parameters are missing or invalid</li>
+<li><strong>Authorization Errors</strong>: Returned when a user lacks
+permission for an operation</li>
+<li><strong>Blockchain Errors</strong>: Captured and translated into
+user-friendly messages</li>
+<li><strong>Database Errors</strong>: Logged and handled gracefully</li>
+</ol>
+<p>Example error response:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;success&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="st">&quot;Failed to process donation: Insufficient funds in source account&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="security-considerations">Security Considerations</h2>
+<h3 id="private-key-management">Private Key Management</h3>
+<p>The system requires donor private keys for signing transactions.
+Consider implementing:</p>
+<ol type="1">
+<li><strong>Encrypted Storage</strong>: Store private keys encrypted in
+the database</li>
+<li><strong>Key Derivation</strong>: Generate keys from user
+credentials</li>
+<li><strong>Hardware Security Modules</strong>: For production
+environments</li>
+</ol>
+<h3 id="authorization">Authorization</h3>
+<p>All sensitive operations (milestone releases, recurring donation
+cancellations) include authorization checks:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Authorization check</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="op">!</span>isCreator <span class="op">&amp;&amp;</span> <span class="op">!</span>isAdmin) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="vs">`User not authorized to release milestone funds: </span><span class="sc">${</span>authorizedBy<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="transaction-validation">Transaction Validation</h3>
+<p>All transactions are validated before submission:</p>
+<ol type="1">
+<li><strong>Parameter Validation</strong>: Required parameters are
+checked</li>
+<li><strong>Business Rules</strong>: Business logic constraints are
+enforced</li>
+<li><strong>Blockchain Validation</strong>: The Stellar network
+validates transaction structure</li>
+</ol>
+<h2 id="examples">Examples</h2>
+<h3 id="process-a-one-time-donation">Process a One-Time Donation</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using TransactionService.js</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">processDonation</span>({</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">donorId</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;50&quot;</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> <span class="st">&quot;SXXXXXXXXXXXXXXXXXXXXX&quot;</span><span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">isAnonymous</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">message</span><span class="op">:</span> <span class="st">&quot;Supporting your mission!&quot;</span><span class="op">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">recurring</span><span class="op">:</span> <span class="kw">false</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Check result</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (result<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Donation processed successfully: </span><span class="sc">${</span>result<span class="op">.</span><span class="at">transactionRecord</span><span class="op">.</span><span class="at">_id</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="vs">`Failed to process donation: </span><span class="sc">${</span>result<span class="op">.</span><span class="at">error</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="set-up-a-recurring-donation">Set Up a Recurring Donation</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using TransactionService.js</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">processDonation</span>({</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">donorId</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;25&quot;</span><span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> <span class="st">&quot;SXXXXXXXXXXXXXXXXXXXXX&quot;</span><span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">isAnonymous</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">recurring</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">recurringFrequency</span><span class="op">:</span> <span class="st">&quot;monthly&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Check result</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (result<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Recurring donation set up successfully: </span><span class="sc">${</span>result<span class="op">.</span><span class="at">transactionRecord</span><span class="op">.</span><span class="at">_id</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Next payment: </span><span class="sc">${</span>result<span class="op">.</span><span class="at">transactionRecord</span><span class="op">.</span><span class="at">recurringDetails</span><span class="op">.</span><span class="at">nextProcessing</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="vs">`Failed to set up recurring donation: </span><span class="sc">${</span>result<span class="op">.</span><span class="at">error</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="create-a-milestone-escrow">Create a Milestone Escrow</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using StellarTransactionBuilder.js</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> escrowResult <span class="op">=</span> <span class="cf">await</span> stellarBuilder<span class="op">.</span><span class="fu">createMilestoneEscrow</span>({</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> <span class="st">&quot;SXXXXXXXXXXXXXXXXXXXXX&quot;</span><span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">milestones</span><span class="op">:</span> [</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">id</span><span class="op">:</span> <span class="st">&quot;milestone1&quot;</span><span class="op">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">title</span><span class="op">:</span> <span class="st">&quot;Phase 1: Planning&quot;</span><span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;500&quot;</span><span class="op">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">releaseDays</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">conditions</span><span class="op">:</span> [<span class="st">&quot;Complete project plan&quot;</span><span class="op">,</span> <span class="st">&quot;Assemble team&quot;</span>]</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">id</span><span class="op">:</span> <span class="st">&quot;milestone2&quot;</span><span class="op">,</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">title</span><span class="op">:</span> <span class="st">&quot;Phase 2: Implementation&quot;</span><span class="op">,</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;1500&quot;</span><span class="op">,</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">releaseDays</span><span class="op">:</span> <span class="dv">60</span><span class="op">,</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">conditions</span><span class="op">:</span> [<span class="st">&quot;Develop prototype&quot;</span><span class="op">,</span> <span class="st">&quot;User testing&quot;</span>]</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">initialFunding</span><span class="op">:</span> <span class="st">&quot;2000&quot;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="co">// Store escrow details</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> db<span class="op">.</span><span class="fu">collection</span>(<span class="st">&#39;escrows&#39;</span>)<span class="op">.</span><span class="fu">insertOne</span>({</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  <span class="dt">escrowAccountId</span><span class="op">:</span> escrowResult<span class="op">.</span><span class="at">escrowAccountId</span><span class="op">,</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">escrowSecretKey</span><span class="op">:</span> escrowResult<span class="op">.</span><span class="at">escrowSecretKey</span><span class="op">,</span> <span class="co">// Store securely!</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="dt">milestones</span><span class="op">:</span> escrowResult<span class="op">.</span><span class="at">milestones</span><span class="op">,</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="dt">transactionHash</span><span class="op">:</span> escrowResult<span class="op">.</span><span class="at">transactionHash</span><span class="op">,</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="dt">created</span><span class="op">:</span> <span class="kw">new</span> <span class="bu">Date</span>()</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="release-milestone-funds">Release Milestone Funds</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using TransactionService.js</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> releaseResult <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">releaseMilestoneFunding</span>({</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">milestoneId</span><span class="op">:</span> <span class="st">&quot;milestone1&quot;</span><span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">authorizedBy</span><span class="op">:</span> <span class="st">&quot;admin789&quot;</span><span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">amount</span><span class="op">:</span> <span class="st">&quot;500&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Check result</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (releaseResult<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Milestone funds released: </span><span class="sc">${</span>releaseResult<span class="op">.</span><span class="at">transactionHash</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="vs">`Failed to release funds: </span><span class="sc">${</span>releaseResult<span class="op">.</span><span class="at">error</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="process-due-recurring-donations">Process Due Recurring
+Donations</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using TransactionService.js (typically run as a scheduled job)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> processResult <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">processRecurringDonations</span>()<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Processed </span><span class="sc">${</span>processResult<span class="op">.</span><span class="at">results</span><span class="op">.</span><span class="at">processed</span><span class="sc">}</span><span class="vs"> recurring donations`</span>)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Successful: </span><span class="sc">${</span>processResult<span class="op">.</span><span class="at">results</span><span class="op">.</span><span class="at">successful</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Failed: </span><span class="sc">${</span>processResult<span class="op">.</span><span class="at">results</span><span class="op">.</span><span class="at">failed</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="cancel-a-recurring-donation">Cancel a Recurring Donation</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using TransactionService.js</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> cancellationResult <span class="op">=</span> <span class="cf">await</span> transactionService<span class="op">.</span><span class="fu">cancelRecurringDonation</span>({</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">donorId</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;campaign456&quot;</span><span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">userId</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span> <span class="co">// Must be the donor or an admin</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sourceSecret</span><span class="op">:</span> <span class="st">&quot;SXXXXXXXXXXXXXXXXXXXXX&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Check result</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cancellationResult<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Recurring donation cancelled: </span><span class="sc">${</span>cancellationResult<span class="op">.</span><span class="at">transactionHash</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="vs">`Failed to cancel donation: </span><span class="sc">${</span>cancellationResult<span class="op">.</span><span class="at">error</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</body>
+</html>
