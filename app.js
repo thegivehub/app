@@ -53,10 +53,10 @@ let app = {
             pic: "/img/profilepics/cdr.png"
         },
         navUrls: {
-            'overview': '/dashboard.html',
-            'campaigns': '/browse.html',
-            'donors': '/donors.html',
-            'settings': '/settings.html'
+            'overview': '/pages/dashboard.html',
+            'campaigns': '/pages/browse.html',
+            'donors': '/pages/donors.html',
+            'settings': '/pages/settings.html'
         },
         api: {
             baseUrl: 'https://app.thegivehub.com/api',
