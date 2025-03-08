@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction System Documentation</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --sidebar-width: 280px;
+            --sidebar-bg: #f9fafb;
+            --content-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --hover-color: #eff6ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            position: relative;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            cursor: pointer;
+                margin-top: 0.75rem;
+                margin-right: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .nav-tree {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-section-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .nav-section-header:hover {
+            background-color: var(--hover-color);
+        }
+
+        .nav-section-header .icon {
+            margin-right: 0.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-section-header .icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .nav-section-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .nav-section-items.expanded {
+            max-height: 300px;
+        }
+
+        .nav-item {
+            padding: 0.5rem 1rem 0.5rem 2.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .nav-item.active {
+            background-color: var(--hover-color);
+            border-left: 3px solid var(--primary-color);
+            font-weight: 500;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+            background-color: var(--content-bg);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-content.full-width {
+            margin-left: 0;
+        }
+
+        .content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 5;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .toggle-sidebar.hidden {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div>
+                    <img src="/img/logo-no-background.png" alt="Logo" width="200">
+                    <h2 class="sidebar-title">Documentation</h2>
+                </div>
+                <button class="close-sidebar" aria-label="Close sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <nav class="nav-tree">
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span class="icon expanded">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </span>
+                        Transaction System
+                    </div>
+                    <div class="nav-section-items expanded">
+                        <div class="nav-item active" data-page="overview.html">Overview</div>
+                        <div class="nav-item" data-page="integration.html">System Integration</div>
+                        <div class="nav-item" data-page="best-practices.html">Best Practices</div>
+                        <div class="nav-item" data-page="troubleshooting.html">Troubleshooting</div>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+        
+        <button class="toggle-sidebar hidden" aria-label="Toggle sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        
+        <main class="main-content">
+            <iframe id="content-iframe" class="content-iframe" src="overview.html" title="Documentation Content"></iframe>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const sidebar = document.querySelector('.sidebar');
+            const closeSidebarBtn = document.querySelector('.close-sidebar');
+            const toggleSidebarBtn = document.querySelector('.toggle-sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const contentIframe = document.getElementById('content-iframe');
+            const navSectionHeaders = document.querySelectorAll('.nav-section-header');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            // Toggle sidebar
+            function toggleSidebar() {
+                const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('full-width', isCollapsed);
+                toggleSidebarBtn.classList.toggle('hidden', !isCollapsed);
+            }
+            
+            closeSidebarBtn.addEventListener('click', toggleSidebar);
+            toggleSidebarBtn.addEventListener('click', toggleSidebar);
+            
+            // Toggle sections
+            navSectionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const sectionItems = this.nextElementSibling;
+                    const icon = this.querySelector('.icon');
+                    
+                    sectionItems.classList.toggle('expanded');
+                    icon.classList.toggle('expanded');
+                });
+            });
+            
+            // Switch pages
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Update active nav item
+                    navItems.forEach(navItem => navItem.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update iframe src
+                    const pageUrl = this.getAttribute('data-page');
+                    contentIframe.src = pageUrl;
+                    
+                    // On mobile, close sidebar after selection
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

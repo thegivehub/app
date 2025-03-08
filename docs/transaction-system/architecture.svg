@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 680" width="1000" height="680">
+  <!-- Styles -->
+  <defs>
+    <style>
+      .title {
+        font-family: 'Arial', sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        text-anchor: middle;
+      }
+      .subtitle {
+        font-family: 'Arial', sans-serif;
+        font-size: 14px;
+        font-style: italic;
+        text-anchor: middle;
+      }
+      .layer-title {
+        font-family: 'Arial', sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        text-anchor: middle;
+        fill: #ffffff;
+      }
+      .component {
+        font-family: 'Arial', sans-serif;
+        font-size: 14px;
+        text-anchor: middle;
+        fill: #333333;
+      }
+      .label {
+        font-family: 'Arial', sans-serif;
+        font-size: 12px;
+        text-anchor: middle;
+      }
+      .arrow {
+        stroke: #666;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      .dotted {
+        stroke-dasharray: 5,5;
+      }
+      .layer {
+        fill-opacity: 0.7;
+        stroke: #333333;
+        stroke-width: 2;
+      }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="500" y="40" class="title">The Give Hub Transaction System Architecture</text>
+  <text x="500" y="65" class="subtitle">Built on Stellar Blockchain for Secure, Transparent Donations</text>
+  
+  <!-- Layers Background -->
+  <rect x="100" y="100" width="800" height="100" rx="10" ry="10" class="layer" fill="#3b82f6" />
+  <rect x="100" y="210" width="800" height="100" rx="10" ry="10" class="layer" fill="#8b5cf6" />
+  <rect x="100" y="320" width="800" height="100" rx="10" ry="10" class="layer" fill="#ec4899" />
+  <rect x="100" y="430" width="800" height="100" rx="10" ry="10" class="layer" fill="#f59e0b" />
+  <rect x="100" y="540" width="800" height="100" rx="10" ry="10" class="layer" fill="#10b981" />
+  
+  <!-- Layer Titles -->
+  <text x="150" y="125" class="layer-title">API Layer</text>
+  <text x="150" y="235" class="layer-title">Database Layer</text>
+  <text x="150" y="345" class="layer-title">Service Layer</text>
+  <text x="150" y="455" class="layer-title">Transaction Builder Layer</text>
+  <text x="150" y="565" class="layer-title">Blockchain Layer</text>
+  
+  <!-- API Layer Components -->
+  <rect x="300" y="110" width="180" height="80" rx="5" ry="5" fill="#ffffff" stroke="#3b82f6" stroke-width="2" />
+  <text x="390" y="155" class="component">RESTful API Endpoints</text>
+  
+  <rect x="520" y="110" width="180" height="80" rx="5" ry="5" fill="#ffffff" stroke="#3b82f6" stroke-width="2" />
+  <text x="610" y="155" class="component">WebHook Handlers</text>
+  
+  <!-- Database Layer Components -->
+  <rect x="200" y="220" width="150" height="80" rx="5" ry="5" fill="#ffffff" stroke="#8b5cf6" stroke-width="2" />
+  <text x="275" y="255" class="component">Transaction</text>
+  <text x="275" y="275" class="component">Records</text>
+  
+  <rect x="380" y="220" width="150" height="80" rx="5" ry="5" fill="#ffffff" stroke="#8b5cf6" stroke-width="2" />
+  <text x="455" y="255" class="component">User &amp; Donor</text>
+  <text x="455" y="275" class="component">Information</text>
+  
+  <rect x="560" y="220" width="150" height="80" rx="5" ry="5" fill="#ffffff" stroke="#8b5cf6" stroke-width="2" />
+  <text x="635" y="255" class="component">Campaign</text>
+  <text x="635" y="275" class="component">Data</text>
+  
+  <rect x="740" y="220" width="150" height="80" rx="5" ry="5" fill="#ffffff" stroke="#8b5cf6" stroke-width="2" />
+  <text x="815" y="255" class="component">Milestone &amp;</text>
+  <text x="815" y="275" class="component">Escrow Records</text>
+  
+  <!-- Service Layer Components -->
+  <rect x="200" y="330" width="170" height="80" rx="5" ry="5" fill="#ffffff" stroke="#ec4899" stroke-width="2" />
+  <text x="285" y="365" class="component">TransactionService.js</text>
+  <text x="285" y="385" class="component">(Node.js)</text>
+  
+  <rect x="400" y="330" width="170" height="80" rx="5" ry="5" fill="#ffffff" stroke="#ec4899" stroke-width="2" />
+  <text x="485" y="365" class="component">TransactionProcessor.php</text>
+  <text x="485" y="385" class="component">(PHP)</text>
+  
+  <rect x="600" y="330" width="170" height="80" rx="5" ry="5" fill="#ffffff" stroke="#ec4899" stroke-width="2" />
+  <text x="685" y="365" class="component">Scheduled Jobs</text>
+  <text x="685" y="385" class="component">(Recurring Donations)</text>
+  
+  <!-- Transaction Builder Layer Components -->
+  <rect x="300" y="440" width="400" height="80" rx="5" ry="5" fill="#ffffff" stroke="#f59e0b" stroke-width="2" />
+  <text x="500" y="475" class="component">StellarTransactionBuilder.js</text>
+  <text x="500" y="495" class="component">(Payment, Donation, Escrow &amp; Milestone Operations)</text>
+  
+  <!-- Blockchain Layer Components -->
+  <rect x="250" y="550" width="200" height="80" rx="5" ry="5" fill="#ffffff" stroke="#10b981" stroke-width="2" />
+  <text x="350" y="585" class="component">Stellar Network</text>
+  <text x="350" y="605" class="component">(Main/Test Net)</text>
+  
+  <rect x="550" y="550" width="200" height="80" rx="5" ry="5" fill="#ffffff" stroke="#10b981" stroke-width="2" />
+  <text x="650" y="585" class="component">Stellar Horizon API</text>
+  <text x="650" y="605" class="component">(Transaction Submission)</text>
+  
+  <!-- Transaction Types and Features -->
+  <g transform="translate(920, 150)">
+    <rect x="0" y="0" width="150" height="30" rx="5" ry="5" fill="#f3f4f6" stroke="#666" />
+    <text x="75" y="20" class="label">One-Time Donations</text>
+    
+    <rect x="0" y="40" width="150" height="30" rx="5" ry="5" fill="#f3f4f6" stroke="#666" />
+    <text x="75" y="60" class="label">Recurring Donations</text>
+    
+    <rect x="0" y="80" width="150" height="30" rx="5" ry="5" fill="#f3f4f6" stroke="#666" />
+    <text x="75" y="100" class="label">Milestone Escrow</text>
+  </g>
+  
+  <!-- Connections -->
+  <!-- API to Service -->
+  <path d="M 390 190 L 390 320" class="arrow" />
+  <path d="M 610 190 L 610 320" class="arrow" />
+  
+  <!-- Service to Database -->
+  <path d="M 260 330 L 260 300" class="arrow" />
+  <path d="M 310 330 L 445 300" class="arrow" />
+  <path d="M 485 330 L 485 300" class="arrow" />
+  <path d="M 660 330 L 660 300" class="arrow" />
+  <path d="M 720 330 L 800 300" class="arrow" />
+  
+  <!-- Service to Transaction Builder -->
+  <path d="M 285 410 L 400 440" class="arrow" />
+  <path d="M 485 410 L 485 440" class="arrow" />
+  <path d="M 685 410 L 570 440" class="arrow" />
+  
+  <!-- Transaction Builder to Blockchain -->
+  <path d="M 400 520 L 350 550" class="arrow" />
+  <path d="M 600 520 L 650 550" class="arrow" />
+  
+  <!-- Transaction Types -->
+  <path d="M 770 155 L 920 155" class="arrow dotted" />
+  <path d="M 770 365 L 850 365 L 850 175 L 920 175" class="arrow dotted" />
+  <path d="M 850 365 L 850 215 L 920 215" class="arrow dotted" />
+  
+  <!-- External Integration Points -->
+  <rect x="40" y="150" width="30" height="100" rx="5" ry="5" fill="#f3f4f6" stroke="#666" />
+  <text x="55" y="190" transform="rotate(-90, 55, 190)" class="label">Client Apps</text>
+  <path d="M 70 175 L 300 150" class="arrow" />
+  
+  <rect x="40" y="300" width="30" height="100" rx="5" ry="5" fill="#f3f4f6" stroke="#666" />
+  <text x="55" y="340" transform="rotate(-90, 55, 340)" class="label">Admin Portal</text>
+  <path d="M 70 340 L 200 365" class="arrow" />
+  
+  <!-- Key Components Annotation -->
+  <rect x="670" y="620" width="230" height="50" rx="5" ry="5" fill="#ffffff" stroke="#666" />
+  <text x="785" y="640" class="label">Key Components:</text>
+  <text x="785" y="660" class="label">Transaction Types, Escrow, Blockchain Integration</text>
+</svg>
+
