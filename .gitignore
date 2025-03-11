@@ -34,3 +34,5 @@ img/avatars/*.jpeg
 img/avatars/**
 .openapi-generator
 .openapi-generator-ignore
+givehub.sql
+mongo-dump.tgz
