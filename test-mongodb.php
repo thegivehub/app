@@ -28,8 +28,8 @@ try {
     
     // List databases to test connection
     echo "Available databases:\n";
-    foreach ($client->listDatabases() as $database) {
-        echo " - " . $database->getName() . "\n";
+    foreach ($client->listDatabases() as $dbInfo) {
+        echo " - " . $dbInfo->getName() . "\n";
     }
     
     // Select our application database

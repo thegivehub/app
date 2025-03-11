@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "4420:80"
     volumes:
       - ./:/var/www/html
       - ./logs:/var/www/html/logs
@@ -28,7 +28,7 @@ services:
   mongodb:
     image: mongo:6.0
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro

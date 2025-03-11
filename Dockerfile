@@ -46,6 +46,7 @@ RUN composer dump-autoload --optimize
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod +x /var/www/html/docker-entrypoint.sh
+RUN git config --global --add safe.directory /var/www/html
 
 # Configure Apache
 RUN a2enmod rewrite

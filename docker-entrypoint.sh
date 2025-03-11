@@ -67,6 +67,7 @@ chown -R www-data:www-data /var/www/html/img/avatars
 
 # Test MongoDB connection
 echo "Testing MongoDB connection..."
+which php
 php /var/www/html/test-mongodb.php > /var/www/html/logs/mongodb-test.log 2>&1
 if [ $? -eq 0 ]; then
     echo "✅ MongoDB connection test successful"
