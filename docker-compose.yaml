@@ -18,10 +18,12 @@ services:
       - MONGODB_HOST=mongodb
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=givehub
+      - MONGODB_USERNAME=
+      - MONGODB_PASSWORD=
       - COMPOSER_ALLOW_SUPERUSER=1
+      - PHP_EXTENSION_MONGODB=1
     networks:
       - givehub_network
-    command: ["/var/www/html/docker-entrypoint.sh"]
 
   mongodb:
     image: mongo:6.0
@@ -29,10 +31,12 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       - MONGO_INITDB_DATABASE=givehub
     networks:
       - givehub_network
+    command: mongod --logpath=/var/log/mongodb/mongod.log --logappend
 
 networks:
   givehub_network:

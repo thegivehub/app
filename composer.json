@@ -7,17 +7,22 @@
         "mongodb/mongodb": "^1.15",
         "firebase/php-jwt": "^6.0",
         "ext-mongodb": "*",
-        "ramsey/uuid": "^4.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ramsey/uuid": "^4.0"
     },
     "autoload": {
-        "files": [
-            "lib/autoload.php"
+        "classmap": [
+            "lib/"
         ]
     },
     "scripts": {
         "post-install-cmd": [
             "php -r \"echo 'MongoDB PHP Driver: ' . (extension_loaded('mongodb') ? 'Installed' : 'NOT INSTALLED') . PHP_EOL;\""
         ]
+    },
+    "config": {
+        "platform": {
+            "php": "8.1.0"
+        }
     }
 }
