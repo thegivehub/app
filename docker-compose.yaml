@@ -10,12 +10,15 @@ services:
     volumes:
       - ./:/var/www/html
       - ./logs:/var/www/html/logs
+      # Exclude vendor directory to avoid conflicts with container dependencies
+      - /var/www/html/vendor
     depends_on:
       - mongodb
     environment:
       - MONGODB_HOST=mongodb
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=givehub
+      - COMPOSER_ALLOW_SUPERUSER=1
     networks:
       - givehub_network
     command: ["/var/www/html/docker-entrypoint.sh"]

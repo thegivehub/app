@@ -19,6 +19,13 @@ mkdir -p /var/www/html/img/avatars
 chown -R www-data:www-data /var/www/html/logs
 chown -R www-data:www-data /var/www/html/img/avatars
 
+# Install/update Composer dependencies
+echo "Installing Composer dependencies..."
+composer install --no-interaction
+
+# Make sure MongoDB extension is enabled
+php -m | grep -q mongodb || { echo "MongoDB extension not enabled!"; exit 1; }
+
 # Run database setup
 echo "Running database setup..."
 php /var/www/html/lib/setup.php

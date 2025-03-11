@@ -1,8 +1,23 @@
 {
+    "name": "thegivehub/app",
+    "description": "The Give Hub crowdfunding platform",
+    "type": "project",
     "require": {
+        "php": ">=7.4",
         "mongodb/mongodb": "^1.15",
         "firebase/php-jwt": "^6.0",
         "ext-mongodb": "*",
-        "ramsey/uuid": "^4.0"
+        "ramsey/uuid": "^4.0",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "files": [
+            "lib/autoload.php"
+        ]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php -r \"echo 'MongoDB PHP Driver: ' . (extension_loaded('mongodb') ? 'Installed' : 'NOT INSTALLED') . PHP_EOL;\""
+        ]
     }
 }

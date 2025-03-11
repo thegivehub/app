@@ -126,7 +126,38 @@ docker-compose logs mongodb
 
 # Verify network connectivity
 docker-compose exec app ping mongodb
+
+# Test MongoDB connectivity with the test script
+docker-compose exec app php test-mongodb.php
+
+# Check if MongoDB PHP extension is installed
+docker-compose exec app php -m | grep mongodb
+
+# Verify MongoDB client library is installed
+docker-compose exec app composer show | grep mongodb
 ```
+
+If you're getting errors about missing MongoDB\Client or MongoDB\Model\BSONDocument classes:
+
+1. Make sure the MongoDB PHP extension is installed:
+   ```bash
+   docker-compose exec app php -m | grep mongodb
+   ```
+
+2. Ensure the MongoDB PHP library is properly installed:
+   ```bash
+   docker-compose exec app composer require mongodb/mongodb
+   ```
+
+3. Check for any autoloading issues:
+   ```bash
+   docker-compose exec app composer dump-autoload
+   ```
+
+4. Restart the application container:
+   ```bash
+   docker-compose restart app
+   ```
 
 ### File Permission Issues
 

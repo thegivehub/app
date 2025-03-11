@@ -10,10 +10,21 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install zip
+RUN docker-php-ext-install zip pdo pdo_mysql
+
+# Install additional required extensions for MongoDB driver
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    pkg-config \
+    libssl-dev \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
 # Install MongoDB extension
 RUN pecl install mongodb && docker-php-ext-enable mongodb
+
+# Install MongoDB PHP library via Composer
+RUN composer require mongodb/mongodb:^1.15
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
