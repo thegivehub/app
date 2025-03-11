@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/MongoCollection.php';
 
 class Database {
@@ -6,11 +7,35 @@ class Database {
     private $db;
     private static $instance = null;
 
-    public function __construct($db="givehub") {
+    public function __construct($db = null) {
         try {
-            $this->client = new MongoDB\Client('mongodb://localhost:27017');
-            $this->db = $this->client->selectDatabase($db);
+            // Use environment variables via config.php
+            $dbName = $db ?: MONGODB_DATABASE;
+            $host = MONGODB_HOST;
+            $port = MONGODB_PORT;
+            $username = MONGODB_USERNAME;
+            $password = MONGODB_PASSWORD;
+
+            // Build connection string
+            $connectionString = "mongodb://";
+            
+            // Add authentication if provided
+            if ($username && $password) {
+                $connectionString .= $username . ":" . $password . "@";
+            }
+            
+            // Add host and port
+            $connectionString .= $host . ":" . $port;
+
+            // Create MongoDB client with the connection string
+            $this->client = new MongoDB\Client($connectionString);
+            $this->db = $this->client->selectDatabase($dbName);
+            
+            if (APP_DEBUG) {
+                error_log("MongoDB connection established to {$host}:{$port}/{$dbName}");
+            }
         } catch (Exception $e) {
+            error_log("MongoDB connection failed: " . $e->getMessage());
             throw new Exception("MongoDB connection failed: " . $e->getMessage());
         }
     }
@@ -26,5 +51,3 @@ class Database {
         return new MongoCollection($this->db->selectCollection($name));
     }
 }
-
-
