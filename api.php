@@ -8,7 +8,7 @@ require_once __DIR__ . '/lib/db.php';
  * @param mixed $data Data to be JSON encoded
  * @param bool $exit Whether to exit after sending (default: true)
  */
-function sendJson($code, $data, $exit = true) {
+function sendAPIJson($code, $data, $exit = true) {
     http_response_code($code);
     header('Access-Control-Allow-Origin: *');
     header('Content-Type: application/json');
@@ -60,11 +60,11 @@ spl_autoload_register(function ($className) {
             eval($classDefinition); // This eval is much safer as it only contains the class name which we validated
         } else {
             logMessage("Base Collection class not found", ['path' => $baseCollectionPath], 'error');
-            sendJson(500, ["error" => "System configuration error"]);
+            sendAPIJson(500, ["error" => "System configuration error"]);
         }
     } else {
         logMessage("Invalid collection name", ['className' => $className], 'error');
-        sendJson(400, ["error" => "Invalid collection name"]);
+        sendAPIJson(400, ["error" => "Invalid collection name"]);
     }
 });
 session_start();
@@ -93,7 +93,7 @@ $instance = new $endpoint();
 // Verify that the endpoint class exists
 if (!$endpoint || !class_exists($endpoint)) {
     logMessage("Invalid endpoint", ['endpoint' => $endpoint], 'error');
-    sendJson(400, ["error" => "Invalid endpoint"]);
+    sendAPIJson(400, ["error" => "Invalid endpoint"]);
 }
 $pathParts = preg_split("/\//", $_SERVER['PATH_INFO']);
 array_shift($pathParts);
@@ -103,18 +103,18 @@ if ($endpoint === 'User' && isset($pathParts) && count($pathParts) > 0) {
             case 'profile':
                 if ($method === 'PUT') {
                     $result = $instance->updateProfile($instance->getUserIdFromToken(), $posted);
-                    sendJson(200, $result);
+                    sendAPIJson(200, $result);
                 }
                 break;
             case 'me':
                 if ($method === 'PUT') {
                     $result = $instance->updateProfile($instance->getUserIdFromToken(), $posted);
-                    sendJson(200, $result);
+                    sendAPIJson(200, $result);
                 }
                 
                 if ($method === 'GET') {
                     $result = $instance->me();
-                    sendJson(200, $result);
+                    sendAPIJson(200, $result);
                 }
                 break;
         }
@@ -126,7 +126,7 @@ if ($endpoint === 'Campaign') {
             case 'my':
                 if ($method === 'GET') {
                     $result = $instance->getMyCampaigns();
-                    sendJson(200, $result);
+                    sendAPIJson(200, $result);
                 }
                 break;
         }
