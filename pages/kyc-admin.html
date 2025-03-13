@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Administration - TheGiveHub</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/admin.css">
+    <!-- Include necessary CSS libraries -->
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <img src="/assets/img/logo.png" alt="TheGiveHub Logo">
+            </div>
+            <nav class="main-nav">
+                <!-- Navigation menu here -->
+                <ul class="admin-menu">
+                    <li><a href="/admin/dashboard.html">Dashboard</a></li>
+                    <li><a href="/admin/users.html">Users</a></li>
+                    <li><a href="/admin/kyc-admin.html" class="active">KYC Verification</a></li>
+                    <li><a href="/admin/settings.html">Settings</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="container-fluid">
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h1>Identity Verification Administration</h1>
+                    </div>
+                    
+                    <div class="panel-body">
+                        <!-- KYC Statistics -->
+                        <div class="stats-row row">
+                            <div class="col-md-3">
+                                <div class="stat-card bg-info">
+                                    <div class="stat-value" id="stat-total">0</div>
+                                    <div class="stat-label">Total Verifications</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card bg-success">
+                                    <div class="stat-value" id="stat-approved">0</div>
+                                    <div class="stat-label">Approved</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card bg-danger">
+                                    <div class="stat-value" id="stat-rejected">0</div>
+                                    <div class="stat-label">Rejected</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card bg-warning">
+                                    <div class="stat-value" id="stat-pending">0</div>
+                                    <div class="stat-label">Pending</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Controls -->
+                        <div class="filter-controls">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter-status">Status</label>
+                                        <select id="filter-status" class="form-control">
+                                            <option value="">All Statuses</option>
+                                            <option value="APPROVED">Approved</option>
+                                            <option value="REJECTED">Rejected</option>
+                                            <option value="PENDING">Pending</option>
+                                            <option value="ERROR">Error</option>
+                                            <option value="EXPIRED">Expired</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter-start-date">Start Date</label>
+                                        <input type="date" id="filter-start-date" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter-end-date">End Date</label>
+                                        <input type="date" id="filter-end-date" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button id="apply-filters" class="btn btn-primary btn-block">Apply Filters</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Verification List -->
+                        <div class="verification-list-container">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Last Updated</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="verification-list">
+                                        <tr>
+                                            <td colspan="6" class="text-center">Loading verification data...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modal for Manual Override -->
+        <div class="modal fade" id="override-modal" tabindex="-1" role="dialog" aria-labelledby="overrideModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="overrideModalLabel">Manual Verification Override</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="override-form">
+                            <input type="hidden" id="override-user-id">
+                            
+                            <div class="form-group">
+                                <label for="override-user-info">User:</label>
+                                <div id="override-user-info" class="form-control-static"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="override-status">Status:</label>
+                                <select id="override-status" class="form-control" required>
+                                    <option value="">Select Status</option>
+                                    <option value="APPROVED">Approve Verification</option>
+                                    <option value="REJECTED">Reject Verification</option>
+                                    <option value="PENDING">Reset to Pending</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="override-reason">Reason:</label>
+                                <textarea id="override-reason" class="form-control" rows="3" required></textarea>
+                                <small class="form-text text-muted">Provide a detailed reason for this manual override (for audit purposes).</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="save-override">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <div class="container">
+                <p>&copy; 2025 TheGiveHub. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript files -->
+    <script src="/assets/js/lib/jquery.min.js"></script>
+    <script src="/assets/js/lib/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/APIConfig.js"></script>
+    <script>
+        // KYC Admin JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const verificationList = document.getElementById('verification-list');
+            const filterStatus = document.getElementById('filter-status');
+            const filterStartDate = document.getElementById('filter-start-date');
+            const filterEndDate = document.getElementById('filter-end-date');
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            
+            // Stats elements
+            const statTotal = document.getElementById('stat-total');
+            const statApproved = document.getElementById('stat-approved');
+            const statRejected = document.getElementById('stat-rejected');
+            const statPending = document.getElementById('stat-pending');
+            
+            // Override modal elements
+            const overrideModal = document.getElementById('override-modal');
+            const overrideUserId = document.getElementById('override-user-id');
+            const overrideUserInfo = document.getElementById('override-user-info');
+            const overrideStatus = document.getElementById('override-status');
+            const overrideReason = document.getElementById('override-reason');
+            const saveOverrideBtn = document.getElementById('save-override');
+
+            // Get current filters
+            function getFilters() {
+                return {
+                    status: filterStatus.value,
+                    startDate: filterStartDate.value || null,
+                    endDate: filterEndDate.value || null
+                };
+            }
+
+            // Format date for display
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+
+            // Load verification report data
+            async function loadVerificationData() {
+                try {
+                    const filters = getFilters();
+                    let url = app.api.buildUrl('/kyc/report');
+                    
+                    // Add filters to URL if present
+                    const params = [];
+                    if (filters.status) params.push(`status=${filters.status}`);
+                    if (filters.startDate) params.push(`startDate=${filters.startDate}`);
+                    if (filters.endDate) params.push(`endDate=${filters.endDate}`);
+                    
+                    if (params.length > 0) {
+                        url += '?' + params.join('&');
+                    }
+                    
+                    // Make API request
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load verification data');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error || 'Error loading report');
+                    }
+                    
+                    // Update statistics
+                    statTotal.textContent = data.totalCount;
+                    statApproved.textContent = data.statusCounts.APPROVED;
+                    statRejected.textContent = data.statusCounts.REJECTED;
+                    statPending.textContent = data.statusCounts.PENDING;
+                    
+                    // Clear the verification list
+                    verificationList.innerHTML = '';
+                    
+                    // Add verification entries
+                    if (data.verifications.length === 0) {
+                        verificationList.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center">No verification records found</td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    data.verifications.forEach(verification => {
+                        const row = document.createElement('tr');
+                        
+                        // Set row class based on status
+                        if (verification.result === 'APPROVED') {
+                            row.classList.add('table-success');
+                        } else if (verification.result === 'REJECTED') {
+                            row.classList.add('table-danger');
+                        } else if (verification.result === 'PENDING') {
+                            row.classList.add('table-warning');
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${verification.userName || 'Unknown'}</td>
+                            <td>${verification.userEmail || 'Unknown'}</td>
+                            <td>
+                                <span class="badge badge-${getBadgeClass(verification.result)}">
+                                    ${verification.result}
+                                </span>
+                                ${verification.isManual ? '<span class="badge badge-secondary">Manual</span>' : ''}
+                            </td>
+                            <td>${formatDate(verification.created)}</td>
+                            <td>${formatDate(verification.updated)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary override-btn" 
+                                        data-user-id="${verification.userId}"
+                                        data-user-name="${verification.userName || 'Unknown'}"
+                                        data-user-email="${verification.userEmail || 'Unknown'}"
+                                        data-status="${verification.result}">
+                                    Override
+                                </button>
+                            </td>
+                        `;
+                        
+                        verificationList.appendChild(row);
+                    });
+                    
+                    // Add event listeners to override buttons
+                    document.querySelectorAll('.override-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const userId = this.getAttribute('data-user-id');
+                            const userName = this.getAttribute('data-user-name');
+                            const userEmail = this.getAttribute('data-user-email');
+                            const status = this.getAttribute('data-status');
+                            
+                            // Populate modal
+                            overrideUserId.value = userId;
+                            overrideUserInfo.textContent = `${userName} (${userEmail})`;
+                            overrideStatus.value = '';
+                            overrideReason.value = '';
+                            
+                            // Show modal
+                            $('#override-modal').modal('show');
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading verification data:', error);
+                    verificationList.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">
+                                Error loading verification data: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Get badge class based on status
+            function getBadgeClass(status) {
+                switch (status) {
+                    case 'APPROVED': return 'success';
+                    case 'REJECTED': return 'danger';
+                    case 'PENDING': return 'warning';
+                    case 'ERROR': return 'danger';
+                    case 'EXPIRED': return 'secondary';
+                    default: return 'info';
+                }
+            }
+
+            // Save manual override
+            async function saveOverride() {
+                try {
+                    const userId = overrideUserId.value;
+                    const status = overrideStatus.value;
+                    const reason = overrideReason.value;
+                    
+                    if (!userId || !status || !reason) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+                    
+                    const response = await fetch(app.api.buildUrl('/kyc/admin-override'), {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            status: status,
+                            reason: reason
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save override');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Override failed');
+                    }
+                    
+                    // Close modal and reload data
+                    $('#override-modal').modal('hide');
+                    loadVerificationData();
+                    
+                } catch (error) {
+                    console.error('Override error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+
+            // Event listeners
+            applyFiltersBtn.addEventListener('click', loadVerificationData);
+            saveOverrideBtn.addEventListener('click', saveOverride);
+            
+            // Initialize
+            loadVerificationData();
+        });
+    </script>
+</body>
+</html>

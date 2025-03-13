@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Verification - TheGiveHub</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <!-- Include necessary CSS libraries -->
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <img src="/assets/img/logo.png" alt="TheGiveHub Logo">
+            </div>
+            <nav class="main-nav">
+                <!-- Navigation menu here -->
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="card verification-card">
+                    <div class="card-header">
+                        <h1>Identity Verification</h1>
+                    </div>
+                    <div class="card-body">
+                        <div id="verification-status" class="status-container">
+                            <div class="spinner-container">
+                                <div class="spinner"></div>
+                                <p>Loading verification status...</p>
+                            </div>
+                        </div>
+
+                        <div id="pending-verification" class="verification-section" style="display: none;">
+                            <div class="alert alert-info">
+                                <p>Your identity verification is in progress. We'll notify you once it's complete.</p>
+                            </div>
+                        </div>
+
+                        <div id="complete-verification" class="verification-section" style="display: none;">
+                            <div class="alert alert-success">
+                                <p>Your identity has been successfully verified!</p>
+                            </div>
+                        </div>
+
+                        <div id="failed-verification" class="verification-section" style="display: none;">
+                            <div class="alert alert-danger">
+                                <p>We couldn't verify your identity. Please try again.</p>
+                                <p id="failure-reason"></p>
+                            </div>
+                        </div>
+
+                        <div id="start-verification" class="verification-section" style="display: none;">
+                            <div class="verification-intro">
+                                <h2>Why we need to verify your identity</h2>
+                                <p>To comply with regulations and ensure a safe environment for all users, we need to verify your identity before you can fully access all features.</p>
+                                
+                                <h3>What you'll need:</h3>
+                                <ul>
+                                    <li>A valid government-issued photo ID (passport, driver's license, or ID card)</li>
+                                    <li>A device with a camera</li>
+                                    <li>A few minutes of your time</li>
+                                </ul>
+                                
+                                <h3>The verification process:</h3>
+                                <ol>
+                                    <li>Take or upload a photo of your ID document</li>
+                                    <li>Take a selfie for facial verification</li>
+                                    <li>Wait for confirmation (usually within minutes)</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="action-container">
+                                <button id="verify-button" class="btn btn-primary btn-lg">Start Verification</button>
+                            </div>
+                        </div>
+
+                        <div id="error-container" class="error-section" style="display: none;">
+                            <div class="alert alert-danger">
+                                <p id="error-message">An error occurred. Please try again later.</p>
+                            </div>
+                            <button id="retry-button" class="btn btn-outline-primary">Retry</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="container">
+                <p>&copy; 2025 TheGiveHub. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Core JavaScript files -->
+    <script src="/assets/js/lib/jquery.min.js"></script>
+    <script src="/assets/js/lib/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/APIConfig.js"></script>
+    <script src="/assets/js/SettingsManager.js"></script>
+    <script src="/assets/js/KycManager.js"></script>
+    <script>
+        // Verification page JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const statusContainer = document.getElementById('verification-status');
+            const pendingSection = document.getElementById('pending-verification');
+            const completeSection = document.getElementById('complete-verification');
+            const failedSection = document.getElementById('failed-verification');
+            const startSection = document.getElementById('start-verification');
+            const errorContainer = document.getElementById('error-container');
+            const errorMessage = document.getElementById('error-message');
+            const failureReason = document.getElementById('failure-reason');
+            const verifyButton = document.getElementById('verify-button');
+            const retryButton = document.getElementById('retry-button');
+
+            // Hide all sections initially
+            function hideAllSections() {
+                pendingSection.style.display = 'none';
+                completeSection.style.display = 'none';
+                failedSection.style.display = 'none';
+                startSection.style.display = 'none';
+                errorContainer.style.display = 'none';
+            }
+
+            // Show error message
+            function showError(message) {
+                hideAllSections();
+                errorMessage.textContent = message || 'An error occurred. Please try again later.';
+                errorContainer.style.display = 'block';
+                statusContainer.style.display = 'none';
+            }
+
+            // Check verification status
+            async function checkVerificationStatus() {
+                try {
+                    statusContainer.style.display = 'block';
+                    hideAllSections();
+
+                    const statusResult = await app.kycManager.getVerificationStatus();
+                    
+                    statusContainer.style.display = 'none';
+                    
+                    if (!statusResult.success) {
+                        showError(statusResult.error);
+                        return;
+                    }
+
+                    // Display appropriate section based on status
+                    if (statusResult.verified) {
+                        completeSection.style.display = 'block';
+                    } else if (statusResult.status === 'INITIATED' || statusResult.status === 'PENDING') {
+                        pendingSection.style.display = 'block';
+                    } else if (statusResult.result === 'REJECTED') {
+                        failedSection.style.display = 'block';
+                        const reason = statusResult.reason || 'Please try again or contact support.';
+                        failureReason.textContent = reason;
+                    } else {
+                        startSection.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error checking status:', error);
+                    showError(error.message);
+                }
+            }
+
+            // Start verification process
+            async function startVerification() {
+                try {
+                    statusContainer.style.display = 'block';
+                    hideAllSections();
+                    
+                    const result = await app.kycManager.startVerification({
+                        includeUserInfo: true,
+                        autoOpen: true
+                    });
+                    
+                    statusContainer.style.display = 'none';
+                    
+                    if (result.success) {
+                        pendingSection.style.display = 'block';
+                    } else {
+                        showError(result.error);
+                    }
+                } catch (error) {
+                    console.error('Error starting verification:', error);
+                    showError(error.message);
+                }
+            }
+
+            // Handle URL parameters for redirect
+            function handleRedirectParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('status')) {
+                    const redirectResult = app.kycManager.handleRedirect(urlParams);
+                    
+                    if (redirectResult.success) {
+                        pendingSection.style.display = 'block';
+                    } else {
+                        showError(redirectResult.error);
+                    }
+                    
+                    // Clear URL parameters
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return true;
+                }
+                return false;
+            }
+
+            // Event listeners
+            verifyButton.addEventListener('click', startVerification);
+            retryButton.addEventListener('click', checkVerificationStatus);
+
+            // Initialize
+            if (!handleRedirectParams()) {
+                checkVerificationStatus();
+            }
+        });
+    </script>
+</body>
+</html>

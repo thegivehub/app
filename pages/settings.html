@@ -929,6 +929,15 @@
             </div>
         </div>
     </div>
+    <div id="kyc-verification-reminder" class="verification-reminder" style="display: none;">
+        <div class="alert alert-warning">
+            <h4>Identity Verification Required</h4>
+            <p>To protect our community and comply with regulations, we need to verify your identity.</p>
+            <p>This is a simple process that takes only a few minutes.</p>
+            <button id="start-verification-btn" class="btn btn-primary">Start Verification</button>
+        </div>
+    </div>
+
 <script>
 (function() {
     const $ = str => document.querySelector(str);
@@ -1147,11 +1156,36 @@
 
             // Update loading state
             document.body.classList.toggle('loading', this.state.loading);
+        },
+        // Check if KYC verification is required and show the reminder if needed
+        async function checkKycVerification() {
+            try {
+                // Only proceed if we have the KYC manager module
+                if (!window.app || !window.app.kycManager) {
+                    return;
+                }
+
+                // Check if verification is required
+                const isRequired = await window.app.kycManager.isVerificationRequired();
+
+                if (isRequired) {
+                    document.getElementById('kyc-verification-reminder').style.display = 'block';
+
+                    // Add event listener to the verification button
+                    document.getElementById('start-verification-btn').addEventListener('click', function() {
+                        window.location.href = '/verification.html';
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking KYC verification status:', error);
+            }
         }
+
     };
 
     window.app = app;
     document.addEventListener('DOMContentLoaded', () => app.init());
+   document.addEventListener('DOMContentLoaded', checkKycVerification);
 })();
 </script>
 <script src="/lib/APIConfig.js"></script>
