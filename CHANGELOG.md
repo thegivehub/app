@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Blockchain transaction status tracking system
+  - MongoDB schema for blockchain transactions
+  - API endpoints for transaction status management
+  - Background job for automatic status updates
+  - Detailed transaction status history
 - Signature collection and management functionality
   - MongoDB schema for signatures collection
   - PHP API endpoints for signature operations
