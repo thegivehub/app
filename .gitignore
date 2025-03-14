@@ -36,3 +36,4 @@ img/avatars/**
 .openapi-generator-ignore
 givehub.sql
 mongo-dump.tgz
+src/.htaccess

@@ -137,3 +137,51 @@ For support, suggestions, or collaboration, feel free to reach out:
 
 _Changing lives, one project at a time. ❤️_
 
+## Changelog Management
+
+The project maintains a detailed changelog following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format. The changelog tracks all significant changes to the project, including new features, changes, fixes, and more.
+
+### Viewing the Changelog
+
+The changelog is available in the [CHANGELOG.md](CHANGELOG.md) file at the root of the repository.
+
+### Updating the Changelog
+
+There are two ways to update the changelog:
+
+1. **Manual Updates**: You can edit the CHANGELOG.md file directly, adding your changes to the appropriate section under [Unreleased].
+
+2. **Automated Updates**: Use the provided script to automatically generate changelog entries from git commits:
+
+```bash
+# Update the [Unreleased] section with all new commits
+php tools/update-changelog.php
+
+# Update with commits since a specific date
+php tools/update-changelog.php --since="2025-01-01"
+
+# Create a new version from the [Unreleased] section
+php tools/update-changelog.php --version="1.1.0"
+```
+
+### Changelog Format
+
+The changelog follows this structure:
+
+- **[Unreleased]**: Changes that will be included in the next release
+- **[Version] - Date**: Each released version with its release date
+  - **Added**: New features
+  - **Changed**: Changes to existing functionality
+  - **Deprecated**: Features that will be removed in upcoming releases
+  - **Removed**: Features that were removed
+  - **Fixed**: Bug fixes
+  - **Security**: Security fixes
+
+### Best Practices
+
+- Keep entries concise and descriptive
+- Include commit hashes where relevant
+- Focus on user-facing changes rather than internal code changes
+- Group related changes together
+- Update the changelog as part of your development process, not just before releases
+
