@@ -1,371 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Campaigns</title>
     <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      h1 {
+        color: #333;
+        margin: 20px;
+      }
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 90%;
+        max-width: 1200px;
+        margin-bottom: 20px;
+      }
+      .create-btn {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+      }
+      .create-btn:hover {
+        background-color: #1d4ed8;
+      }
+      .empty-state {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        text-align: center;
+        width: 90%;
+        max-width: 600px;
+        margin: 40px 0;
+      }
+      .empty-state h2 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .empty-state p {
+        color: #666;
+        margin-bottom: 20px;
+      }
+      .campaign-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        width: 90%;
+        max-width: 1200px;
+      }
+      .campaign-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        color: inherit;
+        transition: box-shadow 0.2s;
+        position: relative;
+      }
+      .campaign-card:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+      .campaign-title {
+        font-size: 1.2em;
+        margin: 0 0 10px;
+        color: #333;
+      }
+      .campaign-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+      .status-active {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+      .status-draft {
+        background-color: #f3f4f6;
+        color: #374151;
+      }
+      .status-completed {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+      .status-paused {
+        background-color: #fef9c3;
+        color: #854d0e;
+      }
+      .campaign-location,
+      .campaign-goal,
+      .campaign-progress {
+        font-size: 0.9em;
+        margin: 5px 0;
+        color: #555;
+      }
+      .progress-bar {
+        width: 100%;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .progress-bar div {
+        height: 10px;
+        background-color: #4caf50;
+      }
+      .campaign-actions {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 15px;
+      }
+      .action-btn {
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 500;
+      }
+      .view-btn {
+        color: #2563eb;
+        background-color: #eff6ff;
+      }
+      .view-btn:hover {
+        background-color: #dbeafe;
+      }
+      .edit-btn {
+        color: #16a34a;
+        background-color: #f0fdf4;
+      }
+      .edit-btn:hover {
+        background-color: #dcfce7;
+      }
+      .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #2563eb;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 40px auto;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .error-message {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px auto;
+        width: 90%;
+        max-width: 600px;
+        text-align: center;
+      }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+          background-color: #111827;
+          color: #e5e7eb;
         }
         h1 {
-            color: #333;
-            margin: 20px;
+          color: #e5e7eb;
         }
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 90%;
-            max-width: 1200px;
-            margin-bottom: 20px;
-        }
-        .create-btn {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        .create-btn:hover {
-            background-color: #1d4ed8;
-        }
+        .campaign-card,
         .empty-state {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            text-align: center;
-            width: 90%;
-            max-width: 600px;
-            margin: 40px 0;
-        }
-        .empty-state h2 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .empty-state p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .campaign-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            width: 90%;
-            max-width: 1200px;
-        }
-        .campaign-card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            color: inherit;
-            transition: box-shadow 0.2s;
-            position: relative;
-        }
-        .campaign-card:hover {
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+          background-color: #1f2937;
+          color: #e5e7eb;
         }
         .campaign-title {
-            font-size: 1.2em;
-            margin: 0 0 10px;
-            color: #333;
+          color: #e5e7eb;
         }
-        .campaign-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-        .status-active {
-            background-color: #dcfce7;
-            color: #166534;
+        .campaign-location,
+        .campaign-goal,
+        .campaign-progress {
+          color: #9ca3af;
         }
         .status-draft {
-            background-color: #f3f4f6;
-            color: #374151;
-        }
-        .status-completed {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-        .status-paused {
-            background-color: #fef9c3;
-            color: #854d0e;
-        }
-        .campaign-location, .campaign-goal, .campaign-progress {
-            font-size: 0.9em;
-            margin: 5px 0;
-            color: #555;
+          background-color: #374151;
+          color: #e5e7eb;
         }
         .progress-bar {
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .progress-bar div {
-            height: 10px;
-            background-color: #4caf50;
-        }
-        .campaign-actions {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-top: 15px;
-        }
-        .action-btn {
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        .view-btn {
-            color: #2563eb;
-            background-color: #eff6ff;
-        }
-        .view-btn:hover {
-            background-color: #dbeafe;
-        }
-        .edit-btn {
-            color: #16a34a;
-            background-color: #f0fdf4;
-        }
-        .edit-btn:hover {
-            background-color: #dcfce7;
-        }
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #2563eb;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+          background-color: #4b5563;
         }
         .error-message {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
+          background-color: #7f1d1d;
+          color: #fee2e2;
         }
-        
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #111827;
-                color: #e5e7eb;
-            }
-            h1 {
-                color: #e5e7eb;
-            }
-            .campaign-card, .empty-state {
-                background-color: #1f2937;
-                color: #e5e7eb;
-            }
-            .campaign-title {
-                color: #e5e7eb;
-            }
-            .campaign-location, .campaign-goal, .campaign-progress {
-                color: #9ca3af;
-            }
-            .status-draft {
-                background-color: #374151;
-                color: #e5e7eb;
-            }
-            .progress-bar {
-                background-color: #4b5563;
-            }
-            .error-message {
-                background-color: #7f1d1d;
-                color: #fee2e2;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-
-<div class="header-section">
-    <h1>My Campaigns</h1>
-    <a href="/new-campaign.html" class="create-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
+  </head>
+  <body>
+    <div class="header-section">
+      <h1>My Campaigns</h1>
+      <a href="/pages/new-campaign.html" class="create-btn">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         Create Campaign
-    </a>
-</div>
+      </a>
+    </div>
 
-<div id="loading-spinner" class="loading-spinner"></div>
-<div id="error-message" class="error-message" style="display: none;"></div>
-<div id="empty-state" class="empty-state" style="display: none;">
-    <h2>No Campaigns Yet</h2>
-    <p>You haven't created any campaigns yet. Get started by creating your first campaign!</p>
-    <a href="/new-campaign.html" class="create-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
+    <div id="loading-spinner" class="loading-spinner"></div>
+    <div id="error-message" class="error-message" style="display: none"></div>
+    <div id="empty-state" class="empty-state" style="display: none">
+      <h2>No Campaigns Yet</h2>
+      <p>
+        You haven't created any campaigns yet. Get started by creating your
+        first campaign!
+      </p>
+      <a href="/pages/new-campaign.html" class="create-btn">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         Create Campaign
-    </a>
-</div>
-<div class="campaign-grid" id="campaign-grid" style="display: none;"></div>
+      </a>
+    </div>
+    <div class="campaign-grid" id="campaign-grid" style="display: none"></div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
         const campaignGrid = document.getElementById('campaign-grid');
         const loadingSpinner = document.getElementById('loading-spinner');
         const errorMessage = document.getElementById('error-message');
         const emptyState = document.getElementById('empty-state');
-        
+
         // Helper function to format currency
         const formatCurrency = (amount, currency = 'USD') => {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency
-            }).format(amount);
+          return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+          }).format(amount);
         };
-        
+
         // Helper function to get status class
         const getStatusClass = (status) => {
-            const statusMap = {
-                'active': 'status-active',
-                'draft': 'status-draft',
-                'completed': 'status-completed',
-                'paused': 'status-paused'
-            };
-            return statusMap[status.toLowerCase()] || 'status-draft';
+          const statusMap = {
+            active: 'status-active',
+            draft: 'status-draft',
+            completed: 'status-completed',
+            paused: 'status-paused',
+          };
+          return statusMap[status.toLowerCase()] || 'status-draft';
         };
-        
+
         // Fetch user's campaigns
         fetch('/api/campaign/my')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(campaigns => {
-                loadingSpinner.style.display = 'none';
-                
-                if (campaigns.length === 0) {
-                    emptyState.style.display = 'block';
-                    return;
-                }
-                
-                campaignGrid.style.display = 'grid';
-                
-                campaigns.forEach(campaign => {
-                    // Create card element
-                    const card = document.createElement('div');
-                    card.classList.add('campaign-card');
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((campaigns) => {
+            loadingSpinner.style.display = 'none';
 
-                    // Campaign status
-                    const status = document.createElement('div');
-                    status.classList.add('campaign-status');
-                    status.classList.add(getStatusClass(campaign.status || 'draft'));
-                    status.textContent = campaign.status || 'Draft';
-                    card.appendChild(status);
+            if (campaigns.length === 0) {
+              emptyState.style.display = 'block';
+              return;
+            }
 
-                    // Campaign title
-                    const title = document.createElement('h2');
-                    title.classList.add('campaign-title');
-                    title.textContent = campaign.title || "Campaign Title";
-                    card.appendChild(title);
+            campaignGrid.style.display = 'grid';
 
-                    // Campaign location
-                    if (campaign.location && campaign.location.region) {
-                        const location = document.createElement('p');
-                        location.classList.add('campaign-location');
-                        location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
-                        card.appendChild(location);
-                    }
+            campaigns.forEach((campaign) => {
+              // Create card element
+              const card = document.createElement('div');
+              card.classList.add('campaign-card');
 
-                    // Campaign funding goal
-                    if (campaign.funding) {
-                        const goal = document.createElement('p');
-                        goal.classList.add('campaign-goal');
-                        goal.textContent = `Goal: ${formatCurrency(campaign.funding.goalAmount, campaign.funding.currency)}`;
-                        card.appendChild(goal);
+              // Campaign status
+              const status = document.createElement('div');
+              status.classList.add('campaign-status');
+              status.classList.add(getStatusClass(campaign.status || 'draft'));
+              status.textContent = campaign.status || 'Draft';
+              card.appendChild(status);
 
-                        // Campaign progress
-                        const raisedAmount = campaign.funding.raisedAmount || 0;
-                        const goalAmount = campaign.funding.goalAmount || 0;
-                        const progress = goalAmount > 0 ? (raisedAmount / goalAmount) * 100 : 0;
+              // Campaign title
+              const title = document.createElement('h2');
+              title.classList.add('campaign-title');
+              title.textContent = campaign.title || 'Campaign Title';
+              card.appendChild(title);
 
-                        const progressText = document.createElement('p');
-                        progressText.classList.add('campaign-progress');
-                        progressText.textContent = `Progress: ${formatCurrency(raisedAmount, campaign.funding.currency)} / ${formatCurrency(goalAmount, campaign.funding.currency)}`;
-                        card.appendChild(progressText);
+              // Campaign location
+              if (campaign.location && campaign.location.region) {
+                const location = document.createElement('p');
+                location.classList.add('campaign-location');
+                location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
+                card.appendChild(location);
+              }
 
-                        // Progress bar
-                        const progressBar = document.createElement('div');
-                        progressBar.classList.add('progress-bar');
-                        const progressFill = document.createElement('div');
-                        progressFill.style.width = `${progress}%`;
-                        progressBar.appendChild(progressFill);
-                        card.appendChild(progressBar);
-                    }
+              // Campaign funding goal
+              if (campaign.funding) {
+                const goal = document.createElement('p');
+                goal.classList.add('campaign-goal');
+                goal.textContent = `Goal: ${formatCurrency(
+                  campaign.funding.goalAmount,
+                  campaign.funding.currency
+                )}`;
+                card.appendChild(goal);
 
-                    // Action buttons
-                    const actions = document.createElement('div');
-                    actions.classList.add('campaign-actions');
-                    
-                    const viewLink = document.createElement('a');
-                    viewLink.classList.add('action-btn', 'view-btn');
-                    viewLink.href = `campaign-detail.html?id=${campaign._id}`;
-                    viewLink.textContent = 'View';
-                    actions.appendChild(viewLink);
-                    
-                    const editLink = document.createElement('a');
-                    editLink.classList.add('action-btn', 'edit-btn');
-                    editLink.href = `campaign-edit.html?id=${campaign._id}`;
-                    editLink.textContent = 'Edit';
-                    actions.appendChild(editLink);
-                    
-                    card.appendChild(actions);
+                // Campaign progress
+                const raisedAmount = campaign.funding.raisedAmount || 0;
+                const goalAmount = campaign.funding.goalAmount || 0;
+                const progress =
+                  goalAmount > 0 ? (raisedAmount / goalAmount) * 100 : 0;
 
-                    // Append card to grid
-                    campaignGrid.appendChild(card);
-                });
-            })
-            .catch(error => {
-                console.error("Error fetching campaigns:", error);
-                loadingSpinner.style.display = 'none';
-                errorMessage.textContent = "Failed to load your campaigns. Please try again later.";
-                errorMessage.style.display = 'block';
+                const progressText = document.createElement('p');
+                progressText.classList.add('campaign-progress');
+                progressText.textContent = `Progress: ${formatCurrency(
+                  raisedAmount,
+                  campaign.funding.currency
+                )} / ${formatCurrency(goalAmount, campaign.funding.currency)}`;
+                card.appendChild(progressText);
+
+                // Progress bar
+                const progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+                const progressFill = document.createElement('div');
+                progressFill.style.width = `${progress}%`;
+                progressBar.appendChild(progressFill);
+                card.appendChild(progressBar);
+              }
+
+              // Action buttons
+              const actions = document.createElement('div');
+              actions.classList.add('campaign-actions');
+
+              const viewLink = document.createElement('a');
+              viewLink.classList.add('action-btn', 'view-btn');
+              viewLink.href = `campaign-detail.html?id=${campaign._id}`;
+              viewLink.textContent = 'View';
+              actions.appendChild(viewLink);
+
+              const editLink = document.createElement('a');
+              editLink.classList.add('action-btn', 'edit-btn');
+              editLink.href = `campaign-edit.html?id=${campaign._id}`;
+              editLink.textContent = 'Edit';
+              actions.appendChild(editLink);
+
+              card.appendChild(actions);
+
+              // Append card to grid
+              campaignGrid.appendChild(card);
             });
-    });
-</script>
+          })
+          .catch((error) => {
+            console.error('Error fetching campaigns:', error);
+            loadingSpinner.style.display = 'none';
+            errorMessage.textContent =
+              'Failed to load your campaigns. Please try again later.';
+            errorMessage.style.display = 'block';
+          });
+      });
+      async function checkKycVerification() {
+        console.log('Checking KYC verification status...');
+        try {
+          // Only proceed if we have the KYC manager module
+          if (!window.app || !window.app.kycManager) {
+            return;
+          }
 
-</body>
+          // Check if verification is required
+          const isRequired =
+            await window.app.kycManager.isVerificationRequired();
+
+          if (isRequired) {
+            document.getElementById('kyc-verification-reminder').style.display =
+              'block';
+
+            // Add event listener to the verification button
+            document
+              .getElementById('start-verification-btn')
+              .addEventListener('click', function () {
+                window.location.href = '/verification.html';
+              });
+          }
+        } catch (error) {
+          console.error('Error checking KYC verification status:', error);
+        }
+      }
+      document.addEventListener('DOMContentLoaded', checkKycVerification);
+    </script>
+  </body>
 </html>
