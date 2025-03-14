@@ -122,9 +122,9 @@ try {
                         'bsonType' => 'object',
                         'description' => 'Transaction data from Jumio'
                     ]
-                }
+                ]
             ]
-        },
+        ],
         'validationLevel' => 'moderate' // Use moderate to allow existing docs
     ]);
     
