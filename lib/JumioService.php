@@ -102,7 +102,7 @@ class JumioService {
                 return [
                     'success' => true,
                     'redirectUrl' => $response['redirectUrl'],
-                    'verificationId' => (string)$insertResult->getInsertedId()
+                    'verificationId' => (string)$insertResult['id']
                 ];
             } else {
                 error_log('Jumio initiation failed with response: ' . json_encode($response));
@@ -333,7 +333,7 @@ class JumioService {
                 return [
                     'success' => true,
                     'message' => 'Manual verification created',
-                    'verificationId' => (string)$insertResult->getInsertedId()
+                    'verificationId' => (string)$insertResult['id']
                 ];
             }
             
@@ -395,7 +395,7 @@ class JumioService {
             // Get verification records
             $verifications = $this->kycCollection->find($query, [
                 'sort' => ['created' => -1]
-            ])->toArray();
+            ]);
             
             // Aggregate statistics
             $totalCount = count($verifications);
