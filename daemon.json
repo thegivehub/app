@@ -1,0 +1,6 @@
+{
+  "tlsverify": true,
+  "tlscacert": "ca.crt",
+  "tlskey": "key.pem",
+  "tlscert": "cert.pem"
+}
