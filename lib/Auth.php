@@ -135,9 +135,8 @@ class Auth {
         try {
             $verificationCode = random_int(100000, 999999);
             $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
-
-            $user = $this->db->users->findOne(['email' => $data['email']]);
             
+
             $updateData = [
                 'email' => $data['email'],
                 'personalInfo.email' => $data['email'],
@@ -147,20 +146,20 @@ class Auth {
                 'auth.twoFactorEnabled' => false
             ];
 
-            if ($user) {
-                $result = $this->db->users->updateOne(
-                    ['email' => $data['email']], 
-                    ['$set' => $updateData]
-                );
-            } else {
-                $userData = array_merge($updateData, [
-                    'status' => 'pending',
-                    'created' => new MongoDB\BSON\UTCDateTime(),
-                    'roles' => ['user']
-                ]);
-                
-                $result = $this->db->users->insertOne($userData);
-            }
+            file_put_contents("verify.log", date("Ymdhis") . "\nCREATING NEW RECORD\n-------\n".json_encode($userData)."\n", FILE_APPEND);
+
+            $result = $this->db->users->updateOne(
+                ['email' => $data['email']],
+                [
+                    '$set' => $updateData,
+                    '$setOnInsert' => [
+                        'status' => 'pending',
+                        'created' => new MongoDB\BSON\UTCDateTime(),
+                        'roles' => ['user']
+                    ]
+                ],
+                ['upsert' => true]
+            );
 
             if (!$result['success']) {
                 throw new Exception($result['error'] ?? 'Failed to process verification');
