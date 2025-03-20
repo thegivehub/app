@@ -1316,9 +1316,9 @@
             if (this.data.user && !this.state.loading) {
               $('#displayName').value = this.data.user.displayName || '';
               $('#first_name').value =
-                this.data.user.personalInfo?.firstName || '';
+                this.data.user.profile?.firstName || '';
               $('#last_name').value =
-                this.data.user.personalInfo?.lastName || '';
+                this.data.user.profile?.lastName || '';
               $('#phone').value = this.data.user.personalInfo?.phone || '';
               $('#email').value = this.data.user.email || '';
               $('#bio').value = this.data.user.profile?.bio || '';
@@ -1361,7 +1361,7 @@
 
         window.app = app;
         document.addEventListener('DOMContentLoaded', () => app.init());
-        document.addEventListener('DOMContentLoaded', checkKycVerification);
+        document.addEventListener('DOMContentLoaded', app.checkKycVerification);
       })();
     </script>
     <script src="/lib/APIConfig.js"></script>

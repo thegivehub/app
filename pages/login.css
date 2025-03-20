@@ -82,7 +82,7 @@ body {
     font-size: 0.875rem;
 }
 
-.login-form {
+.login-form, .logout-form {
     padding: 0 2rem 2rem;
 }
 .have-an-account {

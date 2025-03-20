@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - The Give Hub</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+          <h1>Logging Out ...</h1>
+        </div>
+        <div class="login-header-text">
+            <h1><span style="font-size:0.7em;font-weight:400;">Thank you for using</span><br> The Give Hub</h1>
+            <p>We hope to see you again soon!</p>
+        </div>
+
+        <form class="logout-form" id="logoutForm">
+            
+            <button type="submit" class="login-button" id="logoutButton">
+                <div class="spinner"></div>
+                <span>Log Out</span>
+            </button>
+
+            <div class="form-error" id="logoutError"></div>
+        </form>
+    </div>
+
+    <script>
+        const app = {
+            elements: {
+                form: document.getElementById('logoutForm'),
+                username: document.getElementById('username'),
+                password: document.getElementById('password'),
+                logoutButton: document.getElementById('logoutButton'),
+                usernameError: document.getElementById('usernameError'),
+                passwordError: document.getElementById('passwordError'),
+                logoutError: document.getElementById('logoutError'),
+                googleLogin: document.getElementById('googleLogin')
+            },
+
+            init() {
+                this.setupEventListeners();
+            },
+
+            setupEventListeners() {
+                this.elements.form.addEventListener('submit', (e) => this.handleLogout(e));
+            },
+
+            async handleLogout(e) {
+                e.preventDefault();
+                
+                // Reset errors
+                this.clearErrors();
+
+                try {
+                    const response = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            accessToken: localStorage.getItem('accessToken')
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Store tokens
+                        localStorage.setItem('accessToken', null);
+                        localStorage.setItem('refreshToken', null);
+                        
+                        // Redirect to dashboard
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        this.showError('logoutError', data.error || 'Login failed');
+                    }
+                } catch (error) {
+                    this.showError('logoutError', `An error occurred (${error}). Please try again.`);
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+            showError(elementId, message) {
+                const element = this.elements[elementId];
+                element.textContent = message;
+                element.classList.add('active');
+            },
+
+            clearErrors() {
+                ['logoutError'].forEach(id => {
+                    const element = this.elements[id];
+                    element.textContent = '';
+                    element.classList.remove('active');
+                });
+            },
+
+            setLoading(loading) {
+                this.elements.logoutButton.classList.toggle('loading', loading);
+                this.elements.logoutButton.disabled = loading;
+            }
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>

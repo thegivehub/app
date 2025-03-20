@@ -234,6 +234,7 @@ class Auth {
 
     public function login($data) {
         try {
+            $badLogin = 'Invalid username or password';
             if (!isset($data['username']) || !isset($data['password'])) {
                 throw new Exception('Username and password required');
             }
@@ -247,12 +248,12 @@ class Auth {
             ]);
 
             if (!$user) {
-                throw new Exception('User not found');
+                throw new Exception($badLogin);
             }
 
             // Verify password
             if (!password_verify($data['password'], $user['auth']['passwordHash'])) {
-                throw new Exception('Invalid password');
+                throw new Exception($badLogin);
             }
 
             // Check status
