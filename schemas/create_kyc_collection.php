@@ -54,7 +54,21 @@ try {
     echo "Setting up collection validation rules...\n";
     
     // Define schema validation for the collection
-    $db->db->command([
+    // Get MongoDB connection directly
+    $connectionString = "mongodb://";
+    
+    // Add authentication if provided
+    if (MONGODB_USERNAME && MONGODB_PASSWORD) {
+        $connectionString .= MONGODB_USERNAME . ":" . MONGODB_PASSWORD . "@";
+    }
+    
+    // Add host and port
+    $connectionString .= MONGODB_HOST . ":" . MONGODB_PORT;
+    
+    $client = new MongoDB\Client($connectionString);
+    $database = $client->selectDatabase(MONGODB_DATABASE);
+    
+    $database->command([
         'collMod' => 'kyc_verifications',
         'validator' => [
             '$jsonSchema' => [

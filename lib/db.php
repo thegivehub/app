@@ -4,7 +4,7 @@ require_once __DIR__ . '/MongoCollection.php';
 
 class Database {
     private $client;
-    private $db;
+    public $db;
     private static $instance = null;
 
     public function __construct($db = null) {

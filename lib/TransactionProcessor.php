@@ -2,6 +2,16 @@
 // lib/TransactionProcessor.php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Model.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+use ZuluCrypto\StellarSdk\Keypair;
+use ZuluCrypto\StellarSdk\Server;
+use ZuluCrypto\StellarSdk\XdrModel\Operation\CreateAccountOp;
+use ZuluCrypto\StellarSdk\XdrModel\Operation\PaymentOp;
+use ZuluCrypto\StellarSdk\Transaction\TransactionBuilder;
+use ZuluCrypto\StellarSdk\Network;
+use ZuluCrypto\StellarSdk\Memo\MemoText;
+use ZuluCrypto\StellarSdk\Asset\AssetTypeNative;
 
 class TransactionProcessor extends Model {
     private $stellarSdk;
@@ -9,15 +19,10 @@ class TransactionProcessor extends Model {
     private $network;
     private $baseFee;
     private $lastError;
+    private $useTestnet;
     
     public function __construct($useTestnet = true) {
         parent::__construct();
-        
-        // Load Stellar SDK (assuming composer requirement for stellar/stellar-sdk)
-        // If not yet installed, run: composer require stellar/stellar-sdk
-        if (!class_exists('\ZuluCrypto\StellarSdk\Stellar')) {
-            throw new Exception('Stellar SDK not found. Please install via Composer.');
-        }
         
         // Set network based on environment
         $this->useTestnet = $useTestnet;
@@ -26,11 +31,11 @@ class TransactionProcessor extends Model {
             : 'https://horizon.stellar.org';
             
         $this->network = $useTestnet
-            ? \ZuluCrypto\StellarSdk\Network::testnet()
-            : \ZuluCrypto\StellarSdk\Network::public();
+            ? Network::testnet()
+            : Network::public();
         
         // Initialize Stellar SDK
-        $this->stellarSdk = \ZuluCrypto\StellarSdk\Stellar::newClient($this->horizonUrl);
+        $this->stellarSdk = new Server($this->horizonUrl);
         
         // Set base fee (default is 100 stroops = 0.00001 XLM)
         $this->baseFee = 100;
@@ -97,11 +102,11 @@ class TransactionProcessor extends Model {
             ];
             
             // Create Stellar keypair from secret
-            $sourceKeypair = \ZuluCrypto\StellarSdk\Keypair::newFromSeed($sourceSecret);
+            $sourceKeypair = Keypair::newFromSeed($sourceSecret);
             $sourceAccount = $this->stellarSdk->requestAccount($sourceKeypair->getPublicKey());
             
             // Create transaction builder
-            $transaction = (new \ZuluCrypto\StellarSdk\Transaction\TransactionBuilder($sourceAccount))
+            $transaction = (new TransactionBuilder($sourceAccount))
                 ->setBaseFee($this->baseFee);
             
             // Prepare memo text
@@ -114,13 +119,13 @@ class TransactionProcessor extends Model {
             if (strlen($memoText) > 28) {
                 $memoText = substr($memoText, 0, 28);
             }
-            $transaction->addMemo(new \ZuluCrypto\StellarSdk\Memo\MemoText($memoText));
+            $transaction->addMemo(new MemoText($memoText));
             
             // Add payment operation
             $transaction->addPaymentOperation(
                 $campaignAddress,
                 $amount,
-                \ZuluCrypto\StellarSdk\Asset\AssetTypeNative::getAssetType()
+                AssetTypeNative::getAssetType()
             );
             
             // If recurring, add metadata to transaction record
@@ -485,22 +490,22 @@ class TransactionProcessor extends Model {
             }
             
             // Create Stellar keypair from escrow secret
-            $escrowKeypair = \ZuluCrypto\StellarSdk\Keypair::newFromSeed($escrow['escrowSecretKey']);
+            $escrowKeypair = Keypair::newFromSeed($escrow['escrowSecretKey']);
             $escrowAccount = $this->stellarSdk->requestAccount($escrowKeypair->getPublicKey());
             
             // Create transaction builder
-            $transaction = (new \ZuluCrypto\StellarSdk\Transaction\TransactionBuilder($escrowAccount))
+            $transaction = (new TransactionBuilder($escrowAccount))
                 ->setBaseFee($this->baseFee);
             
             // Add payment operation
             $transaction->addPaymentOperation(
                 $campaign['stellarAddress'],
                 $releaseAmount,
-                \ZuluCrypto\StellarSdk\Asset\AssetTypeNative::getAssetType()
+                AssetTypeNative::getAssetType()
             );
             
             // Add memo with milestone info
-            $transaction->addMemo(new \ZuluCrypto\StellarSdk\Memo\MemoText("milestone:{$campaignId},{$milestoneId}"));
+            $transaction->addMemo(new MemoText("milestone:{$campaignId},{$milestoneId}"));
             
             // Sign and submit transaction
             $transaction->sign($escrowKeypair);
@@ -718,19 +723,20 @@ class TransactionProcessor extends Model {
             }
             
             // Create new Stellar account for escrow
-            $escrowKeypair = \ZuluCrypto\StellarSdk\Keypair::newFromRandom();
+            $escrowKeypair = Keypair::newFromRandom();
             $escrowPublicKey = $escrowKeypair->getPublicKey();
             $escrowSecretKey = $escrowKeypair->getSecret();
             
             // Create source keypair
-            $sourceKeypair = \ZuluCrypto\StellarSdk\Keypair::newFromSeed($sourceSecret);
+            $sourceKeypair = Keypair::newFromSeed($sourceSecret);
             $sourceAccount = $this->stellarSdk->requestAccount($sourceKeypair->getPublicKey());
             
+            
             // Create transaction to fund escrow account
-            $transaction = (new \ZuluCrypto\StellarSdk\Transaction\TransactionBuilder($sourceAccount))
+            $transaction = (new TransactionBuilder($sourceAccount))
                 ->setBaseFee($this->baseFee)
                 ->addCreateAccountOperation($escrowPublicKey, $initialFunding)
-                ->addMemo(new \ZuluCrypto\StellarSdk\Memo\MemoText("escrow:{$campaignId}"));
+                ->addMemo(new MemoText("escrow:{$campaignId}"));
             
             // Sign and submit transaction
             $transaction->sign($sourceKeypair);

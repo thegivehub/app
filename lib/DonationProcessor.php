@@ -28,8 +28,9 @@ class DonationProcessor {
             // Get user information if authenticated
             $userData = null;
             try {
-                $userId = $this->auth->getUserIdFromToken();
-                if ($userId) {
+                // Check if user is logged in via session
+                if (isset($_SESSION['user_id'])) {
+                    $userId = $_SESSION['user_id'];
                     $userData = $this->db->getCollection('users')->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
                 }
             } catch (Exception $e) {
@@ -376,11 +377,22 @@ class DonationProcessor {
             ]
         );
         
-        if (!$result->getModifiedCount()) {
-            return [
-                'success' => false,
-                'error' => 'Donation not found or status not updated'
-            ];
+        if (is_array($result)) {
+            // If result is an array (from our custom DB wrapper)
+            if (empty($result['success']) || empty($result['modified'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Donation not found or status not updated'
+                ];
+            }
+        } else {
+            // If result is a MongoDB\UpdateResult object
+            if (!$result->getModifiedCount()) {
+                return [
+                    'success' => false,
+                    'error' => 'Donation not found or status not updated'
+                ];
+            }
         }
         
         return [
@@ -541,11 +553,22 @@ class DonationProcessor {
             ]
         );
         
-        if (!$result->getModifiedCount()) {
-            return [
-                'success' => false,
-                'error' => 'Recurring donation not found or already cancelled'
-            ];
+        if (is_array($result)) {
+            // If result is an array (from our custom DB wrapper)
+            if (empty($result['success']) || empty($result['modified'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Recurring donation not found or already cancelled'
+                ];
+            }
+        } else {
+            // If result is a MongoDB\UpdateResult object
+            if (!$result->getModifiedCount()) {
+                return [
+                    'success' => false,
+                    'error' => 'Recurring donation not found or already cancelled'
+                ];
+            }
         }
         
         return [

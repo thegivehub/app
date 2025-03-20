@@ -7,7 +7,19 @@ require_once __DIR__ . '/../lib/db.php';
 try {
     // Get MongoDB connection
     $db = Database::getInstance();
-    $client = new MongoDB\Client(MONGODB_CONNECTION_STRING);
+    
+    // Build connection string
+    $connectionString = "mongodb://";
+    
+    // Add authentication if provided
+    if (MONGODB_USERNAME && MONGODB_PASSWORD) {
+        $connectionString .= MONGODB_USERNAME . ":" . MONGODB_PASSWORD . "@";
+    }
+    
+    // Add host and port
+    $connectionString .= MONGODB_HOST . ":" . MONGODB_PORT;
+    
+    $client = new MongoDB\Client($connectionString);
     $database = $client->selectDatabase(MONGODB_DATABASE);
 
     // Drop existing collection if it exists
