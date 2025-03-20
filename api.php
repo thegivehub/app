@@ -173,6 +173,43 @@ if ($endpoint === 'User' && isset($pathParts) && count($pathParts) > 0) {
                 break;
         }
 }
+
+if ($endpoint === 'Campaign') {
+    if (isset($pathParts) && count($pathParts) > 1) {
+        switch ($pathParts[1]) {
+            case 'my':
+                if ($method === 'GET') {
+                    $result = $instance->getMyCampaigns();
+                    sendAPIJson(200, $result);
+                }
+                break;
+
+            case 'featured':
+                if ($method === 'GET') {
+                    $result = $instance->getFeaturedCampaigns();
+                    sendAPIJson(200, $result);
+                }
+                break;
+
+            case 'category':
+                if ($method === 'GET' && isset($pathParts[2])) {
+                    $category = $pathParts[2];
+                    $result = $instance->getCampaignsByCategory($category);
+                    sendAPIJson(200, $result);
+                }
+                break;
+
+            case 'search':
+                if ($method === 'GET' && isset($_GET['q'])) {
+                    $query = $_GET['q'];
+                    $result = $instance->searchCampaigns($query);
+                    sendAPIJson(200, $result);
+                }
+                break;
+        }
+    }
+}
+
 /*
 if ($endpoint === 'Campaign') {
     if (isset($pathParts) && count($pathParts) > 0) {

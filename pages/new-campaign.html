@@ -368,154 +368,441 @@
         </div>
       </form>
     </div>
+<script>
+  let currentStep = 1;
+  const totalSteps = 4;
 
-    <script>
-      let currentStep = 1;
-      const totalSteps = 4;
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (validateCurrentStep()) {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateForm();
+      } else {
+        submitForm();
+      }
+    }
+  });
 
-      document.getElementById('nextBtn').addEventListener('click', () => {
-        if (validateCurrentStep()) {
-          if (currentStep < totalSteps) {
-            currentStep++;
-            updateForm();
-          } else {
-            submitForm();
-          }
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentStep > 1) {
+      currentStep--;
+      updateForm();
+    }
+  });
+
+  function validateCurrentStep() {
+    const currentSection = document.getElementById(`step${currentStep}`);
+    const inputs = currentSection.querySelectorAll(
+      'input, select, textarea'
+    );
+    let valid = true;
+
+    inputs.forEach((input) => {
+      if (input.required && !input.value) {
+        valid = false;
+        input.classList.add('error');
+        const errorDiv = input.parentElement.querySelector('.error');
+        if (errorDiv) errorDiv.style.display = 'block';
+      } else {
+        input.classList.remove('error');
+        const errorDiv = input.parentElement.querySelector('.error');
+        if (errorDiv) errorDiv.style.display = 'none';
+      }
+    });
+
+    return valid;
+  }
+
+  function updateForm() {
+    // Update progress steps
+    document.querySelectorAll('.step').forEach((step, index) => {
+      if (index + 1 === currentStep) {
+        step.classList.add('active');
+      } else if (index + 1 < currentStep) {
+        step.classList.add('completed');
+        step.classList.remove('active');
+      } else {
+        step.classList.remove('active', 'completed');
+      }
+    });
+
+    // Show/hide form sections
+    document.querySelectorAll('.form-section').forEach((section, index) => {
+      if (index + 1 === currentStep) {
+        section.classList.add('active');
+      } else {
+        section.classList.remove('active');
+      }
+    });
+
+    // Update buttons
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
+    nextBtn.textContent = currentStep === totalSteps ? 'Submit Campaign' : 'Next';
+    
+    // Populate the review page when reaching step 4
+    if (currentStep === 4) {
+      const campaignData = {
+        title: document.getElementById('campaignTitle').value,
+        type: document.getElementById('campaignType').value,
+        description: document.getElementById('description').value,
+        fundingGoal: document.getElementById('fundingGoal').value,
+        deadline: document.getElementById('deadline').value,
+        minContribution: document.getElementById('minContribution').value
+      };
+      
+      // Get a readable campaign type
+      let campaignTypeText = "Not specified";
+      if (campaignData.type === "crowdfunding") {
+        campaignTypeText = "Crowdfunding";
+      } else if (campaignData.type === "microloan") {
+        campaignTypeText = "Microloan";
+      }
+      
+      // Format the deadline
+      const deadlineDate = new Date(campaignData.deadline);
+      const formattedDate = deadlineDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Build the HTML for the review page
+      const previewHtml = `
+        <div class="review-section">
+          <h3>Basic Information</h3>
+          <p><strong>Campaign Title:</strong> ${campaignData.title}</p>
+          <p><strong>Campaign Type:</strong> ${campaignTypeText}</p>
+          <p><strong>Description:</strong> ${campaignData.description}</p>
+          
+          <h3>Funding Details</h3>
+          <p><strong>Funding Goal:</strong> $${Number(campaignData.fundingGoal).toLocaleString()}</p>
+          <p><strong>Campaign Deadline:</strong> ${formattedDate}</p>
+          <p><strong>Minimum Contribution:</strong> $${Number(campaignData.minContribution).toLocaleString()}</p>
+          
+          <h3>Campaign Images</h3>
+          <div class="image-preview-container">
+            ${document.getElementById('imagePreview').innerHTML || '<p>No images uploaded</p>'}
+          </div>
+        </div>
+      `;
+      
+      // Insert the preview HTML into the review section
+      document.getElementById('campaignPreview').innerHTML = previewHtml;
+    }
+  }
+
+  // Helper function to get auth token from localStorage
+  function getToken() {
+    return localStorage.getItem('authToken') || '';
+  }
+
+  // Helper function to get user ID from localStorage or session
+  function getUserId() {
+    // First try localStorage
+    const userId = localStorage.getItem('userId');
+    if (userId) return userId;
+    
+    // If not in localStorage, try to extract from JWT token
+    const token = getToken();
+    if (token) {
+      try {
+        // Parse JWT token (without verification)
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        
+        return payload.sub || payload.userId || payload._id || null;
+      } catch (e) {
+        console.error('Error parsing token:', e);
+      }
+    }
+    
+    return null;
+  }
+  
+function submitForm() {
+  console.log('Submitting form...');
+  
+  // Validate all fields one last time
+  let allValid = true;
+  for (let i = 1; i <= totalSteps; i++) {
+    const section = document.getElementById(`step${i}`);
+    const inputs = section.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach((input) => {
+      if (input.required && !input.value) {
+        allValid = false;
+      }
+    });
+  }
+  
+  if (!allValid) {
+    alert('Please fill in all required fields before submitting.');
+    return;
+  }
+  
+  // Show loading state
+  const submitBtn = document.getElementById('nextBtn');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+  
+  // Prepare form data without images
+  const formData = {
+    title: document.getElementById('campaignTitle').value,
+    type: document.getElementById('campaignType').value,
+    description: document.getElementById('description').value,
+    fundingGoal: parseFloat(document.getElementById('fundingGoal').value),
+    deadline: document.getElementById('deadline').value,
+    minContribution: parseFloat(document.getElementById('minContribution').value),
+    creatorId: getUserId(),
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+    images: [] // This will be populated after image uploads
+  };
+  
+  // Get all image elements
+  const imageElements = document.querySelectorAll('#imagePreview .preview-item');
+  const imagePromises = [];
+  
+  // Process each image
+  imageElements.forEach(img => {
+    if (img.style.backgroundImage) {
+      const imageUrl = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+      
+      // Create a promise for each image upload
+      const uploadPromise = fetch('/upload-image.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+          image: imageUrl
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
         }
-      });
-
-      document.getElementById('prevBtn').addEventListener('click', () => {
-        if (currentStep > 1) {
-          currentStep--;
-          updateForm();
+        return response.json();
+      })
+      .then(data => {
+        if (data.success && data.url) {
+          return data.url; // Return the uploaded image URL
         }
+        throw new Error('Invalid image upload response');
       });
-
-      function validateCurrentStep() {
-        const currentSection = document.getElementById(`step${currentStep}`);
-        const inputs = currentSection.querySelectorAll(
-          'input, select, textarea'
-        );
-        let valid = true;
-
-        inputs.forEach((input) => {
-          if (input.required && !input.value) {
-            valid = false;
-            input.classList.add('error');
-            const errorDiv = input.parentElement.querySelector('.error');
-            if (errorDiv) errorDiv.style.display = 'block';
-          } else {
-            input.classList.remove('error');
-            const errorDiv = input.parentElement.querySelector('.error');
-            if (errorDiv) errorDiv.style.display = 'none';
-          }
-        });
-
-        return valid;
+      
+      imagePromises.push(uploadPromise);
+    }
+  });
+  
+  // Wait for all image uploads to complete
+  Promise.all(imagePromises)
+    .then(imageUrls => {
+      // Add all uploaded image URLs to form data
+      formData.images = imageUrls;
+      
+      // Now submit the campaign with image URLs
+      return fetch('/api.php/Campaign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify(formData)
+      });
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok: ' + response.statusText);
       }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Success:', data);
+      
+      // Show success message
+      alert('Campaign submitted successfully! It will be reviewed by our team.');
+      
+      // Redirect to campaigns page or dashboard
+      window.location.href = '/my-campaigns.html';
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error submitting campaign: ' + error.message);
+    })
+    .finally(() => {
+      // Reset button state
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    });
+}
+  // Image upload handling
+  const imageUpload = document.getElementById('imageUpload');
+  const imagePreview = document.getElementById('imagePreview');
 
-      function updateForm() {
-        // Update progress steps
-        document.querySelectorAll('.step').forEach((step, index) => {
-          if (index + 1 === currentStep) {
-            step.classList.add('active');
-          } else if (index + 1 < currentStep) {
-            step.classList.add('completed');
-            step.classList.remove('active');
-          } else {
-            step.classList.remove('active', 'completed');
-          }
-        });
+  imageUpload.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.click();
 
-        // Show/hide form sections
-        document.querySelectorAll('.form-section').forEach((section, index) => {
-          if (index + 1 === currentStep) {
-            section.classList.add('active');
-          } else {
-            section.classList.remove('active');
-          }
-        });
-
-        // Update buttons
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-
-        prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
-        nextBtn.textContent =
-          currentStep === totalSteps ? 'Submit Campaign' : 'Next';
-      }
-
-      function submitForm() {
-        console.log('Submitting form...');
-        const formData = {
-          title: document.getElementById('campaignTitle').value,
-          type: document.getElementById('campaignType').value,
-          description: document.getElementById('description').value,
-          fundingGoal: document.getElementById('fundingGoal').value,
-          deadline: document.getElementById('deadline').value,
-          minContribution: document.getElementById('minContribution').value,
+    input.onchange = () => {
+      Array.from(input.files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.createElement('div');
+          preview.className = 'preview-item';
+          preview.style.backgroundImage = `url(${e.target.result})`;
+          preview.style.backgroundSize = 'cover';
+          preview.style.backgroundPosition = 'center';
+          imagePreview.appendChild(preview);
         };
-        console.log('Form Data:', formData);
-        // Here you would typically send the form data to your backend
-        alert('Campaign submitted successfully!');
-      }
+        reader.readAsDataURL(file);
+      });
+    };
+  });
 
-      // Image upload handling
-      const imageUpload = document.getElementById('imageUpload');
-      const imagePreview = document.getElementById('imagePreview');
+  // Drag and drop handling
+  imageUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    imageUpload.style.borderColor = 'var(--primary)';
+  });
 
-      imageUpload.addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.multiple = true;
-        input.click();
+  imageUpload.addEventListener('dragleave', () => {
+    imageUpload.style.borderColor = 'var(--gray-300)';
+  });
 
-        input.onchange = () => {
-          Array.from(input.files).forEach((file) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const preview = document.createElement('div');
-              preview.className = 'preview-item';
-              preview.style.backgroundImage = `url(${e.target.result})`;
-              preview.style.backgroundSize = 'cover';
-              preview.style.backgroundPosition = 'center';
-              imagePreview.appendChild(preview);
-            };
-            reader.readAsDataURL(file);
-          });
+  imageUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    imageUpload.style.borderColor = 'var(--gray-300)';
+
+    Array.from(e.dataTransfer.files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.createElement('div');
+          preview.className = 'preview-item';
+          preview.style.backgroundImage = `url(${e.target.result})`;
+          preview.style.backgroundSize = 'cover';
+          preview.style.backgroundPosition = 'center';
+          imagePreview.appendChild(preview);
         };
-      });
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+  function submitForm() {
+    console.log('Submitting form...');
 
-      // Drag and drop handling
-      imageUpload.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        imageUpload.style.borderColor = 'var(--primary)';
-      });
+    // Collect form data
+    const formData = {
+      title: document.getElementById('campaignTitle').value,
+      type: document.getElementById('campaignType').value,
+      description: document.getElementById('description').value,
+      fundingGoal: parseFloat(document.getElementById('fundingGoal').value),
+      deadline: document.getElementById('deadline').value,
+      minContribution: parseFloat(document.getElementById('minContribution').value),
+      // Add user ID if available in session
+      creatorId: getUserId(), // We'll define this function
+      createdAt: new Date().toISOString(),
+      status: 'pending', // Initial status for moderation
+      images: [] // We'll handle images separately
+    };
 
-      imageUpload.addEventListener('dragleave', () => {
-        imageUpload.style.borderColor = 'var(--gray-300)';
-      });
+    // Get image data from preview
+    const imageElements = document.querySelectorAll('#imagePreview .preview-item');
+    imageElements.forEach(img => {
+      if (img.style.backgroundImage) {
+        const url = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+        formData.images.push(url);
+      }
+    });
 
-      imageUpload.addEventListener('drop', (e) => {
-        e.preventDefault();
-        imageUpload.style.borderColor = 'var(--gray-300)';
+    console.log('Form Data:', formData);
 
-        Array.from(e.dataTransfer.files).forEach((file) => {
-          if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const preview = document.createElement('div');
-              preview.className = 'preview-item';
-              preview.style.backgroundImage = `url(${e.target.result})`;
-              preview.style.backgroundSize = 'cover';
-              preview.style.backgroundPosition = 'center';
-              imagePreview.appendChild(preview);
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      });
-    </script>
+    // Show loading state
+    const submitBtn = document.getElementById('nextBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Submitting...';
+    submitBtn.disabled = true;
+
+    // Send data to the backend
+    fetch('/api.php/Campaign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}` // We'll define this function to get the auth token
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok: ' + response.statusText);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Success:', data);
+
+      // Show success message
+      alert('Campaign submitted successfully! It will be reviewed by our team.');
+
+      // Redirect to campaigns page or dashboard
+      window.location.href = '/my-campaigns.html';
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error submitting campaign: ' + error.message);
+    })
+    .finally(() => {
+      // Reset button state
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    });
+  }
+
+  // Helper function to get auth token from localStorage
+  function getToken() {
+    return localStorage.getItem('authToken') || '';
+  }
+
+  // Helper function to get user ID from localStorage or session
+  function getUserId() {
+    // First try localStorage
+    const userId = localStorage.getItem('userId');
+    if (userId) return userId;
+
+    // If not in localStorage, try to extract from JWT token
+    const token = getToken();
+    if (token) {
+      try {
+        // Parse JWT token (without verification)
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+
+        return payload.sub || payload.userId || payload._id || null;
+      } catch (e) {
+        console.error('Error parsing token:', e);
+      }
+    }
+
+    return null;
+  }
+
+  // Replace the existing submitForm function
+  document.getElementById('campaignForm').onsubmit = function(e) {
+    e.preventDefault(); // Prevent default form submission
+    submitForm();
+  };
+
+</script>
   </body>
 </html>

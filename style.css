@@ -439,6 +439,75 @@ button.icon-button:hover {
 [data-theme="dark"] .submenu-link:hover {
     color: var(--text-color-primary);
 }
+    .profile-completion-container {
+        margin-top: auto;
+        padding: 1rem;
+        border-top: 1px solid rgba(229, 231, 235, 0.2);
+    }
+    
+    .profile-completion-indicator {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .indicator-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .indicator-header h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: inherit;
+        margin: 0;
+    }
+    
+    .indicator-progress {
+        background-color: rgba(209, 213, 219, 0.2);
+        border-radius: 9999px;
+        height: 6px;
+        overflow: hidden;
+    }
+    
+    #completion-progress-bar {
+        background-color: #2563eb;
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.3s ease;
+    }
+    
+    .indicator-message {
+        margin-top: 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .indicator-message p {
+        margin-bottom: 0.25rem;
+        opacity: 0.8;
+    }
+    
+    #complete-profile-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    #complete-profile-link:hover {
+        text-decoration: underline;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .profile-completion-indicator {
+            background-color: rgba(30, 41, 59, 0.4);
+        }
+        
+        .indicator-progress {
+            background-color: rgba(55, 65, 81, 0.5);
+        }
+    }
 
 /* Mobile Styles */
 @media (max-width: 768px) {

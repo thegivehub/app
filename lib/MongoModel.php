@@ -1,6 +1,6 @@
 <?php
 // lib/Model.php
-abstract class Model {
+abstract class MongoModel {
     protected $collection;
 
     public function __construct() {

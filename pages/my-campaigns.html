@@ -1,427 +1,398 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Campaigns</title>
-    <style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Campaigns</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --red-500: #ef4444;
+      --green-100: #dcfce7;
+      --green-500: #22c55e;
+      --yellow-100: #fef9c3;
+      --yellow-500: #eab308;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: var(--gray-700);
+      background: #f8fafc;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-icon {
+      margin-right: 0.5rem;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .campaign-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .campaign-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .campaign-image {
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      background-color: var(--gray-200);
+    }
+
+    .campaign-content {
+      padding: 1.5rem;
+    }
+
+    .campaign-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .campaign-type {
+      font-size: 0.875rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .campaign-description {
+      color: var(--gray-600);
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .campaign-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .campaign-status {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    .status-pending {
+      background-color: var(--yellow-100);
+      color: var(--yellow-500);
+    }
+
+    .status-active {
+      background-color: var(--green-100);
+      color: var(--green-500);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray-600);
+    }
+
+    .no-campaigns {
+      text-align: center;
+      padding: 3rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .no-campaigns h2 {
+      margin-bottom: 1rem;
+    }
+
+    .no-campaigns p {
+      margin-bottom: 1.5rem;
+      color: var(--gray-600);
+    }
+
+    @media (max-width: 768px) {
       body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f9;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
+        padding: 1rem;
       }
-      h1 {
-        color: #333;
-        margin: 20px;
+      
+      .campaigns-grid {
+        grid-template-columns: 1fr;
       }
-      .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 90%;
-        max-width: 1200px;
-        margin-bottom: 20px;
-      }
-      .create-btn {
-        background-color: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.9em;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-      }
-      .create-btn:hover {
-        background-color: #1d4ed8;
-      }
-      .empty-state {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 30px;
-        text-align: center;
-        width: 90%;
-        max-width: 600px;
-        margin: 40px 0;
-      }
-      .empty-state h2 {
-        color: #333;
-        margin-bottom: 10px;
-      }
-      .empty-state p {
-        color: #666;
-        margin-bottom: 20px;
-      }
-      .campaign-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-        width: 90%;
-        max-width: 1200px;
-      }
-      .campaign-card {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        color: inherit;
-        transition: box-shadow 0.2s;
-        position: relative;
-      }
-      .campaign-card:hover {
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-      }
-      .campaign-title {
-        font-size: 1.2em;
-        margin: 0 0 10px;
-        color: #333;
-      }
-      .campaign-status {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 0.8em;
-        font-weight: bold;
-      }
-      .status-active {
-        background-color: #dcfce7;
-        color: #166534;
-      }
-      .status-draft {
-        background-color: #f3f4f6;
-        color: #374151;
-      }
-      .status-completed {
-        background-color: #dbeafe;
-        color: #1e40af;
-      }
-      .status-paused {
-        background-color: #fef9c3;
-        color: #854d0e;
-      }
-      .campaign-location,
-      .campaign-goal,
-      .campaign-progress {
-        font-size: 0.9em;
-        margin: 5px 0;
-        color: #555;
-      }
-      .progress-bar {
-        width: 100%;
-        background-color: #e0e0e0;
-        border-radius: 5px;
-        overflow: hidden;
-        margin-top: 10px;
-      }
-      .progress-bar div {
-        height: 10px;
-        background-color: #4caf50;
-      }
-      .campaign-actions {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        margin-top: 15px;
-      }
-      .action-btn {
-        text-decoration: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 0.8em;
-        font-weight: 500;
-      }
-      .view-btn {
-        color: #2563eb;
-        background-color: #eff6ff;
-      }
-      .view-btn:hover {
-        background-color: #dbeafe;
-      }
-      .edit-btn {
-        color: #16a34a;
-        background-color: #f0fdf4;
-      }
-      .edit-btn:hover {
-        background-color: #dcfce7;
-      }
-      .loading-spinner {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        border-left-color: #2563eb;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 40px auto;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .error-message {
-        background-color: #fee2e2;
-        color: #b91c1c;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 20px auto;
-        width: 90%;
-        max-width: 600px;
-        text-align: center;
-      }
-
-      /* Dark mode support */
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #111827;
-          color: #e5e7eb;
-        }
-        h1 {
-          color: #e5e7eb;
-        }
-        .campaign-card,
-        .empty-state {
-          background-color: #1f2937;
-          color: #e5e7eb;
-        }
-        .campaign-title {
-          color: #e5e7eb;
-        }
-        .campaign-location,
-        .campaign-goal,
-        .campaign-progress {
-          color: #9ca3af;
-        }
-        .status-draft {
-          background-color: #374151;
-          color: #e5e7eb;
-        }
-        .progress-bar {
-          background-color: #4b5563;
-        }
-        .error-message {
-          background-color: #7f1d1d;
-          color: #fee2e2;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="header-section">
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
       <h1>My Campaigns</h1>
-      <a href="/pages/new-campaign.html" class="create-btn">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2">
+      <a href="/new-campaign.html" class="btn btn-primary">
+        <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        Create Campaign
+        Create New Campaign
       </a>
     </div>
-
-    <div id="loading-spinner" class="loading-spinner"></div>
-    <div id="error-message" class="error-message" style="display: none"></div>
-    <div id="empty-state" class="empty-state" style="display: none">
-      <h2>No Campaigns Yet</h2>
-      <p>
-        You haven't created any campaigns yet. Get started by creating your
-        first campaign!
-      </p>
-      <a href="/pages/new-campaign.html" class="create-btn">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Create Campaign
-      </a>
+    
+    <div id="loading" class="loading">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+        <path d="M12 2a10 10 0 0 1 10 10"></path>
+      </svg>
+      <p>Loading your campaigns...</p>
     </div>
-    <div class="campaign-grid" id="campaign-grid" style="display: none"></div>
+    
+    <div id="campaigns-container" class="campaigns-grid" style="display: none;"></div>
+    
+    <div id="no-campaigns" class="no-campaigns" style="display: none;">
+      <h2>You don't have any campaigns yet</h2>
+      <p>Create your first campaign to start raising funds for your project or cause.</p>
+      <a href="/new-campaign.html" class="btn btn-primary">Create a Campaign</a>
+    </div>
+  </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const campaignGrid = document.getElementById('campaign-grid');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const errorMessage = document.getElementById('error-message');
-        const emptyState = document.getElementById('empty-state');
+  <script>
+    // Helper function to get auth token from localStorage
+    function getToken() {
+      return localStorage.getItem('authToken') || '';
+    }
 
-        // Helper function to format currency
-        const formatCurrency = (amount, currency = 'USD') => {
-          return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency,
-          }).format(amount);
-        };
-
-        // Helper function to get status class
-        const getStatusClass = (status) => {
-          const statusMap = {
-            active: 'status-active',
-            draft: 'status-draft',
-            completed: 'status-completed',
-            paused: 'status-paused',
-          };
-          return statusMap[status.toLowerCase()] || 'status-draft';
-        };
-
-        // Fetch user's campaigns
-        fetch('/api/campaign/my')
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((campaigns) => {
-            loadingSpinner.style.display = 'none';
-
-            if (campaigns.length === 0) {
-              emptyState.style.display = 'block';
-              return;
-            }
-
-            campaignGrid.style.display = 'grid';
-
-            campaigns.forEach((campaign) => {
-              // Create card element
-              const card = document.createElement('div');
-              card.classList.add('campaign-card');
-
-              // Campaign status
-              const status = document.createElement('div');
-              status.classList.add('campaign-status');
-              status.classList.add(getStatusClass(campaign.status || 'draft'));
-              status.textContent = campaign.status || 'Draft';
-              card.appendChild(status);
-
-              // Campaign title
-              const title = document.createElement('h2');
-              title.classList.add('campaign-title');
-              title.textContent = campaign.title || 'Campaign Title';
-              card.appendChild(title);
-
-              // Campaign location
-              if (campaign.location && campaign.location.region) {
-                const location = document.createElement('p');
-                location.classList.add('campaign-location');
-                location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
-                card.appendChild(location);
-              }
-
-              // Campaign funding goal
-              if (campaign.funding) {
-                const goal = document.createElement('p');
-                goal.classList.add('campaign-goal');
-                goal.textContent = `Goal: ${formatCurrency(
-                  campaign.funding.goalAmount,
-                  campaign.funding.currency
-                )}`;
-                card.appendChild(goal);
-
-                // Campaign progress
-                const raisedAmount = campaign.funding.raisedAmount || 0;
-                const goalAmount = campaign.funding.goalAmount || 0;
-                const progress =
-                  goalAmount > 0 ? (raisedAmount / goalAmount) * 100 : 0;
-
-                const progressText = document.createElement('p');
-                progressText.classList.add('campaign-progress');
-                progressText.textContent = `Progress: ${formatCurrency(
-                  raisedAmount,
-                  campaign.funding.currency
-                )} / ${formatCurrency(goalAmount, campaign.funding.currency)}`;
-                card.appendChild(progressText);
-
-                // Progress bar
-                const progressBar = document.createElement('div');
-                progressBar.classList.add('progress-bar');
-                const progressFill = document.createElement('div');
-                progressFill.style.width = `${progress}%`;
-                progressBar.appendChild(progressFill);
-                card.appendChild(progressBar);
-              }
-
-              // Action buttons
-              const actions = document.createElement('div');
-              actions.classList.add('campaign-actions');
-
-              const viewLink = document.createElement('a');
-              viewLink.classList.add('action-btn', 'view-btn');
-              viewLink.href = `campaign-detail.html?id=${campaign._id}`;
-              viewLink.textContent = 'View';
-              actions.appendChild(viewLink);
-
-              const editLink = document.createElement('a');
-              editLink.classList.add('action-btn', 'edit-btn');
-              editLink.href = `campaign-edit.html?id=${campaign._id}`;
-              editLink.textContent = 'Edit';
-              actions.appendChild(editLink);
-
-              card.appendChild(actions);
-
-              // Append card to grid
-              campaignGrid.appendChild(card);
-            });
-          })
-          .catch((error) => {
-            console.error('Error fetching campaigns:', error);
-            loadingSpinner.style.display = 'none';
-            errorMessage.textContent =
-              'Failed to load your campaigns. Please try again later.';
-            errorMessage.style.display = 'block';
-          });
-      });
-      async function checkKycVerification() {
-        console.log('Checking KYC verification status...');
+    // Helper function to get user ID
+    function getUserId() {
+      // First try localStorage
+      const userId = localStorage.getItem('userId');
+      if (userId) return userId;
+      
+      // If not in localStorage, try to extract from JWT token
+      const token = getToken();
+      if (token) {
         try {
-          // Only proceed if we have the KYC manager module
-          if (!window.app || !window.app.kycManager) {
-            return;
-          }
-
-          // Check if verification is required
-          const isRequired =
-            await window.app.kycManager.isVerificationRequired();
-
-          if (isRequired) {
-            document.getElementById('kyc-verification-reminder').style.display =
-              'block';
-
-            // Add event listener to the verification button
-            document
-              .getElementById('start-verification-btn')
-              .addEventListener('click', function () {
-                window.location.href = '/verification.html';
-              });
-          }
-        } catch (error) {
-          console.error('Error checking KYC verification status:', error);
+          // Parse JWT token (without verification)
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(window.atob(base64));
+          
+          return payload.sub || payload.userId || payload._id || null;
+        } catch (e) {
+          console.error('Error parsing token:', e);
         }
       }
-      document.addEventListener('DOMContentLoaded', checkKycVerification);
-    </script>
-  </body>
+      
+      return null;
+    }
+    
+    // Check if the user is logged in
+    function checkAuth() {
+      const token = getToken();
+      if (!token) {
+        // Redirect to login page if not authenticated
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return false;
+      }
+      return true;
+    }
+    
+    // Format currency
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
+      }).format(amount);
+    }
+    
+    // Format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).format(date);
+    }
+    
+    // Get campaign status label
+    function getStatusLabel(status) {
+      switch (status) {
+        case 'active':
+          return '<span class="campaign-status status-active">Active</span>';
+        case 'pending':
+          return '<span class="campaign-status status-pending">Pending Review</span>';
+        default:
+          return '<span class="campaign-status">' + status + '</span>';
+      }
+    }
+    
+    // Truncate text to a certain length
+    function truncateText(text, length = 100) {
+      return text.length > length ? text.substring(0, length) + '...' : text;
+    }
+    
+    // Calculate funding progress percentage
+    function calculateProgress(raised, goal) {
+      if (!raised || !goal) return 0;
+      const progress = (raised / goal) * 100;
+      return Math.min(progress, 100); // Cap at 100%
+    }
+    
+    // Render campaign cards
+    function renderCampaigns(campaigns) {
+      const container = document.getElementById('campaigns-container');
+      const loadingElement = document.getElementById('loading');
+      const noCampaignsElement = document.getElementById('no-campaigns');
+      
+      loadingElement.style.display = 'none';
+      
+      if (!campaigns || campaigns.length === 0) {
+        noCampaignsElement.style.display = 'block';
+        return;
+      }
+      
+      container.style.display = 'grid';
+      container.innerHTML = '';
+      
+      campaigns.forEach(campaign => {
+        const imageUrl = campaign.images && campaign.images.length > 0 
+          ? campaign.images[0] 
+          : '/img/campaign-placeholder.jpg';
+          
+        const raised = campaign.raised || 0;
+        const progress = calculateProgress(raised, campaign.fundingGoal);
+        
+        const campaignCard = document.createElement('div');
+        campaignCard.className = 'campaign-card';
+        campaignCard.innerHTML = `
+          <div class="campaign-image" style="background-image: url('${imageUrl}')"></div>
+          <div class="campaign-content">
+            <div class="campaign-title">${campaign.title}</div>
+            <div class="campaign-type">${campaign.type}</div>
+            <p class="campaign-description">${truncateText(campaign.description, 120)}</p>
+            <div>
+              <strong>${formatCurrency(campaign.fundingGoal)}</strong> goal
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progress}%"></div>
+              </div>
+            </div>
+            <div class="campaign-meta">
+              <div>Deadline: ${formatDate(campaign.deadline)}</div>
+              <div>${getStatusLabel(campaign.status)}</div>
+            </div>
+          </div>
+        `;
+        
+        // Add click event to view campaign details
+        campaignCard.addEventListener('click', () => {
+          window.location.href = `/campaign.html?id=${campaign._id}`;
+        });
+        
+        container.appendChild(campaignCard);
+      });
+    }
+    
+    // Fetch user campaigns from the API
+    function fetchMyCampaigns() {
+      if (!checkAuth()) return;
+      
+      const loadingElement = document.getElementById('loading');
+      loadingElement.style.display = 'block';
+      
+      fetch('/api.php/Campaign/my', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch campaigns');
+        }
+        return response.json();
+      })
+      .then(data => {
+        renderCampaigns(data);
+      })
+      .catch(error => {
+        console.error('Error fetching campaigns:', error);
+        loadingElement.style.display = 'none';
+        alert('Error loading campaigns: ' + error.message);
+      });
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', fetchMyCampaigns);
+  </script>
+</body>
 </html>
