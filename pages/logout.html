@@ -55,38 +55,9 @@
 
             async handleLogout(e) {
                 e.preventDefault();
-                
-                // Reset errors
-                this.clearErrors();
-
-                try {
-                    const response = await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            accessToken: localStorage.getItem('accessToken')
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        // Store tokens
-                        localStorage.setItem('accessToken', null);
-                        localStorage.setItem('refreshToken', null);
-                        
-                        // Redirect to dashboard
-                        window.location.href = '/dashboard.html';
-                    } else {
-                        this.showError('logoutError', data.error || 'Login failed');
-                    }
-                } catch (error) {
-                    this.showError('logoutError', `An error occurred (${error}). Please try again.`);
-                } finally {
-                    this.setLoading(false);
-                }
+                localStorage.setItem('accessToken', null);
+                localStorage.setItem('refreshToken', null);
+                window.location.href = '/pages/dashboard.html';
             },
 
             showError(elementId, message) {

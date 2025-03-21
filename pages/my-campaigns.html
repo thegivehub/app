@@ -198,7 +198,7 @@
   <div class="container">
     <div class="header">
       <h1>My Campaigns</h1>
-      <a href="/new-campaign.html" class="btn btn-primary">
+      <a href="/pages/new-campaign.html" class="btn btn-primary">
         <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -220,20 +220,20 @@
     <div id="no-campaigns" class="no-campaigns" style="display: none;">
       <h2>You don't have any campaigns yet</h2>
       <p>Create your first campaign to start raising funds for your project or cause.</p>
-      <a href="/new-campaign.html" class="btn btn-primary">Create a Campaign</a>
+      <a href="/pages/new-campaign.html" class="btn btn-primary">Create a Campaign</a>
     </div>
   </div>
 
   <script>
     // Helper function to get auth token from localStorage
     function getToken() {
-      return localStorage.getItem('authToken') || '';
+      return localStorage.getItem('accessToken') || '';
     }
 
     // Helper function to get user ID
     function getUserId() {
       // First try localStorage
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')).userId : null;
       if (userId) return userId;
       
       // If not in localStorage, try to extract from JWT token
@@ -369,10 +369,11 @@
       const loadingElement = document.getElementById('loading');
       loadingElement.style.display = 'block';
       
-      fetch('/api.php/Campaign/my', {
+      fetch('/api/Campaign/my', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${getToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       })
       .then(response => {
