@@ -135,7 +135,7 @@
                         localStorage.setItem('refreshToken', data.tokens.refreshToken);
                         
                         // Redirect to dashboard
-                        window.location.href = '/dashboard.html';
+                        window.location.href = '/pages/dashboard.html';
                     } else {
                         this.showError('loginError', data.error || 'Login failed');
                     }
