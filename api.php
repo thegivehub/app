@@ -2,6 +2,8 @@
 require 'vendor/autoload.php';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/KycController.php';
+require_once __DIR__ . '/lib/AdminAuthController.php';
+require_once __DIR__ . '/lib/AdminCampaignController.php';
 
 /**
  * Sends a JSON response and exits
@@ -149,6 +151,32 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
     // If we get here, method not allowed
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed for this KYC endpoint']);
+    exit;
+}
+
+// Admin-specific endpoints
+if (isset($pathParts) && $pathParts[0] === 'admin') {
+    $adminAuthController = new AdminAuthController();
+    
+    // Handle admin authentication
+    if (isset($pathParts[1])) {
+        if ($pathParts[1] === 'login') {
+            $adminAuthController->handleLogin();
+            exit;
+        } else if ($pathParts[1] === 'verify') {
+            $adminAuthController->handleVerify();
+            exit;
+        } else if ($pathParts[1] === 'campaigns') {
+            $adminCampaignController = new AdminCampaignController();
+            $adminCampaignController->handleRequest();
+            exit;
+        }
+    }
+    
+    // If we reach here, it's an unknown admin endpoint
+    header('Content-Type: application/json');
+    http_response_code(404);
+    echo json_encode(['error' => 'Unknown admin endpoint']);
     exit;
 }
 
