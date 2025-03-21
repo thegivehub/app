@@ -1120,7 +1120,7 @@
             // First check if user is authenticated
             const token = localStorage.getItem('accessToken');
             if (!token) {
-              window.location.href = '/login.html';
+              window.location.href = '/pages/login.html';
               return;
             }
 
@@ -1179,7 +1179,7 @@
 
               // If token is invalid/missing, redirect to login
               if (error.message.includes('No authentication token')) {
-                window.location.href = '/login.html';
+                window.location.href = '/pages/login.html';
               }
             }
           },
@@ -1268,7 +1268,7 @@
           getCurrentUserId() {
             const token = localStorage.getItem('accessToken');
             if (!token) {
-              window.location.href = '/login.html';
+              window.location.href = '/pages/login.html';
               return null;
             }
 
@@ -1351,6 +1351,7 @@
                   .getElementById('start-verification-btn')
                   .addEventListener('click', function () {
                     window.location.href = '/verification.html';
+                    // pages/kyc-verification.html  ??
                   });
               }
             } catch (error) {
