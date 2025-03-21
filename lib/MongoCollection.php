@@ -43,12 +43,14 @@ class MongoCollection {
             return [
                 'success' => true,
                 'id' => (string)$result->getInsertedId(),
-                'acknowledged' => $result->isAcknowledged()
+                'acknowledged' => $result->isAcknowledged(),
+                'result' => $result
             ];
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'result' => $result
             ];
         }
     }

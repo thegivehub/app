@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php';
+require_once __DIR__ .'/db.php';
 
 class Campaign {
     private $collection;
@@ -26,9 +26,9 @@ class Campaign {
         // Insert the document
         $result = $this->collection->insertOne($data);
         
-        if ($result->getInsertedCount()) {
+        if ($result['result']->getInsertedCount()) {
             // If insertion was successful, return the inserted document with its ID
-            $insertedId = $result->getInsertedId();
+            $insertedId = $result['result']->getInsertedId();
             $campaign = $this->collection->findOne(['_id' => $insertedId]);
             
             return [
@@ -52,7 +52,12 @@ class Campaign {
         if ($id) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
-            return $this->collection->find()->toArray();
+            $out = $this->collection->find();
+            if (is_array($out)) {
+                return $out;
+            } else {
+                return $out->toArray();
+            }
         }
     }
 
