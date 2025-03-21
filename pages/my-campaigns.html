@@ -369,7 +369,7 @@
       const loadingElement = document.getElementById('loading');
       loadingElement.style.display = 'block';
       
-      fetch('/api/campaigns/my', {
+      fetch('/api/campaign/my', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
