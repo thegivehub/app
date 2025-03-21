@@ -1114,7 +1114,7 @@
             saveStatus: null,
           },
           config: {
-            apiBase: 'https://app.thegivehub.com/api',
+            apiBase: location.protocol + "//" + location.hostname + '/api',
           },
           init() {
             // First check if user is authenticated
@@ -1316,9 +1316,9 @@
             if (this.data.user && !this.state.loading) {
               $('#displayName').value = this.data.user.displayName || '';
               $('#first_name').value =
-                this.data.user.profile?.firstName || '';
+                this.data.user.personalInfo?.firstName || '';
               $('#last_name').value =
-                this.data.user.profile?.lastName || '';
+                this.data.user.personalInfo?.lastName || '';
               $('#phone').value = this.data.user.personalInfo?.phone || '';
               $('#email').value = this.data.user.email || '';
               $('#bio').value = this.data.user.profile?.bio || '';
