@@ -131,6 +131,13 @@
         display: block;
       }
 
+      #avatarDiv {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
       #avatarImg {
         width: 150px;
         height: 150px;
@@ -686,7 +693,7 @@
                     <input type="email" id="email" name="email" required />
                   </div>
                 </div>
-                <div style="flex: 1;">
+                <div style="flex: 1;" id="avatarDiv">
                   <h1>Profile Image</h1>
                   <img id="avatarImg" src="../images/color-logo.svg" alt="Profile Image" />
                   <div style="margin-top: 1rem">
@@ -1246,6 +1253,9 @@
                 email: $('#email').value,
                 profile: {
                   bio: $('#bio').value,
+                  avatar: $('#avatarImg').src.includes('color-logo.svg')
+                    ? null
+                    : $('#avatarImg').src.split('/').pop(), // Extract filename
                 },
               };
 
@@ -1360,7 +1370,7 @@
               $('#bio').value = this.data.user.profile?.bio || '';
               $('#avatarImg').src = this.data.user.profile?.avatar ? `../img/avatars/${this.data.user.profile?.avatar}`
                  :
-                'https://via.placeholder.com/150';
+                '../images/color-logo.svg';
               $('#location').value =
                 this.data.user.personalInfo?.location || '';
             }
