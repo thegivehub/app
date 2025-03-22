@@ -808,96 +808,6 @@ const AdminUserManagement = {
         document.getElementById('import-users-modal').classList.remove('active');
     },
 
-    // Save new user or update existing user
-    async saveNewUser() {
-        try {
-            const firstName = document.getElementById('new-user-firstname').value;
-            const lastName = document.getElementById('new-user-lastname').value;
-            const email = document.getElementById('new-user-email').value;
-            const username = document.getElementById('new-user-username').value;
-            const password = document.getElementById('new-user-password').value;
-            const status = document.getElementById('new-user-status').value;
-            const role = document.getElementById('new-user-role').value;
-            const phone = document.getElementById('new-user-phone').value;
-            
-            // Validate required fields
-            if (!firstName || !lastName || !email || !username) {
-                this.showNotification('Please fill in all required fields', 'error');
-                return;
-            }
-            
-            // For a new user, password is required
-            if (!this.state.currentUser && !password) {
-                this.showNotification('Password is required for new users', 'error');
-                return;
-            }
-            
-            this.showLoading(true);
-            
-            // Prepare user data
-            const userData = {
-                email: email,
-                username: username,
-                status: status,
-                personalInfo: {
-                    firstName: firstName,
-                    lastName: lastName,
-                    phone: phone
-                },
-                roles: [role]
-            };
-            
-            // Add password if provided
-            if (password) {
-                userData.password = password;
-            }
-            
-            let response;
-            
-            if (this.state.currentUser) {
-                // Update existing user
-                response = await fetch(`${this.config.apiBase}?id=${this.state.currentUser._id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify(userData)
-                });
-            } else {
-                // Create new user
-                response = await fetch(this.config.apiBase, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify(userData)
-                });
-            }
-
-            if (!response.ok) {
-                throw new Error(`Failed to ${this.state.currentUser ? 'update' : 'create'} user: ${response.statusText}`);
-            }
-
-            // Reload users to refresh the list
-            this.loadUsers();
-
-            // Show success message
-            this.showNotification(`User ${this.state.currentUser ? 'updated' : 'created'} successfully`);
-
-            // Hide modal and clear current user
-            this.hideAddUserModal();
-            this.state.currentUser = null;
-
-            this.showLoading(false);
-        } catch (error) {
-            console.error('Error saving user:', error);
-            this.showNotification(error.message, 'error');
-            this.showLoading(false);
-        }
-    },
-
     // Save changes from user detail view
     async saveUserChanges() {
         // This would handle saving changes from the user details modal
@@ -1203,6 +1113,167 @@ const AdminUserManagement = {
         }
     },
 
+    // Populate role checkboxes based on user data
+    populateRoleCheckboxes(user) {
+        // Get all role checkboxes
+        const roleCheckboxes = document.querySelectorAll('[name="user-roles"]');
+        
+        // Reset all checkboxes (except 'user' which is always checked)
+        roleCheckboxes.forEach(checkbox => {
+            if (checkbox.value !== 'user') {
+                checkbox.checked = false;
+            }
+        });
+        
+        // Check boxes based on user roles
+        if (user && user.roles && Array.isArray(user.roles)) {
+            user.roles.forEach(role => {
+                const checkbox = document.getElementById(`role-${role}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+        
+        // Update the role description
+        this.updateRoleDescription();
+    },
+
+    // Update role description based on selected roles
+    updateRoleDescription() {
+        const roleCheckboxes = document.querySelectorAll('[name="user-roles"]');
+        const roleDescriptionText = document.getElementById('role-description-text');
+        
+        const selectedRoles = Array.from(roleCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        
+        // Always ensure 'user' role is included
+        if (!selectedRoles.includes('user')) {
+            selectedRoles.push('user');
+        }
+        
+        // Update description based on selected roles
+        if (selectedRoles.includes('admin')) {
+            roleDescriptionText.textContent = 'This user will have full administrative access.';
+        } else if (selectedRoles.includes('campaigner') && selectedRoles.includes('donor')) {
+            roleDescriptionText.textContent = 'This user can both create campaigns and make donations.';
+        } else if (selectedRoles.includes('campaigner')) {
+            roleDescriptionText.textContent = 'This user can create and manage campaigns.';
+        } else if (selectedRoles.includes('donor')) {
+            roleDescriptionText.textContent = 'This user can make donations to campaigns.';
+        } else {
+            roleDescriptionText.textContent = 'Standard user with basic permissions.';
+        }
+    },
+
+    // Get selected roles from checkboxes
+    getSelectedRoles() {
+        const roleCheckboxes = document.querySelectorAll('[name="user-roles"]');
+        
+        // Get all checked role values
+        const selectedRoles = Array.from(roleCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+        
+        // Ensure 'user' role is always included
+        if (!selectedRoles.includes('user')) {
+            selectedRoles.push('user');
+        }
+        
+        return selectedRoles;
+    },
+
+    async saveNewUser() {
+        try {
+            const firstName = document.getElementById('new-user-firstname').value;
+            const lastName = document.getElementById('new-user-lastname').value;
+            const email = document.getElementById('new-user-email').value;
+            const username = document.getElementById('new-user-username').value;
+            const password = document.getElementById('new-user-password').value;
+            const status = document.getElementById('new-user-status').value;
+            const phone = document.getElementById('new-user-phone').value;
+            
+            // Get roles from checkboxes
+            const roles = this.getSelectedRoles();
+            
+            // Validate required fields
+            if (!firstName || !lastName || !email || !username) {
+                this.showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // For a new user, password is required
+            if (!this.state.currentUser && !password) {
+                this.showNotification('Password is required for new users', 'error');
+                return;
+            }
+            
+            this.showLoading(true);
+            
+            // Prepare user data
+            const userData = {
+                email: email,
+                username: username,
+                status: status,
+                personalInfo: {
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone
+                },
+                roles: roles
+            };
+            
+            // Add password if provided
+            if (password) {
+                userData.password = password;
+            }
+            
+            let response;
+            
+            if (this.state.currentUser) {
+                // Update existing user
+                response = await fetch(`${this.config.apiBase}?id=${this.state.currentUser._id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+            } else {
+                // Create new user
+                response = await fetch(this.config.apiBase, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+            }
+            
+            if (!response.ok) {
+                throw new Error(`Failed to ${this.state.currentUser ? 'update' : 'create'} user: ${response.statusText}`);
+            }
+            
+            // Reload users to refresh the list
+            this.loadUsers();
+            
+            // Show success message
+            this.showNotification(`User ${this.state.currentUser ? 'updated' : 'created'} successfully`);
+            
+            // Hide modal and clear current user
+            this.hideAddUserModal();
+            this.state.currentUser = null;
+            
+            this.showLoading(false);
+        } catch (error) {
+            console.error('Error saving user:', error);
+            this.showNotification(error.message, 'error');
+            this.showLoading(false);
+        }
+    },
     // Import users
     async importUsers() {
         try {

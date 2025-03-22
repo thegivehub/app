@@ -171,6 +171,10 @@ if (isset($pathParts) && $pathParts[0] === 'admin') {
             $adminCampaignController = new AdminCampaignController();
             $adminCampaignController->handleRequest();
             exit;
+        } else if ($pathParts[1] === 'users') {
+            $adminUserController = new AdminUserController();
+            $adminUserController->handleRequest();
+            exit;
         }
     }
     
