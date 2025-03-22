@@ -4,6 +4,7 @@ require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/KycController.php';
 require_once __DIR__ . '/lib/AdminAuthController.php';
 require_once __DIR__ . '/lib/AdminCampaignController.php';
+require_once __DIR__ . '/lib/AdminUserController.php';
 
 /**
  * Sends a JSON response and exits

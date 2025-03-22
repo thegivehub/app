@@ -90,8 +90,8 @@ class Campaign {
         );
         
         return [
-            'success' => $result->getModifiedCount() > 0,
-            'modifiedCount' => $result->getModifiedCount()
+            'success' => count($result) > 0,
+            'modifiedCount' => count($result)
         ];
     }
     
@@ -99,8 +99,8 @@ class Campaign {
         $result = $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         
         return [
-            'success' => $result->getDeletedCount() > 0,
-            'deletedCount' => $result->getDeletedCount()
+            'success' => count($result) > 0,
+            'deletedCount' => count($result)
         ];
     }
 
@@ -177,7 +177,7 @@ class Campaign {
      *
      * @return string|null User ID or null if not authenticated
      */
-    private function getUserIdFromToken() {
+    public function getUserIdFromToken() {
         // Try to get from Authorization header first
         $headers = getallheaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';

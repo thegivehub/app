@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        /* Additional page-specific styles */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .stat-card.active {
+            border-left: 4px solid var(--success);
+        }
+
+        .stat-card.pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .stat-card.suspended {
+            border-left: 4px solid var(--danger);
+        }
+
+        .stat-card.total {
+            border-left: 4px solid var(--primary);
+        }
+
+        .user-table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .user-table th, 
+        .user-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .user-table th {
+            background-color: var(--gray-50);
+            font-weight: 500;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .user-table tr:hover {
+            background-color: var(--gray-50);
+        }
+
+        .user-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .user-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .user-status {
+            display: inline-flex;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .user-status.active {
+            background-color: var(--success-light);
+            color: var(--success);
+        }
+
+        .user-status.pending {
+            background-color: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .user-status.suspended {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .pagination-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 6px;
+            background-color: white;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .pagination-btn:hover {
+            background-color: var(--gray-50);
+        }
+
+        .pagination-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-info {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 1rem;
+        }
+
+        .loading-placeholder {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
+            background-size: 200% 100%;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: -200% 50%;
+            }
+        }
+
+        /* User detail modal */
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .modal-body {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+
+        .user-profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            background-color: var(--gray-50);
+        }
+
+        .user-profile-avatar {
+            width: 100px;
+            height: 100px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-profile-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .user-profile-username {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+
+        .user-profile-status {
+            margin-bottom: 1.5rem;
+        }
+
+        .user-profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .user-details-section {
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+        }
+
+        .user-details-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .user-details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .user-details-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .user-detail-item {
+            margin-bottom: 1rem;
+        }
+
+        .user-detail-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-detail-value {
+            font-size: 0.875rem;
+            color: var(--gray-800);
+        }
+
+        .user-activity-section {
+            margin-top: 1.5rem;
+        }
+
+        .user-activity-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .user-activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .user-activity-icon {
+            padding: 0.5rem;
+            background-color: var(--gray-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-activity-content {
+            flex: 1;
+        }
+
+        .user-activity-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-activity-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="/img/white-logo.svg" alt="GiveHub Admin">
+                <h1>Admin Dashboard</h1>
+            </div>
+            <ul class="admin-menu">
+                <li class="admin-menu-item">
+                    <a href="dashboard.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="campaigns.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        Campaign Review
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="users.html" class="admin-menu-link active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        User Management
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="reports.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Reports
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="settings.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 15c-1.93 0-3.5-1.57-3.5-3.5S10.07 8 12 8s3.5 1.57 3.5 3.5S13.93 15 12 15z"></path>
+                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"></path>
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+            <div class="admin-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">
+                        <span id="admin-initials">AD</span>
+                    </div>
+                    <div class="admin-user-name" id="admin-name">Admin User</div>
+                </div>
+                <button id="logout-btn" class="admin-logout-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            <!-- User Management Section -->
+            <section id="user-list" class="admin-section">
+                <div class="admin-header">
+                    <h1 class="admin-title">User Management</h1>
+                    <div class="admin-actions">
+                        <button id="add-user-btn" class="btn btn-primary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            Add User
+                        </button>
+                        <button id="refresh-btn" class="btn btn-outline">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <polyline points="23 20 23 14 17 14"></polyline>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Overview -->
+                <div class="stats-overview" id="stats-overview">
+                    <div class="stat-card active">
+                        <div class="stat-label">Active Users</div>
+                        <div class="stat-value" id="active-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card pending">
+                        <div class="stat-label">Pending Verification</div>
+                        <div class="stat-value" id="pending-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card suspended">
+                        <div class="stat-label">Suspended</div>
+                        <div class="stat-value" id="suspended-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value" id="total-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <span class="filter-label">Filter:</span>
+                    <select id="status-filter" class="filter-select">
+                        <option value="all">All Users</option>
+                        <option value="active">Active</option>
+                        <option value="pending">Pending Verification</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="admin">Admins</option>
+                    </select>
+                    <input type="text" class="search-input" placeholder="Search users by name, email, or username..." id="search-input">
+                </div>
+
+                <div class="user-table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- Loading placeholders -->
+                            <tr>
+                                <td>
+                                    <div class="user-name-cell">
+                                        <div class="loading-placeholder" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                                        <div>
+                                            <div class="loading-placeholder" style="width: 120px; margin-bottom: 0.25rem;"></div>
+                                            <div class="loading-placeholder" style="width: 160px;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 60px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 70px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 100px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-name-cell">
+                                        <div class="loading-placeholder" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                                        <div>
+                                            <div class="loading-placeholder" style="width: 120px; margin-bottom: 0.25rem;"></div>
+                                            <div class="loading-placeholder" style="width: 160px;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 60px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 70px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 100px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-name-cell">
+                                        <div class="loading-placeholder" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                                        <div>
+                                            <div class="loading-placeholder" style="width: 120px; margin-bottom: 0.25rem;"></div>
+                                            <div class="loading-placeholder" style="width: 160px;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 60px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 70px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 100px;"></div></td>
+                                <td><div class="loading-placeholder" style="width: 80px;"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">3</button>
+                    <button class="pagination-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="page-info" id="page-info">
+                    Showing 1 to 10 of 42 users
+                </div>
+            </section>
+
+            <!-- User Detail Modal -->
+            <div id="user-modal" class="modal-overlay">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2 class="modal-title">User Details</h2>
+                        <button class="modal-close" id="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="user-profile-section">
+                            <div class="user-profile-avatar" id="user-detail-avatar">JD</div>
+                            <div class="user-profile-name" id="user-detail-name">John Doe</div>
+                            <div class="user-profile-username" id="user-detail-username">@johndoe</div>
+                            <div class="user-profile-status">
+                                <span class="user-status active" id="user-detail-status">Active</span>
+                            </div>
+                            <div class="user-profile-actions">
+                                <button class="btn btn-outline" id="btn-reset-password">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    Reset Password
+                                </button>
+                                <button class="btn btn-outline" id="btn-toggle-status">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Suspend User
+                                </button>
+                                <button class="btn btn-outline" id="btn-toggle-admin">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                    Make Admin
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="user-details-section">
+                                <h3 class="user-details-header">Personal Information</h3>
+                                <div class="user-details-grid">
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">First Name</div>
+                                        <div class="user-detail-value" id="user-detail-firstname">John</div>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">Last Name</div>
+                                        <div class="user-detail-value" id="user-detail-lastname">Doe</div>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">Email</div>
+                                        <div class="user-detail-value" id="user-detail-email">john.doe@example.com</div>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">Phone</div>
+                                        <div class="user-detail-value" id="user-detail-phone">+1 (555) 123-4567</div>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">Location</div>
+                                        <div class="user-detail-value" id="user-detail-location">New York, USA</div>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <div class="user-detail-label">Account Created</div>
+                                        <div class="user-detail-value" id="user-detail-created">January 15, 2023</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-activity-section">
+                                <h3 class="user-activity-header">Recent Activity</h3>
+                                <div id="user-activity-list">
+                                    <div class="user-activity-item">
+                                        <div class="user-activity-icon">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                            </svg>
+                                        </div>
+                                        <div class="user-activity-content">
+                                            <div class="user-activity-title">Created a new campaign</div>
+                                            <div class="user-activity-meta">
+                                                <span>Campaign: "Help Fund Our School Library"</span>
+                                                <span>March 15, 2023</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="user-activity-item">
+                                        <div class="user-activity-icon">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="9" cy="7" r="4"></circle>
+                                            </svg>
+                                        </div>
+                                        <div class="user-activity-content">
+                                            <div class="user-activity-title">Updated profile information</div>
+                                            <div class="user-activity-meta">
+                                                <span>Changed phone number and location</span>
+                                                <span>March 10, 2023</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="user-activity-item">
+                                        <div class="user-activity-icon">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                                <line x1="9" y1="9" x2="9" y2="9"></line>
+                                                <line x1="15" y1="9" x2="15" y2="9"></line>
+                                            </svg>
+                                        </div>
+                                        <div class="user-activity-content">
+                                            <div class="user-activity-title">Made a donation</div>
+                                            <div class="user-activity-meta">
+                                                <span>Donated $50 to "Community Garden Project"</span>
+                                                <span>February 28, 2023</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancel-user-edit">Cancel</button>
+                        <button class="btn btn-primary" id="save-user-changes">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add/Edit User Modal -->
+            <div id="add-user-modal" class="modal-overlay">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="add-user-title">Add New User</h2>
+                        <button class="modal-close" id="close-add-user-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-user-form">
+                            <div class="user-details-section">
+                                <div class="user-details-grid">
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-firstname">First Name</label>
+                                        <input type="text" id="new-user-firstname" class="review-form-input" required>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-lastname">Last Name</label>
+                                        <input type="text" id="new-user-lastname" class="review-form-input" required>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-email">Email</label>
+                                        <input type="email" id="new-user-email" class="review-form-input" required>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-username">Username</label>
+                                        <input type="text" id="new-user-username" class="review-form-input" required>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-password">Password</label>
+                                        <input type="password" id="new-user-password" class="review-form-input" required>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-status">Status</label>
+                                        <select id="new-user-status" class="review-form-input">
+                                            <option value="active">Active</option>
+                                            <option value="pending">Pending Verification</option>
+                                            <option value="suspended">Suspended</option>
+                                        </select>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-role">Role</label>
+                                        <select id="new-user-role" class="review-form-input">
+                                            <option value="user">User</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <label class="user-detail-label" for="new-user-phone">Phone (Optional)</label>
+                                        <input type="text" id="new-user-phone" class="review-form-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancel-add-user">Cancel</button>
+                        <button class="btn btn-primary" id="save-new-user">Save User</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete User Confirmation Modal -->
+            <div id="delete-user-modal" class="modal-overlay">
+                <div class="modal" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Confirm Deletion</h2>
+                        <button class="modal-close" id="close-delete-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <p style="margin-bottom: 1rem;">Are you sure you want to delete this user? This action cannot be undone.</p>
+                        <p><strong>Username:</strong> <span id="delete-user-username"></span></p>
+                        <p><strong>Email:</strong> <span id="delete-user-email"></span></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancel-delete-user">Cancel</button>
+                        <button class="btn btn-danger" id="confirm-delete-user">Delete User</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Users Modal -->
+            <div id="export-users-modal" class="modal-overlay">
+                <div class="modal" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Export Users</h2>
+                        <button class="modal-close" id="close-export-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="user-detail-item" style="margin-bottom: 1.5rem;">
+                            <label class="user-detail-label" for="export-format">Export Format</label>
+                            <select id="export-format" class="review-form-input">
+                                <option value="csv">CSV (Comma Separated Values)</option>
+                                <option value="json">JSON (JavaScript Object Notation)</option>
+                            </select>
+                        </div>
+
+                        <div class="user-detail-item" style="margin-bottom: 1.5rem;">
+                            <label class="user-detail-label" for="export-fields">Fields to Export</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+                                <div>
+                                    <input type="checkbox" id="export-field-id" checked>
+                                    <label for="export-field-id">User ID</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-username" checked>
+                                    <label for="export-field-username">Username</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-email" checked>
+                                    <label for="export-field-email">Email</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-name" checked>
+                                    <label for="export-field-name">Name</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-status" checked>
+                                    <label for="export-field-status">Status</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-role" checked>
+                                    <label for="export-field-role">Role</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-created" checked>
+                                    <label for="export-field-created">Date Created</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="export-field-phone">
+                                    <label for="export-field-phone">Phone</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-detail-item">
+                            <label class="user-detail-label" for="export-filter">Filter</label>
+                            <select id="export-filter" class="review-form-input">
+                                <option value="current">Current filtered list</option>
+                                <option value="all">All users</option>
+                                <option value="active">Active users only</option>
+                                <option value="pending">Pending users only</option>
+                                <option value="suspended">Suspended users only</option>
+                                <option value="admin">Admin users only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancel-export">Cancel</button>
+                        <button class="btn btn-primary" id="confirm-export">Export</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Users Modal -->
+            <div id="import-users-modal" class="modal-overlay">
+                <div class="modal" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Import Users</h2>
+                        <button class="modal-close" id="close-import-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <p style="margin-bottom: 0.5rem;">Upload a CSV file with user data.</p>
+                            <p style="font-size: 0.875rem; color: var(--gray-600);">
+                                The CSV should have headers and include at least: username, email, firstName, lastName, and status.
+                            </p>
+                        </div>
+
+                        <div class="user-detail-item" style="margin-bottom: 1.5rem;">
+                            <label class="user-detail-label" for="import-file">User CSV File</label>
+                            <input type="file" id="import-file" accept=".csv" class="review-form-input">
+                        </div>
+
+                        <div class="user-detail-item">
+                            <label class="user-detail-label" for="import-options">Import Options</label>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                                <div>
+                                    <input type="checkbox" id="import-generate-passwords" checked>
+                                    <label for="import-generate-passwords">Generate random passwords for new users</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="import-update-existing" checked>
+                                    <label for="import-update-existing">Update existing users if found</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="import-send-notifications">
+                                    <label for="import-send-notifications">Send email notifications to new users</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancel-import">Cancel</button>
+                        <button class="btn btn-primary" id="confirm-import">Import</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Admin Authentication Check -->
+    <script>
+// Check if admin is authenticated
+function checkAdminAuth() {
+    const adminToken = localStorage.getItem('adminToken');
+
+    if (!adminToken) {
+        // Redirect to login if no token
+        window.location.href = '/admin/index.html';
+        return false;
+    }
+
+    // Verify token with server
+    fetch('/api.php/admin/verify', {
+        headers: {
+            'Authorization': `Bearer ${adminToken}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error('Authentication failed');
+        }
+
+        // Update admin info
+        if (data.user) {
+            document.getElementById('admin-name').textContent = data.user.displayName;
+            const initials = data.user.displayName
+                .split(' ')
+                .map(name => name[0])
+                .join('')
+                .toUpperCase();
+            document.getElementById('admin-initials').textContent = initials;
+        }
+    })
+    .catch(error => {
+        console.error('Auth error:', error);
+        // Clear token and redirect to login
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/index.html';
+    });
+
+    return true;
+}
+
+// Logout handler
+document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem('adminToken');
+    window.location.href = '/admin/index.html';
+});
+
+// Check auth when page loads
+document.addEventListener('DOMContentLoaded', checkAdminAuth);
+    </script>
+
+    <!-- Main admin script -->
+    <script src="admin-user-management.js"></script>
+</body>
+</html>

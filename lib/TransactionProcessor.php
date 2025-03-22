@@ -2,7 +2,7 @@
 // lib/TransactionProcessor.php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Model.php';
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use ZuluCrypto\StellarSdk\Keypair;
 use ZuluCrypto\StellarSdk\Server;
