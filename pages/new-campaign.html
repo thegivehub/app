@@ -526,31 +526,17 @@
 function submitForm() {
   console.log('Submitting form...');
   
-  // Validate all fields one last time
-  let allValid = true;
-  for (let i = 1; i <= totalSteps; i++) {
-    const section = document.getElementById(`step${i}`);
-    const inputs = section.querySelectorAll('input, select, textarea');
-    
-    inputs.forEach((input) => {
-      if (input.required && !input.value) {
-        allValid = false;
-      }
-    });
-  }
+  // Get the user ID and log it for debugging
+  const userId = getUserId();
+  console.log('User ID from token/storage:', userId);
   
-  if (!allValid) {
-    alert('Please fill in all required fields before submitting.');
+  if (!userId) {
+    console.error('No user ID found - authentication may be missing');
+    alert('You must be logged in to create a campaign. Please log in and try again.');
     return;
   }
   
-  // Show loading state
-  const submitBtn = document.getElementById('nextBtn');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = 'Submitting...';
-  submitBtn.disabled = true;
-  
-  // Prepare form data without images
+  // Collect form data
   const formData = {
     title: document.getElementById('campaignTitle').value,
     type: document.getElementById('campaignType').value,
@@ -558,90 +544,67 @@ function submitForm() {
     fundingGoal: parseFloat(document.getElementById('fundingGoal').value),
     deadline: document.getElementById('deadline').value,
     minContribution: parseFloat(document.getElementById('minContribution').value),
-    creatorId: getUserId(),
+    creatorId: userId,
+    creator_id: userId, // Adding alternative field name to ensure compatibility
+    userId: userId,     // Adding another common field name
     createdAt: new Date().toISOString(),
-    status: 'pending',
-    images: [] // This will be populated after image uploads
+    status: 'pending',  // Initial status for moderation
+    images: []          // We'll handle images separately
   };
-  
-  // Get all image elements
+
+  // Get image data from preview
   const imageElements = document.querySelectorAll('#imagePreview .preview-item');
-  const imagePromises = [];
-  
-  // Process each image
   imageElements.forEach(img => {
     if (img.style.backgroundImage) {
-      const imageUrl = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-      
-      // Create a promise for each image upload
-      const uploadPromise = fetch('/upload-image.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-          image: imageUrl
-        })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to upload image');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success && data.url) {
-          return data.url; // Return the uploaded image URL
-        }
-        throw new Error('Invalid image upload response');
-      });
-      
-      imagePromises.push(uploadPromise);
+      const url = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+      formData.images.push(url);
     }
   });
+
+  console.log('Form Data to be submitted:', formData);
+
+  // Show loading state
+  const submitBtn = document.getElementById('nextBtn');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+
+  // Send data to the backend with proper authorization
+  const token = getToken();
+  console.log('Using authorization token:', token ? 'Token exists' : 'No token');
   
-  // Wait for all image uploads to complete
-  Promise.all(imagePromises)
-    .then(imageUrls => {
-      // Add all uploaded image URLs to form data
-      formData.images = imageUrls;
-      
-      // Now submit the campaign with image URLs
-      return fetch('/api.php/Campaign', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify(formData)
+  fetch('/api.php/Campaign', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      return response.text().then(text => {
+        throw new Error(`Server error (${response.status}): ${text}`);
       });
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok: ' + response.statusText);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Success:', data);
-      
-      // Show success message
-      alert('Campaign submitted successfully! It will be reviewed by our team.');
-      
-      // Redirect to campaigns page or dashboard
-      window.location.href = '/pages/my-campaigns.html';
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Error submitting campaign: ' + error.message);
-    })
-    .finally(() => {
-      // Reset button state
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Success response:', data);
+    alert('Campaign submitted successfully! It will be reviewed by our team.');
+    window.location.href = '/pages/my-campaigns.html';
+  })
+  .catch(error => {
+    console.error('Error submitting campaign:', error);
+    alert('Error submitting campaign: ' + error.message);
+  })
+  .finally(() => {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  });
 }
+
   // Image upload handling
   const imageUpload = document.getElementById('imageUpload');
   const imagePreview = document.getElementById('imagePreview');
@@ -768,36 +731,56 @@ function submitForm() {
     });
   }
 
-  // Helper function to get auth token from localStorage
-  function getToken() {
-    return localStorage.getItem('authToken') || '';
-  }
+// Helper function to get auth token from localStorage
+function getToken() {
+  return localStorage.getItem('accessToken') || ''; // Changed from 'authToken' to 'accessToken'
+}
 
-  // Helper function to get user ID from localStorage or session
-  function getUserId() {
-    // First try localStorage
-    const userId = localStorage.getItem('userId');
-    if (userId) return userId;
-
-    // If not in localStorage, try to extract from JWT token
-    const token = getToken();
-    if (token) {
-      try {
-        // Parse JWT token (without verification)
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(window.atob(base64));
-
-        return payload.sub || payload.userId || payload._id || null;
-      } catch (e) {
-        console.error('Error parsing token:', e);
+// Helper function to get user ID from localStorage or token
+function getUserId() {
+  // First try localStorage
+  const userData = localStorage.getItem('userData');
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      if (user.id || user._id || user.userId) {
+        return user.id || user._id || user.userId;
       }
+    } catch (e) {
+      console.error('Error parsing user data:', e);
     }
-
-    return null;
   }
-
-  // Replace the existing submitForm function
+  
+  // If not in localStorage, try to extract from JWT token
+  const token = getToken();
+  if (token) {
+    try {
+      // Parse JWT token (without verification)
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(window.atob(base64));
+      
+      // Check all common field names for user ID
+      return payload.sub || payload.userId || payload._id || payload.id || null;
+    } catch (e) {
+      console.error('Error parsing token:', e);
+    }
+  }
+  
+  // If still no user ID, try session storage
+  const sessionUserData = sessionStorage.getItem('userData');
+  if (sessionUserData) {
+    try {
+      const user = JSON.parse(sessionUserData);
+      return user.id || user._id || user.userId || null;
+    } catch (e) {
+      console.error('Error parsing session user data:', e);
+    }
+  }
+  
+  return null;
+}
+  // Replace the existing onsubmit function
   document.getElementById('campaignForm').onsubmit = function(e) {
     e.preventDefault(); // Prevent default form submission
     submitForm();

@@ -203,6 +203,11 @@ if ($endpoint === 'User' && isset($pathParts) && count($pathParts) > 0) {
 }
 
 if ($endpoint === 'Campaign') {
+    logMessage("Campaign endpoint requested", [
+        'action' => $pathParts[1] ?? 'default',
+        'method' => $method,
+        'userId' => isset($instance) ? $instance->getUserIdFromToken() : null
+    ]);
     if (isset($pathParts) && count($pathParts) > 1) {
         switch ($pathParts[1]) {
             case 'my':
@@ -252,6 +257,13 @@ if ($endpoint === 'Campaign') {
     }
 }
  */
+logMessage("API Request", [
+    'endpoint' => $endpoint,
+    'method' => $method,
+    'pathParts' => $pathParts ?? null,
+    'id' => $id ?? null,
+    'headers' => getallheaders(),
+]);
 
 if (count($actions)) {
     foreach ($actions as $action) {
