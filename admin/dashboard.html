@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Campaign Review</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .admin-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .admin-logo h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .admin-menu {
+            list-style: none;
+        }
+
+        .admin-menu-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .admin-menu-link:hover {
+            background-color: var(--gray-100);
+        }
+
+        .admin-menu-link.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .admin-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: white;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--gray-50);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-light);
+            color: var(--success);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background-color: white;
+            color: var(--gray-700);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        .campaign-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .campaign-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .campaign-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .campaign-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .campaign-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .campaign-image {
+            height: 160px;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--gray-200);
+            position: relative;
+        }
+
+        .campaign-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .campaign-badge.pending {
+            background-color: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .campaign-badge.active {
+            background-color: var(--success-light);
+            color: var(--success);
+        }
+
+        .campaign-badge.rejected {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .campaign-content {
+            padding: 1rem;
+        }
+
+        .campaign-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--gray-800);
+        }
+
+        .campaign-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .campaign-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .campaign-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .campaign-goal {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .campaign-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Detail view */
+        .review-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .review-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .review-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .review-media {
+            position: relative;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--gray-200);
+        }
+
+        .review-content {
+            padding: 1.5rem;
+        }
+
+        .review-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--gray-800);
+        }
+
+        .review-meta {
+            display: flex;
+            margin-bottom: 1.5rem;
+            gap: 2rem;
+            color: var(--gray-600);
+        }
+
+        .review-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .review-description {
+            margin-bottom: 1.5rem;
+            color: var(--gray-700);
+        }
+
+        .review-details-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+        }
+
+        .review-details-item {
+            display: flex;
+            margin-bottom: 0.75rem;
+        }
+
+        .review-details-label {
+            width: 150px;
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        .review-details-value {
+            flex: 1;
+        }
+
+        .review-sidebar-section {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .review-sidebar-section:last-child {
+            border-bottom: none;
+        }
+
+        .review-sidebar-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+        }
+
+        .review-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .review-form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .review-form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .review-form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .review-form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 0.875rem;
+            z-index: 100;
+            transform: translateY(-10px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s ease, opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="/img/white-logo.svg" alt="GiveHub Admin">
+                <h1>Admin Dashboard</h1>
+            </div>
+            <ul class="admin-menu">
+                <li class="admin-menu-item">
+                    <a href="#" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="#" class="admin-menu-link active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        Campaign Review
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="#" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        User Management
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="#" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Reports
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="#" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 15c-1.93 0-3.5-1.57-3.5-3.5S10.07 8 12 8s3.5 1.57 3.5 3.5S13.93 15 12 15z"></path>
+                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"></path>
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            <!-- Campaign List Section -->
+            <section id="campaign-list" class="admin-section">
+                <div class="admin-header">
+                    <h1 class="admin-title">Campaign Review</h1>
+                    <div class="admin-actions">
+                        <button id="refresh-btn" class="btn btn-outline">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <polyline points="23 20 23 14 17 14"></polyline>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <span class="filter-label">Filter:</span>
+                    <select id="status-filter" class="filter-select">
+                        <option value="pending">Pending Review</option>
+                        <option value="all">All Campaigns</option>
+                        <option value="active">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <input type="text" class="search-input" placeholder="Search campaigns..." id="search-input">
+                </div>
+
+                <div class="campaign-grid" id="campaign-grid">
+                    <!-- Campaign cards will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Campaign Review Section -->
+            <section id="campaign-review" class="admin-section" style="display: none;">
+                <div class="admin-header">
+                    <h1 class="admin-title">Review Campaign</h1>
+                    <div class="admin-actions">
+                        <button id="back-to-list" class="btn btn-outline">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Back to List
+                        </button>
+                    </div>
+                </div>
+
+                <div class="review-layout">
+                    <div class="review-section">
+                        <div class="review-media" id="campaign-banner"></div>
+                        <div class="review-content">
+                            <h2 class="review-title" id="campaign-title"></h2>
+                            <div class="review-meta">
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                    </svg>
+                                    <span id="campaign-creator"></span>
+                                </div>
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span id="campaign-created"></span>
+                                </div>
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <span id="campaign-location"></span>
+                                </div>
+                            </div>
+
+                            <div class="review-description" id="campaign-description"></div>
+
+                            <h3 class="review-details-title">Campaign Details</h3>
+                            <div class="review-details">
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Funding Goal</div>
+                                    <div class="review-details-value" id="campaign-goal"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Campaign Type</div>
+                                    <div class="review-details-value" id="campaign-type"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Deadline</div>
+                                    <div class="review-details-value" id="campaign-deadline"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Minimum Contribution</div>
+                                    <div class="review-details-value" id="campaign-min-contribution"></div>
+                                </div>
+                            </div>
+
+                            <h3 class="review-details-title">Campaign Media</h3>
+                            <div class="campaign-media-gallery" id="campaign-media"></div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <div class="review-sidebar-section">
+                            <h3 class="review-sidebar-title">Review Decision</h3>
+                            <form id="review-form">
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-status">Status</label>
+                                    <select class="review-form-input" id="review-status">
+                                        <option value="active">Approve Campaign</option>
+                                        <option value="rejected">Reject Campaign</option>
+                                    </select>
+                                </div>
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-notes">Admin Notes</label>
+                                    <textarea class="review-form-textarea" id="review-notes" placeholder="Add private notes about this campaign"></textarea>
+                                </div>
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-feedback">Feedback to Creator</label>
+                                    <textarea class="review-form-textarea" id="review-feedback" placeholder="Provide feedback to the campaign creator"></textarea>
+                                </div>
+                                <div class="review-form-actions">
+                                    <button type="submit" class="btn btn-primary" id="save-review">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                            <polyline points="7 3 7 8 15 8"></polyline>
+                                        </svg>
+                                        Save Decision
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Main application
+const adminApp = {
+    apiBase: '/api.php',
+    state: {
+        campaigns: [],
+        currentCampaign: null,
+        filter: 'pending',
+        searchQuery: '',
+    },
+
+    init() {
+        // Set up event listeners
+        this.setupEventListeners();
+
+        // Initial data load
+        this.loadCampaigns();
+    },
+
+    setupEventListeners() {
+        // Filtering
+        document.getElementById('status-filter').addEventListener('change', (e) => {
+            this.state.filter = e.target.value;
+            this.renderCampaigns();
+        });
+
+        // Search
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            this.state.searchQuery = e.target.value.toLowerCase();
+            this.renderCampaigns();
+        });
+
+        // Refresh button
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            this.loadCampaigns();
+        });
+
+        // Back to list button
+        document.getElementById('back-to-list').addEventListener('click', () => {
+            this.showSection('campaign-list');
+        });
+
+        // Review form submission
+        document.getElementById('review-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitReview();
+        });
+    },
+
+    showLoading(show = true) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (show) {
+            loadingOverlay.classList.add('active');
+        } else {
+            loadingOverlay.classList.remove('active');
+        }
+    },
+
+    showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+
+        notification.className = 'notification';
+        notification.classList.add(type);
+        notification.classList.add('show');
+
+        notificationMessage.textContent = message;
+
+        // Hide notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    },
+
+    async loadCampaigns() {
+        try {
+            this.showLoading(true);
+
+            // Fetch all campaigns from the API
+            const response = await fetch(`${this.apiBase}/campaign`);
+
+            if (!response.ok) {
+                throw new Error('Failed to load campaigns');
+            }
+
+            const campaigns = await response.json();
+            this.state.campaigns = campaigns;
+
+            this.renderCampaigns();
+
+            this.showLoading(false);
+        } catch (error) {
+            console.error('Error loading campaigns:', error);
+            this.showNotification(error.message, 'error');
+            this.showLoading(false);
+        }
+    },
+
+    renderCampaigns() {
+        const campaignGrid = document.getElementById('campaign-grid');
+        campaignGrid.innerHTML = '';
+
+        // Apply filters
+        let filteredCampaigns = [...this.state.campaigns];
+
+        // Filter by status
+        if (this.state.filter !== 'all') {
+            filteredCampaigns = filteredCampaigns.filter(campaign =>
+                campaign.status === this.state.filter
+            );
+        }
+
+        // Apply search query
+        if (this.state.searchQuery) {
+            filteredCampaigns = filteredCampaigns.filter(campaign =>
+                campaign.title.toLowerCase().includes(this.state.searchQuery) ||
+                campaign.description.toLowerCase().includes(this.state.searchQuery)
+            );
+        }
+
+        // Render campaign cards
+        if (filteredCampaigns.length === 0) {
+            campaignGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                    <p style="color: var(--gray-600);">No campaigns found</p>
+                </div>
+            `;
+            return;
+        }
+
+        filteredCampaigns.forEach(campaign => {
+            const campaignCard = this.createCampaignCard(campaign);
+            campaignGrid.appendChild(campaignCard);
+        });
+    },
+
+    createCampaignCard(campaign) {
+        const card = document.createElement('div');
+        card.className = 'campaign-card';
+
+        // Determine badge class based on status
+        let badgeClass = 'pending';
+        if (campaign.status === 'active') {
+            badgeClass = 'active';
+        } else if (campaign.status === 'rejected') {
+            badgeClass = 'rejected';
+        }
+
+        // Format date
+        const createdDate = new Date(campaign.createdAt || Date.now()).toLocaleDateString();
+
+        // Calculate funding goal
+        const fundingGoal = this.formatCurrency(campaign.fundingGoal || 0);
+
+        // Get first image or use placeholder
+        const imageUrl = campaign.images && campaign.images.length > 0
+            ? campaign.images[0]
+            : '/img/placeholder.jpg';
+
+        card.innerHTML = `
+            <div class="campaign-image" style="background-image: url('${imageUrl}')">
+                <div class="campaign-badge ${badgeClass}">
+                    ${this.capitalizeFirstLetter(campaign.status)}
+                </div>
+            </div>
+            <div class="campaign-content">
+                <h3 class="campaign-title">${campaign.title}</h3>
+                <div class="campaign-meta">
+                    <span>Created: ${createdDate}</span>
+                    <span>${campaign.type || 'Crowdfunding'}</span>
+                </div>
+                <p class="campaign-description">${campaign.description}</p>
+            </div>
+            <div class="campaign-footer">
+                <div class="campaign-goal">Goal: ${fundingGoal}</div>
+                <div class="campaign-actions">
+                    <button class="btn btn-primary btn-sm review-btn">Review</button>
+                </div>
+            </div>
+        `;
+
+        // Add click event to review button
+        card.querySelector('.review-btn').addEventListener('click', () => {
+            this.viewCampaignDetails(campaign._id);
+        });
+
+        return card;
+    },
+
+    async viewCampaignDetails(campaignId) {
+        try {
+            this.showLoading(true);
+
+            // Fetch campaign details
+            const response = await fetch(`${this.apiBase}/campaign?id=${campaignId}`);
+
+            if (!response.ok) {
+                throw new Error('Failed to load campaign details');
+            }
+
+            const campaign = await response.json();
+            this.state.currentCampaign = campaign;
+
+            // Populate the review section
+            this.populateCampaignDetails(campaign);
+
+            // Show the review section
+            this.showSection('campaign-review');
+
+            this.showLoading(false);
+        } catch (error) {
+            console.error('Error loading campaign details:', error);
+            this.showNotification(error.message, 'error');
+            this.showLoading(false);
+        }
+    },
+
+    populateCampaignDetails(campaign) {
+        // Set banner image
+        const bannerEl = document.getElementById('campaign-banner');
+        if (campaign.images && campaign.images.length > 0) {
+            bannerEl.style.backgroundImage = `url('${campaign.images[0]}')`;
+        } else {
+            bannerEl.style.backgroundImage = `url('/img/placeholder.jpg')`;
+        }
+
+        // Set basic info
+        document.getElementById('campaign-title').textContent = campaign.title || 'Untitled Campaign';
+        document.getElementById('campaign-creator').textContent = campaign.creatorName || 'Unknown Creator';
+        document.getElementById('campaign-created').textContent = this.formatDate(campaign.createdAt);
+        document.getElementById('campaign-location').textContent = campaign.location?.region || 'Unknown Location';
+        document.getElementById('campaign-description').textContent = campaign.description || 'No description provided';
+
+        // Set campaign details
+        document.getElementById('campaign-goal').textContent = this.formatCurrency(campaign.fundingGoal || 0);
+        document.getElementById('campaign-type').textContent = this.capitalizeFirstLetter(campaign.type || 'Crowdfunding');
+        document.getElementById('campaign-deadline').textContent = this.formatDate(campaign.deadline);
+        document.getElementById('campaign-min-contribution').textContent = this.formatCurrency(campaign.minContribution || 0);
+
+        // Display media gallery
+        this.renderMediaGallery(campaign.images || []);
+
+        // Set the form's initial state
+        document.getElementById('review-status').value = campaign.status || 'pending';
+        document.getElementById('review-notes').value = campaign.adminNotes || '';
+        document.getElementById('review-feedback').value = campaign.feedback || '';
+    },
+
+    renderMediaGallery(images) {
+        const mediaContainer = document.getElementById('campaign-media');
+        mediaContainer.innerHTML = '';
+
+        if (images.length === 0) {
+            mediaContainer.innerHTML = '<p>No media provided</p>';
+            return;
+        }
+
+        // Create a grid for images
+        const mediaGrid = document.createElement('div');
+        mediaGrid.style.display = 'grid';
+        mediaGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
+        mediaGrid.style.gap = '1rem';
+        mediaGrid.style.marginTop = '1rem';
+
+        images.forEach(imageUrl => {
+            const mediaItem = document.createElement('div');
+            mediaItem.style.aspectRatio = '16/9';
+            mediaItem.style.backgroundImage = `url('${imageUrl}')`;
+            mediaItem.style.backgroundSize = 'cover';
+            mediaItem.style.backgroundPosition = 'center';
+            mediaItem.style.borderRadius = '6px';
+
+            mediaGrid.appendChild(mediaItem);
+        });
+
+        mediaContainer.appendChild(mediaGrid);
+    },
+
+    async submitReview() {
+        try {
+            if (!this.state.currentCampaign) {
+                throw new Error('No campaign selected');
+            }
+
+            this.showLoading(true);
+
+            const campaignId = this.state.currentCampaign._id;
+            const status = document.getElementById('review-status').value;
+            const adminNotes = document.getElementById('review-notes').value;
+            const feedback = document.getElementById('review-feedback').value;
+
+            // Prepare update data
+            const updateData = {
+                status,
+                adminNotes,
+                feedback,
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: 'Admin', // In a real app, this would be the current admin user
+            };
+
+            // Submit the review
+            const response = await fetch(`${this.apiBase}/campaign?id=${campaignId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update campaign');
+            }
+
+            // Update the local state with the new status
+            this.state.currentCampaign = {
+                ...this.state.currentCampaign,
+                ...updateData,
+            };
+
+            // Also update the campaign in the full list
+            this.state.campaigns = this.state.campaigns.map(campaign => {
+                if (campaign._id === campaignId) {
+                    return {
+                        ...campaign,
+                        ...updateData,
+                    };
+                }
+                return campaign;
+            });
+
+            this.showNotification(`Campaign ${status === 'active' ? 'approved' : 'rejected'} successfully`);
+
+            // Return to the campaign list
+            this.showSection('campaign-list');
+            this.renderCampaigns();
+
+            this.showLoading(false);
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            this.showNotification(error.message, 'error');
+            this.showLoading(false);
+        }
+    },
+
+    showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.admin-section').forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // Show the requested section
+        document.getElementById(sectionId).style.display = 'block';
+
+        // Scroll to top
+        window.scrollTo(0, 0);
+    },
+
+    // Utility functions
+    capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    },
+
+    formatCurrency(amount, currency = 'USD') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+        }).format(amount);
+    },
+
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    },
+};
+
+// Initialize the app when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    adminApp.init();
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Review - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        /* Additional page-specific styles can go here */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .stat-card.pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .stat-card.active {
+            border-left: 4px solid var(--success);
+        }
+
+        .stat-card.rejected {
+            border-left: 4px solid var(--danger);
+        }
+
+        .stat-card.total {
+            border-left: 4px solid var(--primary);
+        }
+
+        .loading-placeholder {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
+            background-size: 200% 100%;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: -200% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="/img/white-logo.svg" alt="GiveHub Admin">
+                <h1>Admin Dashboard</h1>
+            </div>
+            <ul class="admin-menu">
+                <li class="admin-menu-item">
+                    <a href="dashboard.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="campaigns.html" class="admin-menu-link active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        Campaign Review
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="users.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        User Management
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="reports.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Reports
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a href="settings.html" class="admin-menu-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 15c-1.93 0-3.5-1.57-3.5-3.5S10.07 8 12 8s3.5 1.57 3.5 3.5S13.93 15 12 15z"></path>
+                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"></path>
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+            <div class="admin-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">
+                        <span id="admin-initials">AD</span>
+                    </div>
+                    <div class="admin-user-name" id="admin-name">Admin User</div>
+                </div>
+                <button id="logout-btn" class="admin-logout-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            <!-- Campaign List Section -->
+            <section id="campaign-list" class="admin-section">
+                <div class="admin-header">
+                    <h1 class="admin-title">Campaign Review</h1>
+                    <div class="admin-actions">
+                        <button id="refresh-btn" class="btn btn-outline">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <polyline points="23 20 23 14 17 14"></polyline>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Overview -->
+                <div class="stats-overview" id="stats-overview">
+                    <div class="stat-card pending">
+                        <div class="stat-label">Pending Review</div>
+                        <div class="stat-value" id="pending-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card active">
+                        <div class="stat-label">Approved</div>
+                        <div class="stat-value" id="approved-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card rejected">
+                        <div class="stat-label">Rejected</div>
+                        <div class="stat-value" id="rejected-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-label">Total Campaigns</div>
+                        <div class="stat-value" id="total-count">
+                            <div class="loading-placeholder"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <span class="filter-label">Filter:</span>
+                    <select id="status-filter" class="filter-select">
+                        <option value="pending">Pending Review</option>
+                        <option value="all">All Campaigns</option>
+                        <option value="active">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <input type="text" class="search-input" placeholder="Search campaigns..." id="search-input">
+                </div>
+
+                <div class="campaign-grid" id="campaign-grid">
+                    <!-- Loading placeholders -->
+                    <div class="campaign-card">
+                        <div class="loading-placeholder" style="height: 160px;"></div>
+                        <div style="padding: 1rem;">
+                            <div class="loading-placeholder" style="margin-bottom: 0.5rem;"></div>
+                            <div class="loading-placeholder" style="width: 70%; margin-bottom: 1rem;"></div>
+                            <div class="loading-placeholder" style="height: 60px; margin-bottom: 0.5rem;"></div>
+                        </div>
+                    </div>
+                    <div class="campaign-card">
+                        <div class="loading-placeholder" style="height: 160px;"></div>
+                        <div style="padding: 1rem;">
+                            <div class="loading-placeholder" style="margin-bottom: 0.5rem;"></div>
+                            <div class="loading-placeholder" style="width: 70%; margin-bottom: 1rem;"></div>
+                            <div class="loading-placeholder" style="height: 60px; margin-bottom: 0.5rem;"></div>
+                        </div>
+                    </div>
+                    <div class="campaign-card">
+                        <div class="loading-placeholder" style="height: 160px;"></div>
+                        <div style="padding: 1rem;">
+                            <div class="loading-placeholder" style="margin-bottom: 0.5rem;"></div>
+                            <div class="loading-placeholder" style="width: 70%; margin-bottom: 1rem;"></div>
+                            <div class="loading-placeholder" style="height: 60px; margin-bottom: 0.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Campaign Review Section -->
+            <section id="campaign-review" class="admin-section" style="display: none;">
+                <div class="admin-header">
+                    <h1 class="admin-title">Review Campaign</h1>
+                    <div class="admin-actions">
+                        <button id="back-to-list" class="btn btn-outline">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Back to List
+                        </button>
+                    </div>
+                </div>
+
+                <div class="review-layout">
+                    <div class="review-section">
+                        <div class="review-media" id="campaign-banner"></div>
+                        <div class="review-content">
+                            <h2 class="review-title" id="campaign-title"></h2>
+                            <div class="review-meta">
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                    </svg>
+                                    <span id="campaign-creator"></span>
+                                </div>
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span id="campaign-created"></span>
+                                </div>
+                                <div class="review-meta-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <span id="campaign-location"></span>
+                                </div>
+                            </div>
+
+                            <div class="review-description" id="campaign-description"></div>
+
+                            <h3 class="review-details-title">Campaign Details</h3>
+                            <div class="review-details">
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Funding Goal</div>
+                                    <div class="review-details-value" id="campaign-goal"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Campaign Type</div>
+                                    <div class="review-details-value" id="campaign-type"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Deadline</div>
+                                    <div class="review-details-value" id="campaign-deadline"></div>
+                                </div>
+                                <div class="review-details-item">
+                                    <div class="review-details-label">Minimum Contribution</div>
+                                    <div class="review-details-value" id="campaign-min-contribution"></div>
+                                </div>
+                            </div>
+
+                            <h3 class="review-details-title">Campaign Media</h3>
+                            <div class="campaign-media-gallery" id="campaign-media"></div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <div class="review-sidebar-section">
+                            <h3 class="review-sidebar-title">Review Decision</h3>
+                            <form id="review-form">
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-status">Status</label>
+                                    <select class="review-form-input" id="review-status">
+                                        <option value="active">Approve Campaign</option>
+                                        <option value="rejected">Reject Campaign</option>
+                                    </select>
+                                </div>
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-notes">Admin Notes</label>
+                                    <textarea class="review-form-textarea" id="review-notes" placeholder="Add private notes about this campaign"></textarea>
+                                </div>
+                                <div class="review-form-group">
+                                    <label class="review-form-label" for="review-feedback">Feedback to Creator</label>
+                                    <textarea class="review-form-textarea" id="review-feedback" placeholder="Provide feedback to the campaign creator"></textarea>
+                                </div>
+                                <div class="review-form-actions">
+                                    <button type="submit" class="btn btn-primary" id="save-review">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                            <polyline points="7 3 7 8 15 8"></polyline>
+                                        </svg>
+                                        Save Decision
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Admin Authentication Check -->
+    <script>
+// Check if admin is authenticated
+function checkAdminAuth() {
+    const adminToken = localStorage.getItem('adminToken');
+    
+    if (!adminToken) {
+        // Redirect to login if no token
+        window.location.href = '/admin/index.html';
+        return false;
+    }
+    
+    // Verify token with server
+    fetch('/api.php/admin/verify', {
+        headers: {
+            'Authorization': `Bearer ${adminToken}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error('Authentication failed');
+        }
+        
+        // Update admin info
+        if (data.user) {
+            document.getElementById('admin-name').textContent = data.user.displayName;
+            const initials = data.user.displayName
+                .split(' ')
+                .map(name => name[0])
+                .join('')
+                .toUpperCase();
+            document.getElementById('admin-initials').textContent = initials;
+        }
+    })
+    .catch(error => {
+        console.error('Auth error:', error);
+        // Clear token and redirect to login
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/index.html';
+    });
+    
+    return true;
+}
+
+        // Logout handler
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/index.html';
+        });
+        
+        // Check auth when page loads
+        document.addEventListener('DOMContentLoaded', checkAdminAuth);
+    </script>
+
+    <!-- Include main admin script -->
+    <script src="admin-campaign-review.js"></script>
+</body>
+</html>
