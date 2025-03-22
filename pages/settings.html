@@ -131,6 +131,14 @@
         display: block;
       }
 
+      #avatarImg {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1rem;
+      }
+
       .form-group {
         margin-bottom: 1.5rem;
       }
@@ -642,38 +650,54 @@
           <!-- Profile Section -->
           <div class="settings-section active" id="profile">
             <form id="profileForm">
-              <div class="form-group">
-                <label for="displayName">Display Name</label>
-                <input type="text" id="displayName" required />
-              </div>
-              <div class="form-group" style="display: flex">
-                <span style="display: inline-block; width: 49%">
-                  <label for="displayName">First Name</label>
-                  <input
-                    style="width: 98%; display: inline-block"
-                    type="text"
-                    id="first_name"
-                    name="first_name"
-                    required />
-                </span>
-                <span
-                  style="display: inline-block; width: -webkit-fill-available">
-                  <label for="displayName">Last Name</label>
-                  <input
-                    style="width: 100%; display: inline-block"
-                    type="text"
-                    id="last_name"
-                    name="last_name"
-                    required />
-                </span>
-              </div>
-              <div class="form-group">
-                <label for="email">Phone</label>
-                <input type="tel" id="phone" name="phone" required />
-              </div>
-              <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required />
+              <div style="display: flex;flex-direction: row;">
+                <div style="flex: 1;">
+                  <div class="form-group">
+                    <label for="displayName">Display Name</label>
+                    <input type="text" id="displayName" required />
+                  </div>
+                  <div class="form-group" style="display: flex">
+                    <span style="display: inline-block; width: 49%">
+                      <label for="displayName">First Name</label>
+                      <input
+                        style="width: 98%; display: inline-block"
+                        type="text"
+                        id="first_name"
+                        name="first_name"
+                        required />
+                    </span>
+                    <span
+                      style="display: inline-block; width: -webkit-fill-available">
+                      <label for="displayName">Last Name</label>
+                      <input
+                        style="width: 100%; display: inline-block"
+                        type="text"
+                        id="last_name"
+                        name="last_name"
+                        required />
+                    </span>
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Phone</label>
+                    <input type="tel" id="phone" name="phone" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required />
+                  </div>
+                </div>
+                <div style="flex: 1;">
+                  <h1>Profile Image</h1>
+                  <img id="avatarImg" src="../images/color-logo.svg" alt="Profile Image" />
+                  <div style="margin-top: 1rem">
+                    <button class="btn2 btn-primary" id="changeImage">Change Image</button>
+                    <button id="removeImage"
+                      class="btn2 btn-danger"
+                      style="margin-left: 1rem">
+                      Remove Image
+                    </button>
+                  </div>
+                </div>
               </div>
               <div class="form-group">
                 <label for="bio">Bio</label>
@@ -1149,6 +1173,18 @@
                 this.savePreferences();
               });
             });
+
+            // Profile image change
+            $('#changeImage').addEventListener('click', (e) => {
+              e.preventDefault();
+              // Logic to change the profile image
+              alert('Change image functionality not implemented yet.');
+            });
+            $('#removeImage').addEventListener('click', (e) => {
+              e.preventDefault();
+              // Logic to remove the profile image
+              $('#avatarImg').src = '../images/color-logo.svg'; // Reset to default
+            });
           },
           async loadUserData() {
             try {
@@ -1314,7 +1350,7 @@
 
             // Update form fields if data is loaded
             if (this.data.user && !this.state.loading) {
-              $('#displayName').value = this.data.user.displayName || '';
+              $('#displayName').value = this.data.user.username || '';
               $('#first_name').value =
                 this.data.user.personalInfo?.firstName || '';
               $('#last_name').value =
@@ -1322,6 +1358,9 @@
               $('#phone').value = this.data.user.personalInfo?.phone || '';
               $('#email').value = this.data.user.email || '';
               $('#bio').value = this.data.user.profile?.bio || '';
+              $('#avatarImg').src = this.data.user.profile?.avatar ? `../img/avatars/${this.data.user.profile?.avatar}`
+                 :
+                'https://via.placeholder.com/150';
               $('#location').value =
                 this.data.user.personalInfo?.location || '';
             }
