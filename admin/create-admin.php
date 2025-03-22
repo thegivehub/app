@@ -47,4 +47,5 @@ function createAdminUser($username, $password, $email, $firstName, $lastName) {
 }
 
 // Create an admin user
-createAdminUser('admin', 'Iaavsw1!', 'admin@thegivehub.com', 'Admin', 'User');
+createAdminUser('admin', 'Passw0rd!', 'admin@thegivehub.com', 'Admin', 'User');
+
