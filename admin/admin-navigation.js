@@ -8,7 +8,7 @@ class AdminNavigation extends HTMLElement {
     this.state = {
       navLoaded: false,
       currentRoute: '',
-      defaultPage: 'campaigns.html',
+      defaultPage: 'dashboard.html',
       navData: null
     };
 
@@ -286,6 +286,12 @@ class AdminNavigation extends HTMLElement {
         <a href="users.html" class="nav-link" data-page="users.html">
           <i class="nav-icon fas fa-users"></i>
           <span>User Management</span>
+        </a>
+      </li>
+       <li class="nav-item">
+        <a href="reports.html" class="nav-link" data-page="reports.html">
+          <i class="nav-icon fas fa-file-lines"></i>
+          <span>Reports</span>
         </a>
       </li>
     `;

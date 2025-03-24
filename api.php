@@ -5,6 +5,9 @@ require_once __DIR__ . '/lib/KycController.php';
 require_once __DIR__ . '/lib/AdminAuthController.php';
 require_once __DIR__ . '/lib/AdminCampaignController.php';
 require_once __DIR__ . '/lib/AdminUserController.php';
+require_once __DIR__ . '/lib/AdminDashboardController.php';
+require_once __DIR__ . '/lib/AdminReportsController.php';
+
 
 /**
  * Sends a JSON response and exits
@@ -174,6 +177,15 @@ if (isset($pathParts) && $pathParts[0] === 'admin') {
         } else if ($pathParts[1] === 'users') {
             $adminUserController = new AdminUserController();
             $adminUserController->handleRequest();
+            exit;
+        } else if ($pathParts[1] === 'dashboard') {
+            $adminDashboardController = new AdminDashboardController();
+            $adminDashboardController->handleRequest();
+            exit;
+        } else if ($pathParts[1] === 'reports') {
+            // New endpoint for reports
+            $adminReportsController = new AdminReportsController();
+            $adminReportsController->handleRequest();
             exit;
         }
     }
