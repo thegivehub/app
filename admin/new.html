@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - The Give Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+
+        .admin-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .content-wrapper {
+            margin-left: 250px;
+            background-color: var(--gray-50);
+            min-height: calc(100vh - 57px);
+            padding: 0;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto;
+        }
+
+        .tab-container {
+            background-color: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.5rem 1rem;
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: white;
+            color: var(--gray-600);
+            border-radius: 4px 4px 0 0;
+            margin-right: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tab-button .close-tab {
+            margin-left: 0.5rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: transparent;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+        }
+
+        .tab-button:hover .close-tab {
+            background-color: var(--gray-200);
+        }
+
+        .main-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--gray-800);
+            text-decoration: none;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .brand-image {
+            width: 32px;
+            height: 32px;
+            margin-right: 0.75rem;
+        }
+
+        .brand-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .user-panel {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .admin-user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1rem;
+            margin-right: 0.75rem;
+        }
+
+        .info a {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .main-header {
+            position: relative;
+            background-color: white;
+            border-bottom: 1px solid var(--gray-200);
+            z-index: 1000;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-item {
+            margin: 0 0.25rem;
+        }
+
+        .nav-link {
+            color: var(--gray-700);
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+        }
+
+        .nav-link:hover {
+            background-color: var(--gray-100);
+        }
+
+        .ml-auto {
+            margin-left: auto;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-width: 10rem;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: background-color 0.15s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--gray-100);
+        }
+
+        .dropdown-divider {
+            height: 0;
+            border-top: 1px solid var(--gray-200);
+            margin: 0.5rem 0;
+        }
+
+        .admin-user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .content-wrapper {
+                margin-left: 0;
+            }
+            .main-sidebar {
+                transform: translateX(-250px);
+                transition: transform 0.3s ease;
+            }
+            .sidebar-open .main-sidebar {
+                transform: translateX(0);
+            }
+            .sidebar-open .content-wrapper {
+                margin-left: 250px;
+            }
+        }
+    </style>
+    <!-- Register the web component -->
+    <script src="admin-navigation.js"></script>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="admin-layout">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav" id="navbar-top-left">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" role="button" id="toggle-sidebar">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+                <!-- Dynamic top nav will be inserted here -->
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="#" id="user-dropdown">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" id="user-dropdown-menu">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog mr-2"></i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logout-btn">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-light-primary elevation-1">
+            <!-- Brand Logo -->
+            <a href="dashboard.html" class="brand-link">
+                <img src="/img/grey-logo.svg" alt="GiveHub Admin" class="brand-image">
+                <span class="brand-text">Admin</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel">
+                    <div class="admin-user-avatar">
+                        <span id="admin-initials">AD</span>
+                    </div>
+                    <div class="info">
+                        <a href="#" id="admin-name">Admin User</a>
+                    </div>
+                </div>
+
+                <!-- Sidebar Menu - Using the Web Component -->
+                <admin-navigation id="admin-nav" data-nav-url="nav/nav.json" data-default-page="dashboard.html"></admin-navigation>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Tab Container (for future use) -->
+            <div class="tab-container" id="tab-container" style="display: none;">
+                <!-- Tabs will be inserted here -->
+            </div>
+
+            <!-- Content iframe -->
+            <iframe id="content-frame" class="content-iframe" src="dashboard.html"></iframe>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="notification">
+            <span id="notification-message"></span>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Admin Controller Script -->
+    <script>
+    // Admin Controller JavaScript
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize the admin controller
+        AdminController.init();
+    });
+
+    // Main admin controller module
+    const AdminController = {
+        // App state
+        state: {
+            activeTab: null,
+            tabs: {},
+            sidebarVisible: true,
+            currentRoute: '',
+            defaultPage: 'dashboard.html',
+            tabsEnabled: false
+        },
+
+        // Initialize the module
+        init() {
+            this.setupEventListeners();
+            this.checkAuth();
+            this.setupNavigation();
+        },
+        
+        // Set up event listeners
+        setupEventListeners() {
+            // Toggle sidebar
+            document.getElementById('toggle-sidebar').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleSidebar();
+            });
+
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
+            });
+
+            // User dropdown
+            document.getElementById('user-dropdown').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('user-dropdown-menu').classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#user-dropdown') && !e.target.closest('#user-dropdown-menu')) {
+                    document.getElementById('user-dropdown-menu').classList.remove('show');
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                this.handleResize();
+            });
+
+            // Initialize resize handler
+            this.handleResize();
+        },
+
+        // Set up navigation
+        setupNavigation() {
+            const adminNav = document.getElementById('admin-nav');
+            
+            // Listen for navigation click events from the web component
+            adminNav.addEventListener('navigation-click', (e) => {
+                this.loadPage(e.detail.page);
+            });
+            
+            // Listen for navigation loaded event to render top menu
+            adminNav.addEventListener('navigation-loaded', (e) => {
+                this.renderTopNav(e.detail.navData.topmenu || []);
+            });
+        },
+
+        // Render top navigation
+        renderTopNav(items) {
+            const topNavContainer = document.getElementById('navbar-top-left');
+            
+            // Keep the sidebar toggle button
+            let html = `<li class="nav-item">
+                <a class="nav-link" href="#" role="button" id="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </a>
+            </li>`;
+            
+            // Add top menu items
+            items.forEach(item => {
+                html += `
+                    <li class="nav-item d-none d-sm-inline-block">
+                        <a href="${item.link}" class="nav-link" data-page="${item.link || ''}">${item.title}</a>
+                    </li>
+                `;
+            });
+            
+            topNavContainer.innerHTML = html;
+            
+            // Re-attach event listener to the toggle button
+            document.getElementById('toggle-sidebar').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleSidebar();
+            });
+            
+            // Add click events to top nav items
+            topNavContainer.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.getAttribute('data-page');
+                    if (page && page !== '#') {
+                        this.loadPage(page);
+                    }
+                });
+            });
+        },
+
+        // Check if admin is authenticated
+        checkAuth() {
+            const adminToken = localStorage.getItem('adminToken');
+            
+            if (!adminToken) {
+                // Redirect to login if no token
+                window.location.href = '/admin/index.html';
+                return false;
+            }
+            
+            // Verify token with server
+            fetch('/api.php/admin/verify', {
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Invalid token');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    throw new Error('Authentication failed');
+                }
+
+                // Update admin info
+                if (data.user) {
+                    document.getElementById('admin-name').textContent = data.user.displayName;
+                    const initials = data.user.displayName
+                        .split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase();
+                    document.getElementById('admin-initials').textContent = initials;
+                }
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                // Clear token and redirect to login
+                localStorage.removeItem('adminToken');
+                window.location.href = '/admin/index.html';
+            });
+
+            return true;
+        },
+
+        // Load a page into the content iframe
+        loadPage(page) {
+            const contentFrame = document.getElementById('content-frame');
+
+            // Show loading indicator if needed
+            // this.showLoading(true);
+
+            // Load the page
+            contentFrame.src = page;
+
+            // Update current route
+            this.state.currentRoute = page;
+
+            // If tabs are enabled, create or activate a tab
+            if (this.state.tabsEnabled) {
+                this.handleTab(page);
+            }
+        },
+
+        // Handle tab creation or activation
+        handleTab(page) {
+            const tabId = this.getTabId(page);
+
+            // Check if tab already exists
+            if (this.state.tabs[tabId]) {
+                this.activateTab(tabId);
+                return;
+            }
+
+            // Create new tab
+            const pageTitle = this.getPageTitle(page);
+            this.createTab(tabId, page, pageTitle);
+        },
+
+        // Create a new tab
+        createTab(tabId, page, title) {
+            // Create tab object
+            this.state.tabs[tabId] = {
+                id: tabId,
+                page: page,
+                title: title
+            };
+
+            // Create tab element
+            const tabContainer = document.getElementById('tab-container');
+            const tabButton = document.createElement('button');
+            tabButton.id = tabId;
+            tabButton.className = 'tab-button';
+            tabButton.innerHTML = `
+                ${title}
+                <span class="close-tab" data-tab-id="${tabId}">&times;</span>
+            `;
+
+            // Add click event
+            tabButton.addEventListener('click', () => {
+                this.activateTab(tabId);
+            });
+
+            // Add close button event
+            tabButton.querySelector('.close-tab').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeTab(tabId);
+            });
+
+            // Add to container
+            tabContainer.appendChild(tabButton);
+
+            // Show tab container
+            tabContainer.style.display = 'flex';
+
+            // Activate the tab
+            this.activateTab(tabId);
+        },
+
+        // Activate a tab
+        activateTab(tabId) {
+            // Update active state in tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            const tabButton = document.getElementById(tabId);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+
+            // Update current tab
+            this.state.activeTab = tabId;
+
+            // Load the page
+            const tab = this.state.tabs[tabId];
+            if (tab) {
+                const contentFrame = document.getElementById('content-frame');
+                contentFrame.src = tab.page;
+                this.state.currentRoute = tab.page;
+            }
+        },
+
+        // Close a tab
+        closeTab(tabId) {
+            // Remove tab element
+            const tabButton = document.getElementById(tabId);
+            if (tabButton) {
+                tabButton.remove();
+            }
+
+            // Remove from tabs object
+            delete this.state.tabs[tabId];
+
+            // If this was the active tab, activate another one
+            if (this.state.activeTab === tabId) {
+                const remainingTabs = Object.keys(this.state.tabs);
+                if (remainingTabs.length > 0) {
+                    this.activateTab(remainingTabs[0]);
+                } else {
+                    // No tabs left, hide tab container and go to default page
+                    document.getElementById('tab-container').style.display = 'none';
+                    this.loadPage(this.state.defaultPage);
+                }
+            }
+        },
+
+        // Get tab ID from page URL
+        getTabId(page) {
+            return 'tab-' + page.replace(/\W/g, '');
+        },
+
+        // Get page title from the page URL
+        getPageTitle(page) {
+            // Default title based on the page URL
+            return page.replace('.html', '').replace(/\b\w/g, match => match.toUpperCase());
+        },
+
+        // Toggle sidebar visibility
+        toggleSidebar() {
+            document.body.classList.toggle('sidebar-open');
+            this.state.sidebarVisible = !this.state.sidebarVisible;
+        },
+
+        // Handle browser resize
+        handleResize() {
+            if (window.innerWidth <= 992) {
+                document.body.classList.remove('sidebar-open');
+            } else {
+                document.body.classList.add('sidebar-open');
+            }
+        },
+
+        // Show loading indicator
+        showLoading(show = true) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (show) {
+                loadingOverlay.classList.add('active');
+            } else {
+                loadingOverlay.classList.remove('active');
+            }
+        },
+
+        // Show notification
+        showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('show');
+
+            notificationMessage.textContent = message;
+
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        },
+
+        // Enable tabs feature
+        enableTabs() {
+            this.state.tabsEnabled = true;
+            document.getElementById('tab-container').style.display = 'flex';
+
+            // Create initial tab for current page
+            const currentPage = this.state.currentRoute || this.state.defaultPage;
+            this.handleTab(currentPage);
+        },
+
+        // Logout
+        logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/index.html';
+        }
+    };
+    </script>
+</body>
+</html>

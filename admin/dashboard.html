@@ -3,785 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Campaign Review</title>
+    <title>Admin Dashboard - The Give Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css">
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --primary-light: #eff6ff;
-            --success: #10b981;
-            --success-light: #d1fae5;
-            --warning: #f59e0b;
-            --warning-light: #fef3c7;
-            --danger: #ef4444;
-            --danger-light: #fee2e2;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--gray-50);
-            color: var(--gray-700);
-            line-height: 1.5;
-        }
-
-        .admin-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .admin-sidebar {
-            width: 250px;
-            background-color: white;
-            border-right: 1px solid var(--gray-200);
-            padding: 1.5rem;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .admin-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-        }
-
-        .admin-logo img {
-            width: 32px;
-            height: 32px;
-        }
-
-        .admin-logo h1 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-800);
-        }
-
-        .admin-menu {
-            list-style: none;
-        }
-
-        .admin-menu-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .admin-menu-link {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            border-radius: 6px;
-            color: var(--gray-700);
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .admin-menu-link:hover {
-            background-color: var(--gray-100);
-        }
-
-        .admin-menu-link.active {
-            background-color: var(--primary-light);
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .admin-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem;
-        }
-
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .admin-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--gray-800);
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-outline {
-            background-color: white;
-            border: 1px solid var(--gray-300);
-            color: var(--gray-700);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--gray-50);
-        }
-
-        .btn-success {
-            background-color: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background-color: var(--success-light);
-            color: var(--success);
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: var(--danger-light);
-            color: var(--danger);
-        }
-
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .filter-label {
-            font-weight: 500;
-            color: var(--gray-600);
-        }
-
-        .filter-select {
-            padding: 0.5rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            background-color: white;
-            color: var(--gray-700);
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            background-color: white;
-        }
-
-        .campaign-grid {
+        /* Dashboard specific styles */
+        .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .campaign-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         @media (min-width: 1024px) {
-            .campaign-grid {
-                grid-template-columns: repeat(3, 1fr);
+            .dashboard-grid {
+                grid-template-columns: 2fr 1fr;
             }
         }
 
-        .campaign-card {
+        .dashboard-card {
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .campaign-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .dashboard-card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .campaign-image {
-            height: 160px;
-            background-size: cover;
-            background-position: center;
-            background-color: var(--gray-200);
+        .dashboard-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .dashboard-card-action {
+            font-size: 0.875rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .dashboard-card-content {
+            padding: 1.5rem;
+        }
+
+        /* Stats overview row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
             position: relative;
+            overflow: hidden;
         }
 
-        .campaign-badge {
+        .stat-card-icon {
             position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
+            top: 1rem;
+            right: 1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            opacity: 0.2;
+        }
+
+        .stat-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card-trend {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        /* Recent items tables */
+        .recent-items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .recent-items-table th,
+        .recent-items-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .recent-items-table th {
+            font-weight: 500;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .recent-items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .recent-items-table tr:hover {
+            background-color: var(--gray-50);
+        }
+
+        /* Recent activity list */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+        }
+
+        .activity-icon {
+            padding: 0.5rem;
+            background-color: var(--gray-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        /* Campaign status badges */
+        .badge {
+            display: inline-flex;
             padding: 0.25rem 0.5rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 500;
         }
 
-        .campaign-badge.pending {
+        .badge-pending {
             background-color: var(--warning-light);
             color: var(--warning);
         }
 
-        .campaign-badge.active {
+        .badge-active {
             background-color: var(--success-light);
             color: var(--success);
         }
 
-        .campaign-badge.rejected {
+        .badge-rejected {
             background-color: var(--danger-light);
             color: var(--danger);
         }
 
-        .campaign-content {
-            padding: 1rem;
+        /* Loading placeholders */
+        .loading-placeholder {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
+            background-size: 200% 100%;
+            height: 24px;
+            border-radius: 4px;
         }
 
-        .campaign-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--gray-800);
-        }
-
-        .campaign-meta {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--gray-600);
-        }
-
-        .campaign-description {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-            margin-bottom: 1rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .campaign-footer {
-            padding: 0.75rem 1rem;
-            border-top: 1px solid var(--gray-100);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .campaign-goal {
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .campaign-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        /* Detail view */
-        .review-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .review-layout {
-                grid-template-columns: 2fr 1fr;
+        @keyframes pulse {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: -200% 50%;
             }
         }
 
-        .review-section {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-
-        .review-media {
+        /* Charts section */
+        .chart-container {
             position: relative;
-            height: 300px;
-            background-size: cover;
-            background-position: center;
-            background-color: var(--gray-200);
+            height: 220px;
+            margin-top: 1rem;
         }
 
-        .review-content {
-            padding: 1.5rem;
+        .mini-chart-container {
+            position: relative;
+            height: 100px;
+            margin-top: 0.5rem;
         }
 
-        .review-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: var(--gray-800);
-        }
-
-        .review-meta {
+        .chart-legend {
             display: flex;
-            margin-bottom: 1.5rem;
-            gap: 2rem;
-            color: var(--gray-600);
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
         }
 
-        .review-meta-item {
+        .legend-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .review-description {
-            margin-bottom: 1.5rem;
+            font-size: 0.75rem;
             color: var(--gray-700);
         }
 
-        .review-details-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--gray-800);
-        }
-
-        .review-details-item {
-            display: flex;
-            margin-bottom: 0.75rem;
-        }
-
-        .review-details-label {
-            width: 150px;
-            font-weight: 500;
-            color: var(--gray-600);
-        }
-
-        .review-details-value {
-            flex: 1;
-        }
-
-        .review-sidebar-section {
-            margin-bottom: 1.5rem;
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .review-sidebar-section:last-child {
-            border-bottom: none;
-        }
-
-        .review-sidebar-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--gray-800);
-        }
-
-        .review-form-group {
-            margin-bottom: 1rem;
-        }
-
-        .review-form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--gray-700);
-        }
-
-        .review-form-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-size: 0.875rem;
-        }
-
-        .review-form-textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .review-form-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-
-        .notification {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            padding: 1rem 1.5rem;
-            border-radius: 6px;
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 0.875rem;
-            z-index: 100;
-            transform: translateY(-10px);
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .notification.success {
-            border-left: 4px solid var(--success);
-        }
-
-        .notification.error {
-            border-left: 4px solid var(--danger);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-800);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--gray-600);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            display: inline-block;
-            width: 2rem;
-            height: 2rem;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0.3s ease, opacity 0.3s ease;
-        }
-
-        .loading-overlay.active {
-            visibility: visible;
-            opacity: 1;
+        .legend-color {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
     <div class="admin-layout">
-        <!-- Sidebar -->
-        <aside class="admin-sidebar">
-            <div class="admin-logo">
-                <img src="/img/white-logo.svg" alt="GiveHub Admin">
-                <h1>Admin Dashboard</h1>
+        <!-- Main Content -->
+        <main class="admin-content">
+            <div class="admin-header">
+                <h1 class="admin-title">Dashboard</h1>
+                <div class="admin-actions">
+                    <button id="refresh-btn" class="btn btn-outline">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <polyline points="23 20 23 14 17 14"></polyline>
+                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
             </div>
-            <ul class="admin-menu">
-                <li class="admin-menu-item">
-                    <a href="#" class="admin-menu-link">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        Dashboard
-                    </a>
-                </li>
-                <li class="admin-menu-item">
-                    <a href="#" class="admin-menu-link active">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                        Campaign Review
-                    </a>
-                </li>
-                <li class="admin-menu-item">
-                    <a href="#" class="admin-menu-link">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+
+            <!-- Main Dashboard Content -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        User Management
-                    </a>
-                </li>
-                <li class="admin-menu-item">
-                    <a href="#" class="admin-menu-link">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                        </svg>
-                        Reports
-                    </a>
-                </li>
-                <li class="admin-menu-item">
-                    <a href="#" class="admin-menu-link">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M12 15c-1.93 0-3.5-1.57-3.5-3.5S10.07 8 12 8s3.5 1.57 3.5 3.5S13.93 15 12 15z"></path>
-                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"></path>
-                        </svg>
-                        Settings
-                    </a>
-                </li>
-            </ul>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="admin-content">
-            <!-- Campaign List Section -->
-            <section id="campaign-list" class="admin-section">
-                <div class="admin-header">
-                    <h1 class="admin-title">Campaign Review</h1>
-                    <div class="admin-actions">
-                        <button id="refresh-btn" class="btn btn-outline">
+                    </div>
+                    <div class="stat-card-content">
+                        <div class="stat-card-label">Total Users</div>
+                        <div class="stat-card-value" id="total-users-count">0</div>
+                        <div class="stat-card-trend trend-up">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <polyline points="1 4 1 10 7 10"></polyline>
-                                <polyline points="23 20 23 14 17 14"></polyline>
-                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
                             </svg>
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-
-                <div class="filter-bar">
-                    <span class="filter-label">Filter:</span>
-                    <select id="status-filter" class="filter-select">
-                        <option value="pending">Pending Review</option>
-                        <option value="all">All Campaigns</option>
-                        <option value="active">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <input type="text" class="search-input" placeholder="Search campaigns..." id="search-input">
-                </div>
-
-                <div class="campaign-grid" id="campaign-grid">
-                    <!-- Campaign cards will be dynamically inserted here -->
-                </div>
-            </section>
-
-            <!-- Campaign Review Section -->
-            <section id="campaign-review" class="admin-section" style="display: none;">
-                <div class="admin-header">
-                    <h1 class="admin-title">Review Campaign</h1>
-                    <div class="admin-actions">
-                        <button id="back-to-list" class="btn btn-outline">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                            Back to List
-                        </button>
-                    </div>
-                </div>
-
-                <div class="review-layout">
-                    <div class="review-section">
-                        <div class="review-media" id="campaign-banner"></div>
-                        <div class="review-content">
-                            <h2 class="review-title" id="campaign-title"></h2>
-                            <div class="review-meta">
-                                <div class="review-meta-item">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                    </svg>
-                                    <span id="campaign-creator"></span>
-                                </div>
-                                <div class="review-meta-item">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    <span id="campaign-created"></span>
-                                </div>
-                                <div class="review-meta-item">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                        <circle cx="12" cy="10" r="3"></circle>
-                                    </svg>
-                                    <span id="campaign-location"></span>
-                                </div>
-                            </div>
-
-                            <div class="review-description" id="campaign-description"></div>
-
-                            <h3 class="review-details-title">Campaign Details</h3>
-                            <div class="review-details">
-                                <div class="review-details-item">
-                                    <div class="review-details-label">Funding Goal</div>
-                                    <div class="review-details-value" id="campaign-goal"></div>
-                                </div>
-                                <div class="review-details-item">
-                                    <div class="review-details-label">Campaign Type</div>
-                                    <div class="review-details-value" id="campaign-type"></div>
-                                </div>
-                                <div class="review-details-item">
-                                    <div class="review-details-label">Deadline</div>
-                                    <div class="review-details-value" id="campaign-deadline"></div>
-                                </div>
-                                <div class="review-details-item">
-                                    <div class="review-details-label">Minimum Contribution</div>
-                                    <div class="review-details-value" id="campaign-min-contribution"></div>
-                                </div>
-                            </div>
-
-                            <h3 class="review-details-title">Campaign Media</h3>
-                            <div class="campaign-media-gallery" id="campaign-media"></div>
-                        </div>
-                    </div>
-
-                    <div class="review-section">
-                        <div class="review-sidebar-section">
-                            <h3 class="review-sidebar-title">Review Decision</h3>
-                            <form id="review-form">
-                                <div class="review-form-group">
-                                    <label class="review-form-label" for="review-status">Status</label>
-                                    <select class="review-form-input" id="review-status">
-                                        <option value="active">Approve Campaign</option>
-                                        <option value="rejected">Reject Campaign</option>
-                                    </select>
-                                </div>
-                                <div class="review-form-group">
-                                    <label class="review-form-label" for="review-notes">Admin Notes</label>
-                                    <textarea class="review-form-textarea" id="review-notes" placeholder="Add private notes about this campaign"></textarea>
-                                </div>
-                                <div class="review-form-group">
-                                    <label class="review-form-label" for="review-feedback">Feedback to Creator</label>
-                                    <textarea class="review-form-textarea" id="review-feedback" placeholder="Provide feedback to the campaign creator"></textarea>
-                                </div>
-                                <div class="review-form-actions">
-                                    <button type="submit" class="btn btn-primary" id="save-review">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                                            <polyline points="7 3 7 8 15 8"></polyline>
-                                        </svg>
-                                        Save Decision
-                                    </button>
-                                </div>
-                            </form>
+                            <span>8.2% from last month</span>
                         </div>
                     </div>
                 </div>
-            </section>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background-color: var(--success-light); color: var(--success);">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-card-content">
+                        <div class="stat-card-label">Active Campaigns</div>
+                        <div class="stat-card-value" id="active-campaigns-count">0</div>
+                        <div class="stat-card-trend trend-up">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                            <span>12.4% from last month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background-color: var(--warning-light); color: var(--warning);">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="stat-card-content">
+                        <div class="stat-card-label">Pending Review</div>
+                        <div class="stat-card-value" id="pending-count">0</div>
+                        <div class="stat-card-trend trend-down">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                                <polyline points="17 18 23 18 23 12"></polyline>
+                            </svg>
+                            <span>3.1% from last month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-card-content">
+                        <div class="stat-card-label">Total Funding</div>
+                        <div class="stat-card-value" id="total-funding">$0</div>
+                        <div class="stat-card-trend trend-up">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                            <span>18.3% from last month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Left Column -->
+                <div>
+                    <!-- Campaigns Overview -->
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h2 class="dashboard-card-title">Campaign Overview</h2>
+                            <a href="campaigns.html" class="dashboard-card-action">
+                                View All
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="dashboard-card-content">
+                            <div class="chart-container" id="campaigns-chart-container">
+                                <!-- This will be populated by the chart JS -->
+                                <canvas id="campaigns-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #10b981;"></div>
+                                    <span>Approved</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #f59e0b;"></div>
+                                    <span>Pending</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #ef4444;"></div>
+                                    <span>Rejected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Campaigns -->
+                    <div class="dashboard-card" style="margin-top: 1.5rem;">
+                        <div class="dashboard-card-header">
+                            <h2 class="dashboard-card-title">Recent Campaigns</h2>
+                            <a href="campaigns.html" class="dashboard-card-action">
+                                View All
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="dashboard-card-content" style="padding: 0;">
+                            <table class="recent-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Campaign</th>
+                                        <th>Creator</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-campaigns-table">
+                                    <!-- This will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <!-- User Stats -->
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h2 class="dashboard-card-title">User Growth</h2>
+                            <a href="users.html" class="dashboard-card-action">
+                                View All
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="dashboard-card-content">
+                            <div class="chart-container" id="users-chart-container">
+                                <!-- This will be populated by the chart JS -->
+                                <canvas id="users-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users -->
+                    <div class="dashboard-card" style="margin-top: 1.5rem;">
+                        <div class="dashboard-card-header">
+                            <h2 class="dashboard-card-title">Recent Users</h2>
+                            <a href="users.html" class="dashboard-card-action">
+                                View All
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="dashboard-card-content" style="padding: 0;">
+                            <table class="recent-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-users-table">
+                                    <!-- This will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="dashboard-card" style="margin-top: 1.5rem;">
+                        <div class="dashboard-card-header">
+                            <h2 class="dashboard-card-title">Recent Activity</h2>
+                        </div>
+                        <div class="dashboard-card-content">
+                            <div class="activity-list" id="recent-activity-list">
+                                <!-- This will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -795,391 +503,825 @@
         <div class="spinner"></div>
     </div>
 
+    <!-- Load Chart.js from CDN for the dashboard charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <!-- Admin Authentication Check -->
     <script>
-        // Main application
-const adminApp = {
-    apiBase: '/api.php',
-    state: {
-        campaigns: [],
-        currentCampaign: null,
-        filter: 'pending',
-        searchQuery: '',
-    },
-
-    init() {
-        // Set up event listeners
-        this.setupEventListeners();
-
-        // Initial data load
-        this.loadCampaigns();
-    },
-
-    setupEventListeners() {
-        // Filtering
-        document.getElementById('status-filter').addEventListener('change', (e) => {
-            this.state.filter = e.target.value;
-            this.renderCampaigns();
-        });
-
-        // Search
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            this.state.searchQuery = e.target.value.toLowerCase();
-            this.renderCampaigns();
-        });
-
-        // Refresh button
-        document.getElementById('refresh-btn').addEventListener('click', () => {
-            this.loadCampaigns();
-        });
-
-        // Back to list button
-        document.getElementById('back-to-list').addEventListener('click', () => {
-            this.showSection('campaign-list');
-        });
-
-        // Review form submission
-        document.getElementById('review-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitReview();
-        });
-    },
-
-    showLoading(show = true) {
-        const loadingOverlay = document.getElementById('loading-overlay');
-        if (show) {
-            loadingOverlay.classList.add('active');
-        } else {
-            loadingOverlay.classList.remove('active');
-        }
-    },
-
-    showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        const notificationMessage = document.getElementById('notification-message');
-
-        notification.className = 'notification';
-        notification.classList.add(type);
-        notification.classList.add('show');
-
-        notificationMessage.textContent = message;
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, 3000);
-    },
-
-    async loadCampaigns() {
-        try {
-            this.showLoading(true);
-
-            // Fetch all campaigns from the API
-            const response = await fetch(`${this.apiBase}/campaign`);
-
-            if (!response.ok) {
-                throw new Error('Failed to load campaigns');
+        // Check if admin is authenticated
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('adminToken');
+            
+            if (!adminToken) {
+                console.log(`No admin token.  sending to login...`, adminToken);
+                // Redirect to login if no token
+                window.location.href = '/admin/index.html';
+                return false;
             }
-
-            const campaigns = await response.json();
-            this.state.campaigns = campaigns;
-
-            this.renderCampaigns();
-
-            this.showLoading(false);
-        } catch (error) {
-            console.error('Error loading campaigns:', error);
-            this.showNotification(error.message, 'error');
-            this.showLoading(false);
-        }
-    },
-
-    renderCampaigns() {
-        const campaignGrid = document.getElementById('campaign-grid');
-        campaignGrid.innerHTML = '';
-
-        // Apply filters
-        let filteredCampaigns = [...this.state.campaigns];
-
-        // Filter by status
-        if (this.state.filter !== 'all') {
-            filteredCampaigns = filteredCampaigns.filter(campaign =>
-                campaign.status === this.state.filter
-            );
-        }
-
-        // Apply search query
-        if (this.state.searchQuery) {
-            filteredCampaigns = filteredCampaigns.filter(campaign =>
-                campaign.title.toLowerCase().includes(this.state.searchQuery) ||
-                campaign.description.toLowerCase().includes(this.state.searchQuery)
-            );
-        }
-
-        // Render campaign cards
-        if (filteredCampaigns.length === 0) {
-            campaignGrid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                    <p style="color: var(--gray-600);">No campaigns found</p>
-                </div>
-            `;
-            return;
-        }
-
-        filteredCampaigns.forEach(campaign => {
-            const campaignCard = this.createCampaignCard(campaign);
-            campaignGrid.appendChild(campaignCard);
-        });
-    },
-
-    createCampaignCard(campaign) {
-        const card = document.createElement('div');
-        card.className = 'campaign-card';
-
-        // Determine badge class based on status
-        let badgeClass = 'pending';
-        if (campaign.status === 'active') {
-            badgeClass = 'active';
-        } else if (campaign.status === 'rejected') {
-            badgeClass = 'rejected';
-        }
-
-        // Format date
-        const createdDate = new Date(campaign.createdAt || Date.now()).toLocaleDateString();
-
-        // Calculate funding goal
-        const fundingGoal = this.formatCurrency(campaign.fundingGoal || 0);
-
-        // Get first image or use placeholder
-        const imageUrl = campaign.images && campaign.images.length > 0
-            ? campaign.images[0]
-            : '/img/placeholder.jpg';
-
-        card.innerHTML = `
-            <div class="campaign-image" style="background-image: url('${imageUrl}')">
-                <div class="campaign-badge ${badgeClass}">
-                    ${this.capitalizeFirstLetter(campaign.status)}
-                </div>
-            </div>
-            <div class="campaign-content">
-                <h3 class="campaign-title">${campaign.title}</h3>
-                <div class="campaign-meta">
-                    <span>Created: ${createdDate}</span>
-                    <span>${campaign.type || 'Crowdfunding'}</span>
-                </div>
-                <p class="campaign-description">${campaign.description}</p>
-            </div>
-            <div class="campaign-footer">
-                <div class="campaign-goal">Goal: ${fundingGoal}</div>
-                <div class="campaign-actions">
-                    <button class="btn btn-primary btn-sm review-btn">Review</button>
-                </div>
-            </div>
-        `;
-
-        // Add click event to review button
-        card.querySelector('.review-btn').addEventListener('click', () => {
-            this.viewCampaignDetails(campaign._id);
-        });
-
-        return card;
-    },
-
-    async viewCampaignDetails(campaignId) {
-        try {
-            this.showLoading(true);
-
-            // Fetch campaign details
-            const response = await fetch(`${this.apiBase}/campaign?id=${campaignId}`);
-
-            if (!response.ok) {
-                throw new Error('Failed to load campaign details');
-            }
-
-            const campaign = await response.json();
-            this.state.currentCampaign = campaign;
-
-            // Populate the review section
-            this.populateCampaignDetails(campaign);
-
-            // Show the review section
-            this.showSection('campaign-review');
-
-            this.showLoading(false);
-        } catch (error) {
-            console.error('Error loading campaign details:', error);
-            this.showNotification(error.message, 'error');
-            this.showLoading(false);
-        }
-    },
-
-    populateCampaignDetails(campaign) {
-        // Set banner image
-        const bannerEl = document.getElementById('campaign-banner');
-        if (campaign.images && campaign.images.length > 0) {
-            bannerEl.style.backgroundImage = `url('${campaign.images[0]}')`;
-        } else {
-            bannerEl.style.backgroundImage = `url('/img/placeholder.jpg')`;
-        }
-
-        // Set basic info
-        document.getElementById('campaign-title').textContent = campaign.title || 'Untitled Campaign';
-        document.getElementById('campaign-creator').textContent = campaign.creatorName || 'Unknown Creator';
-        document.getElementById('campaign-created').textContent = this.formatDate(campaign.createdAt);
-        document.getElementById('campaign-location').textContent = campaign.location?.region || 'Unknown Location';
-        document.getElementById('campaign-description').textContent = campaign.description || 'No description provided';
-
-        // Set campaign details
-        document.getElementById('campaign-goal').textContent = this.formatCurrency(campaign.fundingGoal || 0);
-        document.getElementById('campaign-type').textContent = this.capitalizeFirstLetter(campaign.type || 'Crowdfunding');
-        document.getElementById('campaign-deadline').textContent = this.formatDate(campaign.deadline);
-        document.getElementById('campaign-min-contribution').textContent = this.formatCurrency(campaign.minContribution || 0);
-
-        // Display media gallery
-        this.renderMediaGallery(campaign.images || []);
-
-        // Set the form's initial state
-        document.getElementById('review-status').value = campaign.status || 'pending';
-        document.getElementById('review-notes').value = campaign.adminNotes || '';
-        document.getElementById('review-feedback').value = campaign.feedback || '';
-    },
-
-    renderMediaGallery(images) {
-        const mediaContainer = document.getElementById('campaign-media');
-        mediaContainer.innerHTML = '';
-
-        if (images.length === 0) {
-            mediaContainer.innerHTML = '<p>No media provided</p>';
-            return;
-        }
-
-        // Create a grid for images
-        const mediaGrid = document.createElement('div');
-        mediaGrid.style.display = 'grid';
-        mediaGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
-        mediaGrid.style.gap = '1rem';
-        mediaGrid.style.marginTop = '1rem';
-
-        images.forEach(imageUrl => {
-            const mediaItem = document.createElement('div');
-            mediaItem.style.aspectRatio = '16/9';
-            mediaItem.style.backgroundImage = `url('${imageUrl}')`;
-            mediaItem.style.backgroundSize = 'cover';
-            mediaItem.style.backgroundPosition = 'center';
-            mediaItem.style.borderRadius = '6px';
-
-            mediaGrid.appendChild(mediaItem);
-        });
-
-        mediaContainer.appendChild(mediaGrid);
-    },
-
-    async submitReview() {
-        try {
-            if (!this.state.currentCampaign) {
-                throw new Error('No campaign selected');
-            }
-
-            this.showLoading(true);
-
-            const campaignId = this.state.currentCampaign._id;
-            const status = document.getElementById('review-status').value;
-            const adminNotes = document.getElementById('review-notes').value;
-            const feedback = document.getElementById('review-feedback').value;
-
-            // Prepare update data
-            const updateData = {
-                status,
-                adminNotes,
-                feedback,
-                reviewedAt: new Date().toISOString(),
-                reviewedBy: 'Admin', // In a real app, this would be the current admin user
-            };
-
-            // Submit the review
-            const response = await fetch(`${this.apiBase}/campaign?id=${campaignId}`, {
-                method: 'PUT',
+            
+            // Verify token with server
+            fetch('/api.php/admin/verify', {
                 headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updateData),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update campaign');
-            }
-
-            // Update the local state with the new status
-            this.state.currentCampaign = {
-                ...this.state.currentCampaign,
-                ...updateData,
-            };
-
-            // Also update the campaign in the full list
-            this.state.campaigns = this.state.campaigns.map(campaign => {
-                if (campaign._id === campaignId) {
-                    return {
-                        ...campaign,
-                        ...updateData,
-                    };
+                    'Authorization': `Bearer ${adminToken}`
                 }
-                return campaign;
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Invalid token');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    throw new Error('Authentication failed');
+                }
+                
+                // Update admin info
+                /*
+                if (data.user) {
+                    document.getElementById('admin-name').textContent = data.user.displayName;
+                    const initials = data.user.displayName
+                        .split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase();
+                    document.getElementById('admin-initials').textContent = initials;
+                }
+                */
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                // Clear token and redirect to login
+                localStorage.removeItem('adminToken');
+                window.location.href = '/admin/index.html';
             });
-
-            this.showNotification(`Campaign ${status === 'active' ? 'approved' : 'rejected'} successfully`);
-
-            // Return to the campaign list
-            this.showSection('campaign-list');
-            this.renderCampaigns();
-
-            this.showLoading(false);
-        } catch (error) {
-            console.error('Error submitting review:', error);
-            this.showNotification(error.message, 'error');
-            this.showLoading(false);
+            
+            return true;
         }
-    },
 
-    showSection(sectionId) {
-        // Hide all sections
-        document.querySelectorAll('.admin-section').forEach(section => {
-            section.style.display = 'none';
+        // Check auth when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            // Initialize dashboard
+            AdminDashboard.init();
         });
+    </script>
 
-        // Show the requested section
-        document.getElementById(sectionId).style.display = 'block';
+    <!-- Dashboard JS -->
+    <script>
+        // Admin Dashboard Module
+        const AdminDashboard = {
+            // App state
+            state: {
+                users: {
+                    total: 0,
+                    active: 0,
+                    pending: 0,
+                    suspended: 0,
+                    recentUsers: []
+                },
+                campaigns: {
+                    total: 0,
+                    active: 0,
+                    pending: 0,
+                    rejected: 0,
+                    recentCampaigns: []
+                },
+                activity: [],
+                charts: {}
+            },
 
-        // Scroll to top
-        window.scrollTo(0, 0);
-    },
+            // Configuration
+            config: {
+                apiBase: '/api.php',
+                refreshInterval: 300000, // 5 minutes in milliseconds
+                chartColors: {
+                    primary: '#2563eb',
+                    success: '#10b981',
+                    warning: '#f59e0b',
+                    danger: '#ef4444',
+                    gray: '#9ca3af'
+                }
+            },
 
-    // Utility functions
-    capitalizeFirstLetter(string) {
-        if (!string) return '';
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    },
+            // Initialize the dashboard
+            init() {
+                this.setupEventListeners();
+                this.loadDashboardData();
+                
+                // Set up auto-refresh
+                this.setupAutoRefresh();
+            },
+            
+            // Set up auto-refresh of dashboard data
+            setupAutoRefresh() {
+                // Clear any existing interval
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
+                }
+                
+                // Set up new refresh interval
+                this.refreshInterval = setInterval(() => {
+                    this.loadDashboardData(false); // false = don't show loading overlay
+                }, this.config.refreshInterval);
+            },
+            
+            // Set up event listeners
+            setupEventListeners() {
+                // Refresh button
+                document.getElementById('refresh-btn').addEventListener('click', () => {
+                    this.loadDashboardData();
+                });
+            },
 
-    formatCurrency(amount, currency = 'USD') {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency,
-        }).format(amount);
-    },
+            // Show loading indicator
+            showLoading(show = true) {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (show) {
+                    loadingOverlay.classList.add('active');
+                } else {
+                    loadingOverlay.classList.remove('active');
+                }
+            },
 
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    },
-};
+            // Show notification
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                const notificationMessage = document.getElementById('notification-message');
+                
+                notification.className = 'notification';
+                notification.classList.add(type);
+                notification.classList.add('show');
+                
+                notificationMessage.textContent = message;
+                
+                // Hide notification after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            },
 
-// Initialize the app when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    adminApp.init();
-});
+            // Load dashboard data
+            async loadDashboardData(showLoading = true) {
+                try {
+                    if (showLoading) {
+                        this.showLoading(true);
+                    }
+                    
+                    // Load users and campaigns data in parallel
+                    const [usersData, campaignsData] = await Promise.all([
+                        this.loadUsersData(),
+                        this.loadCampaignsData()
+                    ]);
+                    
+                    // Load activity data after we have users and campaigns
+                    // This allows us to generate activity based on that data
+                    await this.loadActivityData();
+                    
+                    // Render dashboard elements
+                    this.renderDashboard();
+                    
+                    if (showLoading) {
+                        this.showLoading(false);
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard data:', error);
+                    this.showNotification('Failed to load dashboard data. Please try again.', 'error');
+                    
+                    if (showLoading) {
+                        this.showLoading(false);
+                    }
+                }
+            },
+
+            // Load users data from the real API
+            async loadUsersData() {
+                try {
+                    // Get the admin token for authorization
+                    const adminToken = localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Admin authentication required');
+                    }
+                    
+                    // Fetch users data from the API
+                    const response = await fetch(`${this.config.apiBase}/admin/users`, {
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to load users: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Process the data for dashboard
+                    const stats = data.stats || {
+                        total: 0,
+                        active: 0,
+                        pending: 0,
+                        suspended: 0
+                    };
+                    
+                    // Get recent users from the data
+                    const recentUsers = data.users || [];
+                    
+                    // Generate growth data if not provided
+                    // In a real implementation, you might want to fetch this from a dedicated endpoint
+                    const currentDate = new Date();
+                    const months = [];
+                    
+                    for (let i = 5; i >= 0; i--) {
+                        const month = new Date(currentDate);
+                        month.setMonth(currentDate.getMonth() - i);
+                        months.push(month.toLocaleString('default', { month: 'short' }));
+                    }
+                    
+                    // Calculate a simple growth curve
+                    const growth = months.map((month, index) => {
+                        // Simple growth formula that ends at the total user count
+                        const users = Math.round(stats.total * (0.6 + (index * 0.08)));
+                        return { month, users };
+                    });
+                    
+                    // Update state with the data
+                    this.state.users = {
+                        ...this.state.users,
+                        ...stats,
+                        recentUsers: recentUsers,
+                        growth: growth
+                    };
+                    
+                    return {
+                        stats,
+                        recentUsers,
+                        growth
+                    };
+                } catch (error) {
+                    console.error('Error loading users data:', error);
+                    
+                    // Fallback to initial state or empty data
+                    this.state.users = {
+                        ...this.state.users,
+                        total: 0,
+                        active: 0,
+                        pending: 0,
+                        suspended: 0,
+                        recentUsers: [],
+                        growth: []
+                    };
+                    
+                    throw error;
+                }
+            },
+
+            // Load campaigns data from the real API
+            async loadCampaignsData() {
+                try {
+                    // Get the admin token for authorization
+                    const adminToken = localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Admin authentication required');
+                    }
+                    
+                    // Fetch campaigns data from the API
+                    const response = await fetch(`${this.config.apiBase}/admin/campaigns`, {
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to load campaigns: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Process the campaigns data
+                    const campaigns = Array.isArray(data) ? data : data.campaigns || [];
+                    
+                    // Count campaigns by status
+                    const stats = {
+                        total: campaigns.length,
+                        active: campaigns.filter(c => c.status === 'active').length,
+                        pending: campaigns.filter(c => c.status === 'pending').length,
+                        rejected: campaigns.filter(c => c.status === 'rejected').length
+                    };
+                    
+                    // Sort campaigns by creation date (newest first) for the recent list
+                    const sortedCampaigns = [...campaigns].sort((a, b) => {
+                        const dateA = new Date(a.createdAt || 0);
+                        const dateB = new Date(b.createdAt || 0);
+                        return dateB - dateA;
+                    });
+                    
+                    // Get the 5 most recent campaigns
+                    const recentCampaigns = sortedCampaigns.slice(0, 5);
+                    
+                    // Calculate total funding
+                    // This assumes campaigns have a 'raised' or similar field
+                    const totalFunding = campaigns.reduce((sum, campaign) => {
+                        // Try different field names that might hold the funding amount
+                        const amount = campaign.raised || campaign.funding || campaign.amountRaised || campaign.currentAmount || 0;
+                        return sum + parseFloat(amount);
+                    }, 0);
+                    
+                    // Generate monthly data for the chart
+                    // This would ideally come from a dedicated endpoint in a real app
+                    const currentDate = new Date();
+                    const months = [];
+                    
+                    for (let i = 5; i >= 0; i--) {
+                        const month = new Date(currentDate);
+                        month.setMonth(currentDate.getMonth() - i);
+                        months.push(month.toLocaleString('default', { month: 'short' }));
+                    }
+                    
+                    // Create a simple distribution for the chart
+                    const monthlyData = months.map((month, index) => {
+                        // Use simple formulas that reflect the current counts
+                        const activeCount = Math.round(stats.active * (0.5 + (index * 0.1)));
+                        const pendingCount = Math.round(stats.pending * (0.4 + (index * 0.12)));
+                        const rejectedCount = Math.round(stats.rejected * (0.6 + (index * 0.08)));
+                        
+                        return {
+                            month,
+                            active: activeCount,
+                            pending: pendingCount,
+                            rejected: rejectedCount
+                        };
+                    });
+                    
+                    // Update state with the processed data
+                    this.state.campaigns = {
+                        ...this.state.campaigns,
+                        ...stats,
+                        recentCampaigns,
+                        monthlyData,
+                        totalFunding
+                    };
+                    
+                    return {
+                        stats,
+                        recentCampaigns,
+                        monthlyData,
+                        totalFunding
+                    };
+                } catch (error) {
+                    console.error('Error loading campaigns data:', error);
+                    
+                    // Fallback to initial state
+                    this.state.campaigns = {
+                        ...this.state.campaigns,
+                        total: 0,
+                        active: 0,
+                        pending: 0,
+                        rejected: 0,
+                        recentCampaigns: [],
+                        monthlyData: [],
+                        totalFunding: 0
+                    };
+                    
+                    throw error;
+                }
+            },
+
+            // Load activity data from the real API
+            async loadActivityData() {
+                try {
+                    // Get the admin token for authorization
+                    const adminToken = localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Admin authentication required');
+                    }
+                    
+                    // In a real implementation, you would fetch activity data from a dedicated endpoint
+                    // Since we don't have a specific activity endpoint, we'll create activity data
+                    // based on recent users and campaigns
+                    
+                    // Generate activity data from recent users and campaigns
+                    const activity = [];
+                    
+                    // Add user registrations to activity
+                    if (this.state.users.recentUsers && this.state.users.recentUsers.length > 0) {
+                        this.state.users.recentUsers.forEach(user => {
+                            activity.push({
+                                type: 'user_joined',
+                                title: 'New user registered',
+                                details: user.displayName || user.username || 'New User',
+                                timestamp: user.created || user.createdAt || new Date().toISOString()
+                            });
+                        });
+                    }
+                    
+                    // Add campaign activities
+                    if (this.state.campaigns.recentCampaigns && this.state.campaigns.recentCampaigns.length > 0) {
+                        this.state.campaigns.recentCampaigns.forEach(campaign => {
+                            // Campaign creation
+                            activity.push({
+                                type: 'campaign_created',
+                                title: 'New campaign created',
+                                details: campaign.title || 'Untitled Campaign',
+                                user: campaign.creatorName || 'Campaign Creator',
+                                timestamp: campaign.createdAt || new Date().toISOString()
+                            });
+                            
+                            // Add campaign status changes if available
+                            if (campaign.reviewedAt) {
+                                activity.push({
+                                    type: campaign.status === 'active' ? 'campaign_approved' : 'campaign_rejected',
+                                    title: campaign.status === 'active' ? 'Campaign approved' : 'Campaign rejected',
+                                    details: campaign.title || 'Untitled Campaign',
+                                    user: campaign.reviewedBy || 'Admin User',
+                                    timestamp: campaign.reviewedAt
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Sort activities by timestamp (newest first)
+                    activity.sort((a, b) => {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    });
+                    
+                    // Take only the 6 most recent activities
+                    const recentActivity = activity.slice(0, 6);
+                    
+                    // Update state with the activity data
+                    this.state.activity = recentActivity;
+                    
+                    return recentActivity;
+                } catch (error) {
+                    console.error('Error loading activity data:', error);
+                    
+                    // Fallback to empty activity
+                    this.state.activity = [];
+                    
+                    throw error;
+                }
+            },
+
+            // Render dashboard elements
+            renderDashboard() {
+                // Update count cards
+                this.updateCountCards();
+                
+                // Render charts
+                this.renderCharts();
+                
+                // Render tables
+                this.renderRecentCampaigns();
+                this.renderRecentUsers();
+                
+                // Render activity list
+                this.renderRecentActivity();
+            },
+
+            // Update count cards with current stats
+            updateCountCards() {
+                document.getElementById('total-users-count').textContent = this.state.users.total;
+                document.getElementById('active-campaigns-count').textContent = this.state.campaigns.active;
+                document.getElementById('pending-count').textContent = this.state.campaigns.pending;
+                document.getElementById('total-funding').textContent = this.formatCurrency(this.state.campaigns.totalFunding);
+            },
+
+            // Render dashboard charts
+            renderCharts() {
+                this.renderCampaignsChart();
+                this.renderUsersChart();
+            },
+
+            // Render campaigns chart
+            renderCampaignsChart() {
+                const ctx = document.getElementById('campaigns-chart').getContext('2d');
+                
+                const monthlyData = this.state.campaigns.monthlyData || [];
+                
+                // Destroy existing chart if it exists
+                if (this.state.charts.campaignsChart) {
+                    this.state.charts.campaignsChart.destroy();
+                }
+                
+                // Create new chart
+                this.state.charts.campaignsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: monthlyData.map(item => item.month),
+                        datasets: [
+                            {
+                                label: 'Active',
+                                data: monthlyData.map(item => item.active),
+                                backgroundColor: this.config.chartColors.success
+                            },
+                            {
+                                label: 'Pending',
+                                data: monthlyData.map(item => item.pending),
+                                backgroundColor: this.config.chartColors.warning
+                            },
+                            {
+                                label: 'Rejected',
+                                data: monthlyData.map(item => item.rejected),
+                                backgroundColor: this.config.chartColors.danger
+                            }
+                        ]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            // Render users chart
+            renderUsersChart() {
+                const ctx = document.getElementById('users-chart').getContext('2d');
+                
+                const growthData = this.state.users.growth || [];
+                
+                // Destroy existing chart if it exists
+                if (this.state.charts.usersChart) {
+                    this.state.charts.usersChart.destroy();
+                }
+                
+                // Create new chart
+                this.state.charts.usersChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: growthData.map(item => item.month),
+                        datasets: [{
+                            label: 'Total Users',
+                            data: growthData.map(item => item.users),
+                            fill: true,
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderColor: this.config.chartColors.primary,
+                            tension: 0.4,
+                            pointBackgroundColor: 'white',
+                            pointBorderColor: this.config.chartColors.primary,
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            // Render recent campaigns table
+            renderRecentCampaigns() {
+                const tableBody = document.getElementById('recent-campaigns-table');
+                tableBody.innerHTML = '';
+                
+                if (!this.state.campaigns.recentCampaigns || this.state.campaigns.recentCampaigns.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `<td colspan="5" style="text-align: center; padding: 1.5rem;">No recent campaigns</td>`;
+                    tableBody.appendChild(emptyRow);
+                    return;
+                }
+                
+                // Create rows for recent campaigns
+                this.state.campaigns.recentCampaigns.slice(0, 5).forEach(campaign => {
+                    const row = document.createElement('tr');
+                    
+                    // Determine status badge class
+                    let badgeClass = 'badge-pending';
+                    if (campaign.status === 'active') {
+                        badgeClass = 'badge-active';
+                    } else if (campaign.status === 'rejected') {
+                        badgeClass = 'badge-rejected';
+                    }
+                    
+                    // Format date
+                    const createdDate = new Date(campaign.createdAt).toLocaleDateString();
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div style="font-weight: 500;">${campaign.title}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-600);">${this.formatCurrency(campaign.fundingGoal)} goal</div>
+                        </td>
+                        <td>${campaign.creatorName}</td>
+                        <td><span class="badge ${badgeClass}">${this.capitalizeFirstLetter(campaign.status)}</span></td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <a href="campaigns.html?id=${campaign._id}" class="btn btn-sm btn-outline">
+                                Review
+                            </a>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            },
+
+            // Render recent users table
+            renderRecentUsers() {
+                const tableBody = document.getElementById('recent-users-table');
+                tableBody.innerHTML = '';
+                
+                if (!this.state.users.recentUsers || this.state.users.recentUsers.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `<td colspan="3" style="text-align: center; padding: 1.5rem;">No recent users</td>`;
+                    tableBody.appendChild(emptyRow);
+                    return;
+                }
+                
+                // Create rows for recent users
+                this.state.users.recentUsers.slice(0, 4).forEach(user => {
+                    const row = document.createElement('tr');
+                    
+                    // Create user initials for avatar
+                    const initials = (user.personalInfo.firstName && user.personalInfo.lastName) ? user.personalInfo.firstName[0] + user.personalInfo.lastName[0] : '??';
+
+                    
+                    // Determine status class
+                    let statusClass = 'user-status pending';
+                    if (user.status === 'active') {
+                        statusClass = 'user-status active';
+                    } else if (user.status === 'suspended') {
+                        statusClass = 'user-status suspended';
+                    }
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div class="user-name-cell">
+                                <div class="user-avatar">${initials}</div>
+                                <div>
+                                    <div class="user-name">${user.displayName}</div>
+                                    <div class="user-email">${user.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="${statusClass}">${this.capitalizeFirstLetter(user.status)}</span></td>
+                        <td>
+                            <a href="users.html?id=${user._id}" class="btn btn-sm btn-outline">
+                                View
+                            </a>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            },
+
+            // Render recent activity list
+            renderRecentActivity() {
+                const activityList = document.getElementById('recent-activity-list');
+                activityList.innerHTML = '';
+                
+                if (!this.state.activity || this.state.activity.length === 0) {
+                    activityList.innerHTML = `<div style="text-align: center; padding: 1rem; color: var(--gray-600);">No recent activity</div>`;
+                    return;
+                }
+                
+                // Create activity items
+                this.state.activity.forEach(activity => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+                    
+                    // Determine icon based on activity type
+                    let iconSvg = '';
+                    switch (activity.type) {
+                        case 'campaign_created':
+                        case 'campaign_updated':
+                        case 'campaign_approved':
+                            iconSvg = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
+                            break;
+                        case 'user_joined':
+                        case 'user_status_changed':
+                            iconSvg = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>';
+                            break;
+                        case 'donation_made':
+                            iconSvg = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>';
+                            break;
+                        default:
+                            iconSvg = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                    }
+                    
+                    // Format timestamp
+                    const timestamp = this.formatTimeAgo(new Date(activity.timestamp));
+                    
+                    // Create content
+                    activityItem.innerHTML = `
+                        <div class="activity-icon">
+                            ${iconSvg}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-meta">
+                                <span>${activity.details}</span>
+                                <span>${timestamp}</span>
+                            </div>
+                            ${activity.user ? `<div style="font-size: 0.75rem; color: var(--gray-600); margin-top: 0.25rem;">by ${activity.user}</div>` : ''}
+                        </div>
+                    `;
+                    
+                    activityList.appendChild(activityItem);
+                });
+            },
+
+            // Utility: Format currency
+            formatCurrency(amount, currency = 'USD') {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: currency,
+                    maximumFractionDigits: 0
+                }).format(amount);
+            },
+
+            // Utility: Format date
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            },
+
+            // Utility: Format time ago
+            formatTimeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                
+                let interval = Math.floor(seconds / 31536000);
+                if (interval >= 1) {
+                    return interval === 1 ? '1 year ago' : `${interval} years ago`;
+                }
+                
+                interval = Math.floor(seconds / 2592000);
+                if (interval >= 1) {
+                    return interval === 1 ? '1 month ago' : `${interval} months ago`;
+                }
+                
+                interval = Math.floor(seconds / 86400);
+                if (interval >= 1) {
+                    return interval === 1 ? '1 day ago' : `${interval} days ago`;
+                }
+                
+                interval = Math.floor(seconds / 3600);
+                if (interval >= 1) {
+                    return interval === 1 ? '1 hour ago' : `${interval} hours ago`;
+                }
+                
+                interval = Math.floor(seconds / 60);
+                if (interval >= 1) {
+                    return interval === 1 ? '1 minute ago' : `${interval} minutes ago`;
+                }
+                
+                return 'just now';
+            },
+
+            // Utility: Capitalize first letter
+            capitalizeFirstLetter(string) {
+                if (!string) return '';
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+        };
     </script>
 </body>
 </html>

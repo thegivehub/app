@@ -150,7 +150,7 @@ body {
 /* Main Content Styles */
 .admin-content {
     flex: 1;
-    margin-left: 250px;
+    margin-left: 0;
     padding: 2rem;
 }
 
@@ -577,7 +577,7 @@ body {
     }
     
     .admin-content {
-        margin-left: 200px;
+        margin-left: 0;
     }
 }
 

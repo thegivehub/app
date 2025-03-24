@@ -28,55 +28,9 @@ const AdminCampaignReview = {
     // Initialize the module
     init() {
         this.setupEventListeners();
-        this.initRoleCheckboxes();
         this.loadCampaigns();
     },
     
-    initRoleCheckboxes() {
-        // Get all role checkboxes
-        const roleCheckboxes = document.querySelectorAll('[name="user-roles"]');
-        const userRoleCheckbox = document.getElementById('role-user');
-        const roleDescriptionText = document.getElementById('role-description-text');
-
-        // Make sure 'User' role is always checked and disabled
-        userRoleCheckbox.checked = true;
-        userRoleCheckbox.disabled = true;
-
-        // Add event listeners to role checkboxes
-        roleCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateRoleDescription();
-            });
-        });
-
-        function updateRoleDescription() {
-            const selectedRoles = Array.from(roleCheckboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.value);
-
-            // Always ensure 'user' role is included
-            if (!selectedRoles.includes('user')) {
-                selectedRoles.push('user');
-            }
-
-            // Update description based on selected roles
-            if (selectedRoles.includes('admin')) {
-                roleDescriptionText.textContent = 'This user will have full administrative access.';
-            } else if (selectedRoles.includes('campaigner') && selectedRoles.includes('donor')) {
-                roleDescriptionText.textContent = 'This user can both create campaigns and make donations.';
-            } else if (selectedRoles.includes('campaigner')) {
-                roleDescriptionText.textContent = 'This user can create and manage campaigns.';
-            } else if (selectedRoles.includes('donor')) {
-                roleDescriptionText.textContent = 'This user can make donations to campaigns.';
-            } else {
-                roleDescriptionText.textContent = 'Standard user with basic permissions.';
-            }
-        }
-
-        // Initialize description
-        updateRoleDescription();
-    },
-
     // Set up event listeners
     setupEventListeners() {
         // Filter by status
