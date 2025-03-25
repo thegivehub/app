@@ -136,6 +136,19 @@
             display: block;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if admin token exists
+            const adminToken = localStorage.getItem('adminToken');
+            
+            if (adminToken) {
+                // If token exists, redirect to app.html
+                window.location.href = 'app.html';
+            }
+            
+            // Otherwise, show the login form (it's already visible in the HTML)
+        });
+    </script>
 </head>
 <body>
     <div class="login-container">
@@ -178,7 +191,7 @@
             
             try {
                 // Submit login request
-                const response = await fetch('/api.php/admin/login', {
+                const response = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -193,7 +206,7 @@
                     localStorage.setItem('adminToken', data.token);
                     
                     // Redirect to admin dashboard
-                    window.location.href = '/admin/campaigns.html';
+                    window.location.href = 'app.html';
                 } else {
                     // Show error message
                     errorMessage.textContent = data.error || 'Invalid username or password';
