@@ -823,12 +823,16 @@
                     
                     // Calculate total funding
                     // This assumes campaigns have a 'raised' or similar field
+                    // Calculate total funding with better error handling
                     const totalFunding = campaigns.reduce((sum, campaign) => {
                         // Try different field names that might hold the funding amount
                         const amount = campaign.raised || campaign.funding || campaign.amountRaised || campaign.currentAmount || 0;
-                        return sum + parseFloat(amount);
+                        
+                        // Make sure we're dealing with a valid number
+                        const numericAmount = parseFloat(amount);
+                        return sum + (isNaN(numericAmount) ? 0 : numericAmount);
                     }, 0);
-                    
+
                     // Generate monthly data for the chart
                     // This would ideally come from a dedicated endpoint in a real app
                     const currentDate = new Date();
