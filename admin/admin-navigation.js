@@ -88,7 +88,6 @@ class AdminNavigation extends HTMLElement {
         }
         
         .nav-treeview {
-          display: none;
           padding-left: 1rem;
         }
         
