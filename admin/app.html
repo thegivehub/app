@@ -270,6 +270,76 @@
                 margin-left: 250px;
             }
         }
+        .main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-mini .main-sidebar {
+    width: 70px;
+    overflow: hidden;
+}
+
+.sidebar-mini .brand-text,
+.sidebar-mini .user-panel .info,
+.sidebar-mini .nav-sidebar .nav-link p {
+    display: none;
+}
+
+.sidebar-mini .content-wrapper {
+    margin-left: 70px;
+}
+
+@media (max-width: 992px) {
+    .main-sidebar {
+        transform: translateX(-250px);
+    }
+
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .sidebar-open .main-sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-mini.sidebar-open .main-sidebar {
+        transform: translateX(0);
+        width: 250px;
+    }
+
+    .sidebar-mini.sidebar-open .brand-text,
+    .sidebar-mini.sidebar-open .user-panel .info,
+    .sidebar-mini.sidebar-open .nav-sidebar .nav-link p {
+        display: block;
+    }
+}
+
+/* Override to ensure FontAwesome icons display correctly */
+.fas, .far, .fab, .fa {
+    font-family: 'Font Awesome 5 Free' !important;
+}
+
+.fas {
+    font-weight: 900 !important;
+}
+
+.far {
+    font-weight: 400 !important;
+}
+                .navbar {
+                    z-index: 99999;
+                }
+
     </style>
     <!-- Register the web component -->
     <script src="admin-navigation.js"></script>
@@ -311,7 +381,7 @@
         <aside class="main-sidebar sidebar-light-primary elevation-1">
             <!-- Brand Logo -->
             <a href="dashboard.html" class="brand-link">
-                <img src="/img/grey-logo.svg" alt="GiveHub Admin" class="brand-image">
+                <img src="/img/grey-logo.svg" alt="GiveHub Admin" class="brand-image" style="display:none;">
                 <span class="brand-text">Admin</span>
             </a>
 
@@ -379,6 +449,7 @@
             this.setupEventListeners();
             this.checkAuth();
             this.setupNavigation();
+            this.restoreSidebarState();
         },
         
         // Set up event listeners
@@ -408,6 +479,18 @@
                 }
             });
 
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    // Convert hash to page URL (add .html if needed)
+                    const page = hash.endsWith('.html') ? hash : `${hash}.html`;
+                    this.loadPage(page);
+                } else {
+                    // Load default page if hash is empty
+                    this.loadPage(this.state.defaultPage);
+                }
+            });
+
             // Handle window resize
             window.addEventListener('resize', () => {
                 this.handleResize();
@@ -415,6 +498,20 @@
 
             // Initialize resize handler
             this.handleResize();
+        },
+
+        restoreSidebarState() {
+            const savedState = localStorage.getItem('sidebar-state');
+            if (savedState) {
+                document.body.className = savedState;
+            } else {
+                // Default state: sidebar open on desktop, closed on mobile
+                if (window.innerWidth <= 992) {
+                    document.body.classList.remove('sidebar-open');
+                } else {
+                    document.body.classList.add('sidebar-open');
+                }
+            }
         },
 
         // Set up navigation
@@ -429,7 +526,29 @@
             // Listen for navigation loaded event to render top menu
             adminNav.addEventListener('navigation-loaded', (e) => {
                 this.renderTopNav(e.detail.navData.topmenu || []);
+                this.handleInitialNavigation();
             });
+        },
+        
+        handleInitialNavigation() {
+            // Check for hash in URL
+            const hash = window.location.hash.substring(1);
+            
+            // Check for query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryPage = urlParams.get('page');
+            
+            if (hash) {
+                // Convert hash to page URL (add .html if needed)
+                const page = hash.endsWith('.html') ? hash : `${hash}.html`;
+                this.loadPage(page);
+            } else if (queryPage) {
+                // Honor query parameter if provided
+                this.loadPage(queryPage);
+            } else {
+                // Load default page
+                this.loadPage(this.state.defaultPage);
+            }
         },
 
         // Render top navigation
@@ -445,9 +564,12 @@
             
             // Add top menu items
             items.forEach(item => {
+                // Extract page name for hash
+                const pageHash = item.link ? item.link.replace('.html', '') : '';
+                
                 html += `
                     <li class="nav-item d-none d-sm-inline-block">
-                        <a href="${item.link}" class="nav-link" data-page="${item.link || ''}">${item.title}</a>
+                        <a href="#${pageHash}" class="nav-link" data-page="${item.link || ''}">${item.title}</a>
                     </li>
                 `;
             });
@@ -463,7 +585,7 @@
             // Add click events to top nav items
             topNavContainer.querySelectorAll('.nav-link[data-page]').forEach(link => {
                 link.addEventListener('click', (e) => {
-                    e.preventDefault();
+                    // Don't preventDefault() here to allow normal hash navigation
                     const page = link.getAttribute('data-page');
                     if (page && page !== '#') {
                         this.loadPage(page);
@@ -655,10 +777,34 @@
 
         // Toggle sidebar visibility
         toggleSidebar() {
-            document.body.classList.toggle('sidebar-open');
-            this.state.sidebarVisible = !this.state.sidebarVisible;
+            const body = document.body;
+          
+            if (window.innerWidth <= 992) {
+                // On mobile, toggle sidebar open/closed
+                body.classList.toggle('sidebar-open');
+            } else {
+                // On desktop, toggle between mini and full sidebar
+                body.classList.toggle('sidebar-mini');
+            }
+            
+            // Store preference in localStorage
+            localStorage.setItem('sidebar-state', body.className);
+            
+            // If we have any iframes, let them know about the layout change
+            const contentFrame = document.getElementById('content-frame');
+            if (contentFrame && contentFrame.contentWindow) {
+                try {
+                    contentFrame.contentWindow.postMessage({ 
+                        type: 'sidebar-toggle', 
+                        isMini: body.classList.contains('sidebar-mini'),
+                        isHidden: !body.classList.contains('sidebar-open') && window.innerWidth <= 992
+                    }, '*');
+                } catch (e) {
+                    console.warn('Could not notify iframe of sidebar change', e);
+                }
+            }
         },
-
+        
         // Handle browser resize
         handleResize() {
             if (window.innerWidth <= 992) {

@@ -89,6 +89,7 @@ class AdminNavigation extends HTMLElement {
         
         .nav-treeview {
           padding-left: 1rem;
+          display: none;
         }
         
         .nav-item.menu-open > .nav-treeview {
@@ -111,6 +112,21 @@ class AdminNavigation extends HTMLElement {
         .nav-item.menu-open > .nav-link .right {
           transform: translateY(-50%) rotate(-90deg);
         }
+        
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+        .fas {
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 900;
+        }
+
+        .far {
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 400;
+        }
+
+        .fa-angle-left::before { content: '\\f104'; }
+        .fa-circle::before { content: '\\f111'; }
       </style>
       
       <div class="nav-sidebar">
@@ -174,95 +190,101 @@ class AdminNavigation extends HTMLElement {
 
   // Create navigation item element
   createNavItem(item) {
-    const navItem = document.createElement('li');
-    navItem.className = 'nav-item';
-    
-    if (item.children && item.children.length > 0) {
-      navItem.classList.add('has-treeview');
-    }
-    
-    const link = document.createElement('a');
-    link.href = item.link || '#';
-    link.className = 'nav-link';
-    link.setAttribute('data-page', item.link || '');
-    link.addEventListener('click', (e) => this.handleNavClick(e, link));
-    
-    // Handle icon based on available properties
-    if (item.iconUrl) {
-      // Use the iconUrl if available (preferred approach)
-      if (item.iconUrl.startsWith('data:image/svg')) {
-        // It's an SVG data URL - create an SVG element
-        const iconWrapper = document.createElement('span');
-        iconWrapper.className = 'nav-icon';
-        
-        // Instead of attempting to decode, just use the data URL directly in an img tag
-        const imgIcon = document.createElement('img');
-        imgIcon.src = item.iconUrl;
-        imgIcon.style.width = '1em';
-        imgIcon.style.height = '1em';
-        iconWrapper.appendChild(imgIcon);
-        
-        link.appendChild(iconWrapper);
-      } else {
-        // It's a regular image URL
-        const imgIcon = document.createElement('img');
-        imgIcon.src = item.iconUrl;
-        imgIcon.className = 'nav-icon';
-        imgIcon.style.width = '20px';
-        imgIcon.style.height = '20px';
-        link.appendChild(imgIcon);
-      }
-    } else if (item.icon) {
-      // Fallback to icon class if iconUrl is not provided
-      if (item.icon.match(/\.(gif|png|jpg|svg)/)) {
-        // It's an image path
-        const imgIcon = document.createElement('img');
-        imgIcon.src = item.icon;
-        imgIcon.className = 'nav-icon';
-        imgIcon.style.width = '20px';
-        imgIcon.style.height = '20px';
-        link.appendChild(imgIcon);
-      } else {
-        // It's a FontAwesome class or similar
-        const icon = document.createElement('i');
-        icon.className = `nav-icon ${item.icon}`;
-        link.appendChild(icon);
-      }
-    } else {
-      // Default icon if none provided
-      const icon = document.createElement('i');
-      icon.className = 'nav-icon fas fa-circle';
-      link.appendChild(icon);
-    }
-    
-    // Add title
-    const text = document.createElement('span');
-    text.textContent = item.title;
-    text.style.marginLeft = '0.5rem';
-    link.appendChild(text);
-    
-    // Add dropdown arrow if has children
-    if (item.children && item.children.length > 0) {
-      const arrow = document.createElement('i');
-      arrow.className = 'right fas fa-angle-left';
-      link.appendChild(arrow);
-    }
-    
-    navItem.appendChild(link);
-    
-    // Add children if they exist
-    if (item.children && item.children.length > 0) {
-      const treeview = document.createElement('ul');
-      treeview.className = 'nav nav-treeview';
+      const navItem = document.createElement('li');
+      navItem.className = 'nav-item';
       
-      item.children.forEach(child => {
-        treeview.appendChild(this.createNavItem(child));
-      });
+      if (item.children && item.children.length > 0) {
+          navItem.classList.add('has-treeview');
+      }
       
-      navItem.appendChild(treeview);
-    }
-    
-    return navItem;
+      const link = document.createElement('a');
+      link.href = item.link || '#';
+      link.className = 'nav-link';
+      link.setAttribute('data-page', item.link || '');
+      link.addEventListener('click', (e) => this.handleNavClick(e, link));
+      
+      // Handle icon based on available properties
+      if (item.iconUrl) {
+          // Use the iconUrl if available (preferred approach)
+          if (item.iconUrl.startsWith('data:image/svg')) {
+              // It's an SVG data URL - create an SVG element
+              const iconWrapper = document.createElement('span');
+              iconWrapper.className = 'nav-icon';
+              
+              // Instead of attempting to decode, just use the data URL directly in an img tag
+              const imgIcon = document.createElement('img');
+              imgIcon.src = item.iconUrl;
+              imgIcon.style.width = '1em';
+              imgIcon.style.height = '1em';
+              iconWrapper.appendChild(imgIcon);
+              
+              link.appendChild(iconWrapper);
+          } else {
+              // It's a regular image URL
+              const imgIcon = document.createElement('img');
+              imgIcon.src = item.iconUrl;
+              imgIcon.className = 'nav-icon';
+              imgIcon.style.width = '20px';
+              imgIcon.style.height = '20px';
+              link.appendChild(imgIcon);
+          }
+      } else if (item.icon) {
+          // Fallback to icon class if iconUrl is not provided
+          if (item.icon.match(/\.(gif|png|jpg|svg)/)) {
+              // It's an image path
+              const imgIcon = document.createElement('img');
+              imgIcon.src = item.icon;
+              imgIcon.className = 'nav-icon';
+              imgIcon.style.width = '20px';
+              imgIcon.style.height = '20px';
+              link.appendChild(imgIcon);
+          } else {
+              // It's a FontAwesome class or similar
+              const icon = document.createElement('i');
+              icon.className = `nav-icon ${item.icon}`;
+              
+              // If using FontAwesome, make sure it has the base class
+              if (item.icon.includes('fa-') && !item.icon.includes('fas ') && !item.icon.includes('far ')) {
+                  icon.className = `nav-icon fas ${item.icon}`;
+              }
+              
+              link.appendChild(icon);
+          }
+      } else {
+          // Default icon if none provided
+          const icon = document.createElement('i');
+          icon.className = 'nav-icon fas fa-circle';
+          link.appendChild(icon);
+      }
+      
+      // Add title
+      const text = document.createElement('span');
+      text.textContent = item.title;
+      text.style.marginLeft = '0.5rem';
+      link.appendChild(text);
+      
+      // Add dropdown arrow if has children
+      if (item.children && item.children.length > 0) {
+          const arrow = document.createElement('i');
+          arrow.className = 'right fas fa-angle-left';
+          link.appendChild(arrow);
+      }
+      
+      navItem.appendChild(link);
+      
+      // Add children if they exist
+      if (item.children && item.children.length > 0) {
+          const treeview = document.createElement('ul');
+          treeview.className = 'nav nav-treeview';
+          
+          item.children.forEach(child => {
+              treeview.appendChild(this.createNavItem(child));
+          });
+          
+          navItem.appendChild(treeview);
+      }
+      
+      return navItem;
   }
 
   // Render fallback navigation if loading fails
@@ -303,37 +325,37 @@ class AdminNavigation extends HTMLElement {
 
   // Handle navigation item click
   handleNavClick(event, element) {
-    event.preventDefault();
-    
-    const page = element.getAttribute('data-page');
-    
-    // Don't do anything if it's a parent menu without a link
-    if (!page || page === '#') {
-      // Toggle submenu if it's a parent item
-      const listItem = element.parentElement;
-      if (listItem.classList.contains('has-treeview')) {
-        listItem.classList.toggle('menu-open');
+      event.preventDefault();
+      
+      const page = element.getAttribute('data-page');
+      
+      // Don't do anything if it's a parent menu without a link
+      if (!page || page === '#') {
+          // Toggle submenu if it's a parent item
+          const listItem = element.parentElement;
+          if (listItem.classList.contains('has-treeview')) {
+              listItem.classList.toggle('menu-open');
+          }
+          return;
       }
-      return;
-    }
-    
-    // Update active state
-    this.shadowRoot.querySelectorAll('.nav-link').forEach(link => {
-      link.classList.remove('active');
-    });
-    
-    element.classList.add('active');
-    
-    // Load the page - dispatch event for parent to handle
-    this.dispatchEvent(new CustomEvent('navigation-click', {
-      detail: { page: page }
-    }));
-    
-    // Update current route
-    this.state.currentRoute = page;
-    
-    // Update browser URL
-    this.updateBrowserUrl(page);
+      
+      // Update active state
+      this.shadowRoot.querySelectorAll('.nav-link').forEach(link => {
+          link.classList.remove('active');
+      });
+      
+      element.classList.add('active');
+      
+      // Load the page - dispatch event for parent to handle
+      this.dispatchEvent(new CustomEvent('navigation-click', {
+          detail: { page: page }
+      }));
+      
+      // Update current route
+      this.state.currentRoute = page;
+      
+      // Update browser URL (hash only)
+      this.updateBrowserUrl(page);
   }
 
   // Update browser URL
@@ -343,44 +365,45 @@ class AdminNavigation extends HTMLElement {
     
     // Update both query param and hash for better compatibility
     const url = new URL(window.location.href);
-    url.searchParams.set('page', page);
+    //url.searchParams.set('page', page);
     url.hash = pageName;
     window.history.pushState({}, '', url);
   }
 
   // Handle initial route from URL
   handleInitialRoute() {
-    // Check if there's a hash in the URL
-    const hash = window.location.hash.substring(1);
-    
-    // Check if there's a route in the URL query params
-    const urlParams = new URLSearchParams(window.location.search);
-    const route = urlParams.get('page');
-    
-    // Wait for navigation to load
-    if (hash) {
-      // We'll process this after navigation is loaded
-      this.addEventListener('navigation-rendered', () => {
-        this.findAndLoadNavItemByHash(hash);
-      }, { once: true });
-    } else if (route) {
-      this.state.currentRoute = route;
+      // Check if there's a hash in the URL
+      const hash = window.location.hash.substring(1);
       
-      // Dispatch event to load the page
-      this.dispatchEvent(new CustomEvent('navigation-click', {
-        detail: { page: route }
-      }));
+      // Check if there's a route in the URL query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryRoute = urlParams.get('page');
       
-      // Update active state when navigation is rendered
-      this.addEventListener('navigation-rendered', () => {
-        this.updateActiveNavState(route);
-      }, { once: true });
-    } else {
-      // Load default page
-      this.dispatchEvent(new CustomEvent('navigation-click', {
-        detail: { page: this.state.defaultPage }
-      }));
-    }
+      // Wait for navigation to load
+      if (hash) {
+          // Process hash-based navigation after navigation is loaded
+          this.addEventListener('navigation-rendered', () => {
+              this.findAndLoadNavItemByHash(hash);
+          }, { once: true });
+      } else if (queryRoute) {
+          // Honor query parameter if provided but no hash
+          this.state.currentRoute = queryRoute;
+          
+          // Dispatch event to load the page
+          this.dispatchEvent(new CustomEvent('navigation-click', {
+              detail: { page: queryRoute }
+          }));
+          
+          // Update active state when navigation is rendered
+          this.addEventListener('navigation-rendered', () => {
+              this.updateActiveNavState(queryRoute);
+          }, { once: true });
+      } else {
+          // Load default page
+          this.dispatchEvent(new CustomEvent('navigation-click', {
+              detail: { page: this.state.defaultPage }
+          }));
+      }
   }
 
   // Find and load a nav item based on hash value

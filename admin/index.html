@@ -143,9 +143,12 @@
             
             if (adminToken) {
                 // If token exists, redirect to app.html
-                window.location.href = 'app.html';
+                top.location.href = 'app.html';
             }
             
+            if (parent.location !== window.location) {
+                top.location.href = "/admin/index.html";
+            }
             // Otherwise, show the login form (it's already visible in the HTML)
         });
     </script>
