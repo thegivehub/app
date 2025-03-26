@@ -11,7 +11,7 @@
         const accessToken = localStorage.getItem('accessToken');
         if (!accessToken) {
           console.log('No access token found, redirecting to login');
-          window.location.href = '/pages/login.html';
+          top.location.href = '/pages/login.html';
         }
       })();
     </script>
@@ -743,8 +743,15 @@
           },
 
           loadContent(url) {
+            // First, check authentication
+            if (!this.auth.isAuthenticated()) {
+              top.location.href = '/pages/login.html';
+              return;
+            }
+            
             this.elements.frameLoader.classList.add('active');
             this.elements.frameError.classList.remove('active');
+            
             this.elements.contentFrame.onload = () => {
               this.elements.frameLoader.classList.remove('active');
             };
@@ -779,69 +786,69 @@
             }
           },
         };
-        // Add this to your app object
+        // Replace the existing auth object in your app
         app.auth = {
           init() {
-            // Import Firebase auth when using modules
-            import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')
-              .then((firebaseAuth) => {
-                const auth = firebaseAuth.getAuth(app);
-
-                // Set up auth state listener
-                auth.onAuthStateChanged((user) => {
-                  if (user) {
-                    // User is signed in
-                    localStorage.setItem('authStatus', 'authenticated');
-                    document.body.setAttribute(
-                      'data-auth-status',
-                      'authenticated'
-                    );
-
-                    // Store user info if needed
-                    const userData = {
-                      uid: user.uid,
-                      email: user.email,
-                      displayName: user.displayName,
-                      photoURL: user.photoURL,
-                    };
-                    localStorage.setItem('userData', JSON.stringify(userData));
-
-                    // Update UI elements if needed
-                    if (user.photoURL) {
-                      const avatar = document.querySelector('.user-avatar');
-                      if (avatar) {
-                        avatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}" class="w-full h-full rounded-full">`;
-                      }
-                    }
-
-                    console.log('User is authenticated:', user);
-                  } else {
-                    // User is signed out
-                    localStorage.removeItem('authStatus');
-                    localStorage.removeItem('userData');
-                    document.body.removeAttribute('data-auth-status');
-                    console.log('User is not authenticated');
-
-                    // Redirect to login if needed
-                    window.location.href = '/pages/login.html';
-                  }
-                });
-              })
-              .catch((error) => {
-                console.error('Error loading Firebase Auth:', error);
-              });
+            // Check if user is authenticated first using local storage
+            const accessToken = localStorage.getItem('accessToken');
+            
+            if (!accessToken) {
+              console.log('No access token found, redirecting to login');
+              top.location.href = '/pages/login.html';
+              return;
+            }
+            
+            // If we have a token, verify it's valid by making a request to the server
+            fetch('/api/User/me', {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Invalid token');
+              }
+              return response.json();
+            })
+            .then(userData => {
+              // User is authenticated, update UI
+              console.log('User is authenticated:', userData);
+              document.body.setAttribute('data-auth-status', 'authenticated');
+              
+              // Update avatar if available
+              if (userData.profile && userData.profile.avatar) {
+                const avatarURL = `/img/avatars/${userData.profile.avatar}`;
+                const avatar = document.querySelector('.user-avatar');
+                if (avatar) {
+                  avatar.innerHTML = `<img src="${avatarURL}" alt="${userData.username}" class="w-full h-full rounded-full">`;
+                } else {
+                  // If no avatar, use initials
+                  const initials = userData.username ? userData.username.substring(0, 2).toUpperCase() : 'US';
+                  document.querySelector('.user-avatar').textContent = initials;
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Authentication error:', error);
+              // Token is invalid, clear storage and redirect
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('refreshToken');
+              top.location.href = '/pages/login.html';
+            });
           },
 
           // Helper method to check current auth status
           isAuthenticated() {
-            return localStorage.getItem('authStatus') === 'authenticated';
+            return localStorage.getItem('accessToken') !== null;
           },
 
-          // Helper to get current user data
-          getCurrentUser() {
-            const userData = localStorage.getItem('userData');
-            return userData ? JSON.parse(userData) : null;
-          },
+          // Logout function
+          logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            top.location.href = '/pages/login.html';
+          }
         };
 
         window.app = app;
@@ -1009,6 +1016,17 @@
         // Initialize profile completion on DOM load
         document.addEventListener('DOMContentLoaded', () => {
           app.profileCompletion.init();
+          
+          // Handle logout stuff
+          const logoutLink = document.querySelector('a[href="/pages/logout.html"]');
+          
+          if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+              e.preventDefault();
+              app.auth.logout();
+              return false;
+           });
+          }
         });
       })();
     </script>
