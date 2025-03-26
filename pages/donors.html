@@ -601,6 +601,7 @@
             $('#loadingSpinner').classList.toggle('active', this.state.loading);
 
             if (!this.state.loading) {
+                console.log(this.data);
                 // Update stats
                 $('#totalDonors').textContent = this.data.stats.totalDonors.toLocaleString();
                 $('#totalDonations').textContent = this.formatCurrency(this.data.stats.totalDonations);

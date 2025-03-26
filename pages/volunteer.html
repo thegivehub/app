@@ -556,6 +556,7 @@
 
             // Update form fields if data is loaded
             if (this.data.volunteer && !this.state.loading) {
+                console.log(this.data);
                 // Overview section stats
                 $('#hoursContributed').textContent = this.data.volunteer.stats.hoursContributed || '0';
                 $('#projectsSupported').textContent = this.data.volunteer.stats.projectsSupported || '0';
@@ -579,12 +580,12 @@
                 opportunitiesContainer.innerHTML = this.data.opportunities.map(opp => `
                     <div class="opportunity-card">
                         <div class="opportunity-header">
-                            <h3>${opp.title}</h3>
+                            <h3>${opp.title} opp.title</h3>
                             <span class="badge badge-${opp.status}">${opp.status}</span>
                         </div>
-                        <p>${opp.description}</p>
+                        <p>${opp.description} opp.description</p>
                         <div style="margin: 1rem 0;">
-                            ${app.skills && opp.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                            ${opp.skills && opp.skills.professionalSkills && opp.skills.professionalSkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
                         </div>
                         <button 
                             class="btn btn-primary" 
