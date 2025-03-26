@@ -26,32 +26,85 @@ class Campaign {
             $data['raised'] = 0;
         }
         
-        // Ensure creator ID is set using all possible field names
+        // Check all possible creator ID fields and log their presence/absence
+        if (isset($data['creatorId'])) {
+            error_log("Found creatorId in submitted data: " . $data['creatorId']);
+        } else {
+            error_log("No creatorId in submitted data");
+        }
+        
+        if (isset($data['creator_id'])) {
+            error_log("Found creator_id in submitted data: " . $data['creator_id']);
+        } else {
+            error_log("No creator_id in submitted data");
+        }
+        
+        if (isset($data['userId'])) {
+            error_log("Found userId in submitted data: " . $data['userId']);
+        } else {
+            error_log("No userId in submitted data");
+        }
+        
+        // Combined check for all creator ID fields
         if (!isset($data['creatorId']) && !isset($data['creator_id']) && !isset($data['userId'])) {
             // Try to get from token if not in the data
+            error_log("No creator ID found in any field, attempting to extract from token");
             $userId = $this->getUserIdFromToken();
+            
             if ($userId) {
                 $data['creatorId'] = $userId;
-                error_log("Set creatorId from token: $userId");
+                error_log("Successfully set creatorId from token: " . $userId);
             } else {
-                error_log("WARNING: No creator ID found in data or token");
+                error_log("WARNING: Could not get creator ID from token or session");
             }
         }
         
         // Normalize creator ID field to creatorId
         if (isset($data['creator_id']) && !isset($data['creatorId'])) {
             $data['creatorId'] = $data['creator_id'];
+            error_log("Normalized creator_id to creatorId: " . $data['creatorId']);
         } else if (isset($data['userId']) && !isset($data['creatorId'])) {
             $data['creatorId'] = $data['userId'];
+            error_log("Normalized userId to creatorId: " . $data['creatorId']);
+        }
+        
+        // Log final state before insertion
+        if (isset($data['creatorId'])) {
+            error_log("Final creatorId before database insertion: " . $data['creatorId']);
+        } else {
+            error_log("ERROR: No creatorId set before database insertion!");
+        }
+        
+        // Check if creatorId is a valid MongoDB ObjectId
+        if (isset($data['creatorId'])) {
+            try {
+                $objId = new MongoDB\BSON\ObjectId($data['creatorId']);
+                error_log("creatorId is a valid ObjectId");
+                // Convert string ID to ObjectId for MongoDB
+                $data['creatorId'] = $objId;
+            } catch (Exception $e) {
+                error_log("creatorId is not a valid ObjectId, keeping as string: " . $e->getMessage());
+                // Keep as string if it's not a valid ObjectId
+            }
         }
         
         // Insert the document
+        error_log("Inserting campaign document into database");
         $result = $this->collection->insertOne($data);
         
         if ($result['success']) {
             // If insertion was successful, return the inserted document with its ID
             $insertedId = $result['id'];
+            error_log("Campaign created successfully with ID: " . $insertedId);
+            
             $campaign = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($insertedId)]);
+            
+            // Log the creator ID in the retrieved document
+            if ($campaign && isset($campaign['creatorId'])) {
+                error_log("Retrieved campaign has creatorId: " . $campaign['creatorId']);
+            } else {
+                error_log("WARNING: Retrieved campaign does not have creatorId!");
+            }
             
             return [
                 'success' => true,
@@ -60,9 +113,10 @@ class Campaign {
             ];
         }
         
+        error_log("Failed to create campaign: " . ($result['error'] ?? 'Unknown error'));
         return [
             'success' => false,
-            'error' => 'Failed to create campaign'
+            'error' => 'Failed to create campaign: ' . ($result['error'] ?? '')
         ];
     }
 
@@ -182,32 +236,94 @@ class Campaign {
         $headers = getallheaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         
+        error_log("Authorization header: " . substr($authHeader, 0, 20) . "...");
+        
         if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
             $token = $matches[1];
+            
+            error_log("JWT token found: " . substr($token, 0, 15) . "...");
+            
             try {
-                // Log token for debugging (remove in production!)
-                error_log("Attempting to parse token: " . substr($token, 0, 20) . "...");
+                // Proper JWT validation using Firebase JWT library
+                require_once __DIR__ . '/../vendor/autoload.php';
                 
-                // Simple JWT parsing without verification
-                list($header, $payload, $signature) = explode('.', $token);
-                $payload = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+                // Get JWT secret from Auth class if possible
+                $jwtSecret = null;
+                try {
+                    $auth = new Auth();
+                    $jwtSecret = $auth->getJwtSecret();
+                    error_log("JWT secret obtained from Auth class");
+                } catch (Exception $e) {
+                    error_log("Failed to get JWT secret from Auth class: " . $e->getMessage());
+                    // Fallback to hardcoded secret (same as in Auth.php)
+                    $jwtSecret = '6ABD1CF21B5743C99A283D9184AB6F1A15E8FC1F141C749E39B49B6FD3E9D705';
+                    error_log("Using fallback JWT secret");
+                }
                 
-                // Check all common field names
-                if (isset($payload['sub'])) {
-                    error_log("Found user ID in token 'sub' field: " . $payload['sub']);
-                    return $payload['sub'];
-                } elseif (isset($payload['userId'])) {
-                    error_log("Found user ID in token 'userId' field: " . $payload['userId']);
-                    return $payload['userId'];
-                } elseif (isset($payload['_id'])) {
-                    error_log("Found user ID in token '_id' field: " . $payload['_id']);
-                    return $payload['_id'];
-                } elseif (isset($payload['id'])) {
-                    error_log("Found user ID in token 'id' field: " . $payload['id']);
-                    return $payload['id'];
+                $decoded = \Firebase\JWT\JWT::decode(
+                    $token, 
+                    new \Firebase\JWT\Key($jwtSecret, 'HS256')
+                );
+                
+                error_log("JWT decoded successfully: " . json_encode($decoded));
+                
+                // Check 'sub' field first (standard JWT subject claim)
+                if (isset($decoded->sub)) {
+                    error_log("Using user ID from token 'sub' field: " . $decoded->sub);
+                    return $decoded->sub;
+                }
+                
+                // Check other common field names
+                if (isset($decoded->userId)) {
+                    error_log("Using user ID from token 'userId' field: " . $decoded->userId);
+                    return $decoded->userId;
+                }
+                
+                if (isset($decoded->_id)) {
+                    error_log("Using user ID from token '_id' field: " . $decoded->_id);
+                    return $decoded->_id;
+                }
+                
+                if (isset($decoded->id)) {
+                    error_log("Using user ID from token 'id' field: " . $decoded->id);
+                    return $decoded->id;
+                }
+                
+                error_log("JWT decoded but no user ID found in the payload: " . json_encode($decoded));
+                
+            } catch (\Firebase\JWT\ExpiredException $e) {
+                error_log("JWT token expired: " . $e->getMessage());
+            } catch (\Firebase\JWT\SignatureInvalidException $e) {
+                error_log("JWT signature invalid: " . $e->getMessage());
+            } catch (\Firebase\JWT\BeforeValidException $e) {
+                error_log("JWT not valid yet: " . $e->getMessage());
+            } catch (\Firebase\JWT\UnexpectedValueException $e) {
+                error_log("JWT unexpected value: " . $e->getMessage());
+                
+                // Fallback to manual token parsing for debugging
+                try {
+                    error_log("Attempting manual token parsing for debugging");
+                    list($header, $payload, $signature) = explode('.', $token);
+                    $decodedPayload = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+                    error_log("Manual token parsing result: " . json_encode($decodedPayload));
+                    
+                    // Check if manual parsing reveals user ID
+                    if (isset($decodedPayload['sub'])) {
+                        error_log("Manual parsing found user ID in 'sub': " . $decodedPayload['sub']);
+                    } elseif (isset($decodedPayload['userId'])) {
+                        error_log("Manual parsing found user ID in 'userId': " . $decodedPayload['userId']);
+                    } elseif (isset($decodedPayload['_id'])) {
+                        error_log("Manual parsing found user ID in '_id': " . $decodedPayload['_id']);
+                    } elseif (isset($decodedPayload['id'])) {
+                        error_log("Manual parsing found user ID in 'id': " . $decodedPayload['id']);
+                    } else {
+                        error_log("Manual parsing didn't find any user ID field");
+                    }
+                } catch (Exception $e) {
+                    error_log("Manual token parsing failed: " . $e->getMessage());
                 }
             } catch (Exception $e) {
-                error_log("Token decode error: " . $e->getMessage());
+                error_log("Token decode general error: " . $e->getMessage());
             }
         } else {
             error_log("No Bearer token found in Authorization header");
@@ -219,10 +335,10 @@ class Campaign {
         }
         
         if (isset($_SESSION['user']) && isset($_SESSION['user']['id'])) {
-            error_log("Using user ID from session: " . $_SESSION['user']['id']);
+            error_log("Using user ID from session 'user.id': " . $_SESSION['user']['id']);
             return $_SESSION['user']['id'];
         } elseif (isset($_SESSION['user']) && isset($_SESSION['user']['_id'])) {
-            error_log("Using user ID from session: " . $_SESSION['user']['_id']);
+            error_log("Using user ID from session 'user._id': " . $_SESSION['user']['_id']);
             return $_SESSION['user']['_id'];
         } elseif (isset($_SESSION['userId'])) {
             error_log("Using userId from session: " . $_SESSION['userId']);
@@ -232,4 +348,5 @@ class Campaign {
         error_log("Could not find user ID in token or session");
         return null;
     }
+
 }

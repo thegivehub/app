@@ -86,6 +86,9 @@
             },
 
             init() {
+                if (parent.location !== window.location) {
+                    top.location.href = this.location.href;
+                }
                 this.setupEventListeners();
             },
 

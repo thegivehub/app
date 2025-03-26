@@ -278,6 +278,27 @@
             </div>
             <div class="error">Title is required</div>
           </div>
+          
+          <div class="form-group">
+            <label for="location-country">Country</label>
+            <input type="text" id="location-country" placeholder="e.g., United States">
+            <div class="help-text">Enter the country where this campaign is based</div>
+          </div>
+
+          <div class="form-group">
+            <label for="location-region">Region/City</label>
+            <input type="text" id="location-region" placeholder="e.g., New York">
+            <div class="help-text">Enter the state, province, or city for this campaign</div>
+          </div>
+
+          <div class="form-group">
+            <label for="location-coordinates">Coordinates (Optional)</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="number" id="location-latitude" placeholder="Latitude" step="0.000001">
+              <input type="number" id="location-longitude" placeholder="Longitude" step="0.000001">
+            </div>
+            <div class="help-text">Optional: Enter precise coordinates for campaign map</div>
+          </div>
 
           <div class="form-group">
             <label for="campaignType">Campaign Type</label>
@@ -549,7 +570,15 @@ function submitForm() {
     userId: userId,     // Adding another common field name
     createdAt: new Date().toISOString(),
     status: 'pending',  // Initial status for moderation
-    images: []          // We'll handle images separately
+    images: []          // We'll handle images separately,
+    location: {
+      country: document.getElementById('location-country').value,
+      region: document.getElementById('location-region').value,
+      coordinates: {
+        latitude: parseFloat(document.getElementById('location-latitude').value) || null,
+        longitude: parseFloat(document.getElementById('location-longitude').value) || null
+      }
+    }
   };
 
   // Get image data from preview

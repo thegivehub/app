@@ -71,6 +71,38 @@ class AdminCampaignController {
             if (!$campaign) {
                 http_response_code(404);
                 return ['error' => 'Campaign not found'];
+            } else {
+                if (isset($campaign['creatorId'])) {
+                    $db = new Database();
+                    $usersCollection = $db->getCollection('users');
+                    
+                    // Try to fetch user using ObjectId
+                    try {
+                        $creator = $usersCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['creatorId'])]);
+                    } catch (Exception $e) {
+                        // If ObjectId fails, try with string ID
+                        $creator = $usersCollection->findOne(['_id' => $campaign['creatorId']]);
+                    }
+                    
+                    if ($creator) {
+                        // Create a proper creator name from available fields
+                        $firstName = $creator['personalInfo']['firstName'] ?? '';
+                        $lastName = $creator['personalInfo']['lastName'] ?? '';
+                        $displayName = $creator['displayName'] ?? '';
+                        $username = $creator['username'] ?? '';
+                        
+                        if ($firstName && $lastName) {
+                            $campaign['creatorName'] = $firstName . ' ' . $lastName;
+                        } else if ($displayName) {
+                            $campaign['creatorName'] = $displayName;
+                        } else if ($username) {
+                            $campaign['creatorName'] = $username;
+                        } else {
+                            $campaign['creatorName'] = 'Unknown User';
+                        }
+                    }
+                }
+
             }
             
             return $campaign;
