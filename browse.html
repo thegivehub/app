@@ -77,12 +77,15 @@
 <div class="campaign-grid" id="campaign-grid"></div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        fetch('/api/campaign')  // Adjust URL as needed
-            .then(response => response.json())
-            .then(campaigns => {
-                const campaignGrid = document.getElementById('campaign-grid');
-                campaigns.forEach(campaign => {
+document.addEventListener("DOMContentLoaded", () => {
+    fetch('/api/campaign')  // Adjust URL as needed
+        .then(response => response.json())
+        .then(campaigns => {
+            console.log(`Received ${campaigns.length} campaigns from API`);
+            const campaignGrid = document.getElementById('campaign-grid');
+            
+            campaigns.forEach(campaign => {
+                try {
                     // Create card element
                     const card = document.createElement('div');
                     card.classList.add('campaign-card');
@@ -90,52 +93,94 @@
                     // Campaign title
                     const title = document.createElement('h2');
                     title.classList.add('campaign-title');
-                    title.textContent = campaign.title || "Campaign Title";
+                    title.textContent = campaign.title || "Untitled Campaign";
                     card.appendChild(title);
 
                     // Campaign location
                     const location = document.createElement('p');
                     location.classList.add('campaign-location');
-                    location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
+                    
+                    // Safely access location properties
+                    if (campaign.location && campaign.location.region && campaign.location.country) {
+                        location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
+                    } else if (campaign.location && campaign.location.region) {
+                        location.textContent = `Location: ${campaign.location.region}`;
+                    } else if (campaign.location && campaign.location.country) {
+                        location.textContent = `Location: ${campaign.location.country}`;
+                    } else {
+                        location.textContent = 'Location: Not specified';
+                    }
                     card.appendChild(location);
 
                     // Campaign funding goal
                     const goal = document.createElement('p');
                     goal.classList.add('campaign-goal');
-                    goal.textContent = `Goal: ${campaign.funding.goalAmount} ${campaign.funding.currency}`;
+                    
+                    // Safely access funding properties
+                    if (campaign.funding && campaign.funding.goalAmount !== undefined) {
+                        const currency = campaign.funding.currency || 'USD';
+                        goal.textContent = `Goal: ${campaign.funding.goalAmount} ${currency}`;
+                    } else {
+                        goal.textContent = 'Goal: Not specified';
+                    }
                     card.appendChild(goal);
 
                     // Campaign progress
-                    const raisedAmount = campaign.funding.raisedAmount;
-                    const goalAmount = campaign.funding.goalAmount;
-                    const progress = (raisedAmount / goalAmount) * 100;
-
                     const progressText = document.createElement('p');
                     progressText.classList.add('campaign-progress');
-                    progressText.textContent = `Progress: ${raisedAmount} / ${goalAmount} ${campaign.funding.currency}`;
-                    card.appendChild(progressText);
-
+                    
                     // Progress bar
                     const progressBar = document.createElement('div');
                     progressBar.classList.add('progress-bar');
                     const progressFill = document.createElement('div');
-                    progressFill.style.width = `${progress}%`;
+                    
+                    // Safely calculate progress
+                    if (campaign.funding && 
+                        campaign.funding.raisedAmount !== undefined && 
+                        campaign.funding.goalAmount !== undefined && 
+                        campaign.funding.goalAmount > 0) {
+                        
+                        const raisedAmount = campaign.funding.raisedAmount;
+                        const goalAmount = campaign.funding.goalAmount;
+                        const currency = campaign.funding.currency || 'USD';
+                        const progress = (raisedAmount / goalAmount) * 100;
+                        
+                        progressText.textContent = `Progress: ${raisedAmount} / ${goalAmount} ${currency}`;
+                        progressFill.style.width = `${Math.min(progress, 100)}%`; // Cap at 100%
+                    } else if (campaign.funding && campaign.funding.raisedAmount !== undefined) {
+                        const currency = campaign.funding.currency || 'USD';
+                        progressText.textContent = `Raised: ${campaign.funding.raisedAmount} ${currency}`;
+                        progressFill.style.width = '0%';
+                    } else {
+                        progressText.textContent = 'Progress: No donations yet';
+                        progressFill.style.width = '0%';
+                    }
+                    
+                    card.appendChild(progressText);
                     progressBar.appendChild(progressFill);
                     card.appendChild(progressBar);
 
                     // View more link
                     const viewMore = document.createElement('a');
                     viewMore.classList.add('view-more');
-                    viewMore.href = `campaign-detail.html?id=${campaign._id}`;  // Link to detail page
+                    viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ''}`;
                     viewMore.textContent = 'View More';
                     card.appendChild(viewMore);
 
                     // Append card to grid
                     campaignGrid.appendChild(card);
-                });
-            })
-            .catch(error => console.error("Error fetching campaigns:", error));
-    });
+                    
+                } catch (error) {
+                    console.error(`Error rendering campaign:`, campaign, error);
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching campaigns:", error);
+            const campaignGrid = document.getElementById('campaign-grid');
+            campaignGrid.innerHTML = '<p class="error-message">Failed to load campaigns. Please try again later.</p>';
+        });
+});
 </script>
 
 </body>
