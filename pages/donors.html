@@ -476,10 +476,10 @@
                 this.data.stats = stats;
 
                 console.log(this.data);
+                this.state.loading = false;
                 this.filterDonors();
 
-                this.state.loading = false;
-                this.render();
+                // this.render();
             } catch (error) {
                 console.error('Error loading data:', error);
                 this.showError('Failed to load donor data. Please try again later.');
@@ -502,6 +502,8 @@
                     donor.email.toLowerCase().includes(query)
                 );
             }
+            console.log(this.state.currentFilter);
+            console.log(filtered);
 
             // Apply filters
             switch (this.state.currentFilter) {
@@ -604,10 +606,12 @@
             // Update loading state
             $('#loadingSpinner').classList.toggle('active', this.state.loading);
 
+            console.log(this.state.loading);
+
             if (!this.state.loading) {
                 console.log(this.data);
                 // Update stats
-                $('#totalDonors').textContent = this.data.stats.totalDonors.toLocaleString();
+                $('#totalDonors').textContent = this.data.stats.totalDonors;
                 $('#totalDonations').textContent = this.formatCurrency(this.data.stats.totalDonations);
                 $('#avgDonation').textContent = this.formatCurrency(this.data.stats.averageDonation);
                 $('#retentionRate').textContent = `${this.data.stats.retentionRate}%`;
