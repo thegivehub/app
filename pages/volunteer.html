@@ -580,12 +580,12 @@
                 opportunitiesContainer.innerHTML = this.data.opportunities.map(opp => `
                     <div class="opportunity-card">
                         <div class="opportunity-header">
-                            <h3>${opp.title} opp.title</h3>
+                            <h3>${opp.title}</h3>
                             <span class="badge badge-${opp.status}">${opp.status}</span>
                         </div>
-                        <p>${opp.description} opp.description</p>
+                        <p>${opp.description}</p>
                         <div style="margin: 1rem 0;">
-                            ${opp.skills && opp.skills.professionalSkills && opp.skills.professionalSkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                            ${opp.requiredSkills && opp.requiredSkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
                         </div>
                         <button 
                             class="btn btn-primary" 

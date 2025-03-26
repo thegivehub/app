@@ -465,7 +465,7 @@
         async loadData() {
             try {
                 this.state.loading = true;
-                this.render();
+                // this.render();
 
                 const [donors, stats] = await Promise.all([
                     this.fetchData('donors'),
@@ -474,6 +474,8 @@
 
                 this.data.donors = donors;
                 this.data.stats = stats;
+
+                console.log(this.data);
                 this.filterDonors();
 
                 this.state.loading = false;
@@ -537,6 +539,8 @@
         getPageDonors() {
             const start = (this.state.currentPage - 1) * this.state.itemsPerPage;
             const end = start + this.state.itemsPerPage;
+            console.log(start, end);
+            console.log(this.data.filteredDonors);
             return this.data.filteredDonors.slice(start, end);
         },
         formatCurrency(amount) {
