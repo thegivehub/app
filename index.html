@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GiveHub</title>
     <link rel="stylesheet" href="style.css" />
-
+    <script>
+      // Check authentication immediately before loading the rest of the page
+      (function checkAuth() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          console.log('No access token found, redirecting to login');
+          window.location.href = '/pages/login.html';
+        }
+      })();
+    </script>
   </head>
   <body>
     <!-- Header -->
