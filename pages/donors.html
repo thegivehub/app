@@ -478,7 +478,7 @@
                 this.data.donors = donors;
                 this.data.stats = stats;
 
-                console.log(this.data);
+                // console.log(this.data);
                 this.state.loading = false;
                 this.filterDonors();
 
@@ -505,8 +505,8 @@
                     donor.email.toLowerCase().includes(query)
                 );
             }
-            console.log(this.state.currentFilter);
-            console.log(filtered);
+            // console.log(this.state.currentFilter);
+            // console.log(filtered);
 
             // Apply filters
             switch (this.state.currentFilter) {
@@ -544,8 +544,8 @@
         getPageDonors() {
             const start = (this.state.currentPage - 1) * this.state.itemsPerPage;
             const end = start + this.state.itemsPerPage;
-            console.log(start, end);
-            console.log(this.data.filteredDonors);
+            // console.log(start, end);
+            // console.log(this.data.filteredDonors);
             return this.data.filteredDonors.slice(start, end);
         },
         formatCurrency(amount) {
@@ -652,69 +652,28 @@
             const previousMonthRetained = this.data.donors.filter(donor => donor.status === 'active' && new Date(donor.lastDonation).getMonth() === new Date().getMonth() - 1).length;
             return previousMonthRetained ? ((retainedDonors - previousMonthRetained) / previousMonthRetained * 100).toFixed(2) : 0;
         },
-        // formatDate(date) {
-        //     return new Intl.DateTimeFormat('en-US', {
-        //         year: 'numeric',
-        //         month: 'short',
-        //         day: 'numeric'
-        //     }).format(new Date(date));
-        // },
-        // formatCurrency(amount) {
-        //     return new Intl.NumberFormat('en-US', {
-        //         style: 'currency',
-        //         currency: 'USD'
-        //     }).format(amount);
-        // },
-        // getInitials(name) {
-        //     return name
-        //         .split(' ')
-        //         .map(word => word[0])
-        //         .join('')
-        //         .toUpperCase();
-        // },
-        // getPageDonors() {
-        //     const start = (this.state.currentPage - 1) * this.state.itemsPerPage;
-        //     const end = start + this.state.itemsPerPage;
-        //     return this.data.filteredDonors.slice(start, end);
-        // },
-        // getDonorId(donor) {
-        //     return donor._id.substring(donor._id.length - 8); // Use last 8 characters of ID
-        // },
-        // getDonorStatus(donor) {
-        //     return donor.status === 'active' ? 'Active' : 'Inactive';
-        // },
-        // getDonorType(donor) {
-        //     return donor.donationType === 'recurring' ? 'Recurring' : 'One-time';
-        // },
-        // getDonorAvatar(donor) {
-        //     return `<div class="avatar">${this.getInitials(donor.name)}</div>`;
-        // },
-        // getDonorName(donor) {
-        //     return `<div>${donor.name}</div><div style="font-size: 0.875rem; color: #6b7280;">ID: ...${this.getDonorId(donor)}</div>`;
-        // },
+        getDonorId(donor) {
+            return `...${donor._id.substring(donor._id.length - 8)}`; // Use last 8 characters of ID
+        },
         render() {
             // Update loading state
             $('#loadingSpinner').classList.toggle('active', this.state.loading);
 
-            console.log(this.state.loading);
+            // console.log(this.state.loading);
 
             if (!this.state.loading) {
-                console.log(this.data);
+                // console.log(this.data);
                 // Update stats
                 $('#totalDonors').textContent = this.data.filteredDonors.length;
                 $('#totalDonations').textContent = this.formatCurrency(this.totalDonations());
                 $('#avgDonation').textContent = this.formatCurrency(this.averageDonation());
                 $('#retentionRate').textContent = `${this.retentionRate()}%`;
+
+                // Update trends
                 $('#donorsTrend').textContent = `${this.donorsTrend()}%`;
                 $('#donationsTrend').textContent = `${this.donationsTrend()}%`;
                 $('#avgDonationTrend').textContent = `${this.avgDonationTrend()}%`;
                 $('#retentionTrend').textContent = `${this.retentionTrend()}%`;
-
-                // Update trends
-                // $('#donorsTrend').textContent = `${this.data.stats.donorsTrend}%`;
-                // $('#donationsTrend').textContent = `${this.data.stats.donationsTrend}%`;
-                // $('#avgDonationTrend').textContent = `${this.data.stats.avgDonationTrend}%`;
-                // $('#retentionTrend').textContent = `${this.data.stats.retentionTrend}%`;
 
                 // Update table
                 const pageDonors = this.getPageDonors();
@@ -726,7 +685,7 @@
                                 <div class="avatar">${this.getInitials(donor.name)}</div>
                                 <div>
                                     <div>${donor.name}</div>
-                                    <div style="font-size: 0.875rem; color: #6b7280;">ID: ...${donor._id.substring(donor._id.length-8)}</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">ID: ${this.getDonorId(donor)}</div>
                                 </div>
                             </div>
                         </td>
