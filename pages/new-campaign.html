@@ -761,96 +761,6 @@
     return null;
   }
   
-function submitForm() {
-  console.log('Submitting form...');
-  
-  // Get the user ID and log it for debugging
-  const userId = getUserId();
-  console.log('User ID from token/storage:', userId);
-  
-  if (!userId) {
-    console.error('No user ID found - authentication may be missing');
-    alert('You must be logged in to create a campaign. Please log in and try again.');
-    return;
-  }
-  
-  // Collect form data
-  const formData = {
-    title: document.getElementById('campaignTitle').value,
-    type: document.getElementById('campaignType').value,
-    description: document.getElementById('description').value,
-    fundingGoal: parseFloat(document.getElementById('fundingGoal').value),
-    deadline: document.getElementById('deadline').value,
-    minContribution: parseFloat(document.getElementById('minContribution').value),
-    creatorId: userId,
-    creator_id: userId, // Adding alternative field name to ensure compatibility
-    userId: userId,     // Adding another common field name
-    createdAt: new Date().toISOString(),
-    status: 'pending',  // Initial status for moderation
-    images: [],          // We'll handle images separately,
-    location: {
-      country: document.getElementById('location-country').value,
-      region: document.getElementById('location-region').value,
-      coordinates: {
-        latitude: parseFloat(document.getElementById('location-latitude').value) || null,
-        longitude: parseFloat(document.getElementById('location-longitude').value) || null
-      }
-    }
-  };
-
-  // Get image data from preview
-  const imageElements = document.querySelectorAll('#imagePreview .preview-item');
-  imageElements.forEach(img => {
-    if (img.style.backgroundImage) {
-      const url = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-      formData.images.push(url);
-    }
-  });
-
-  console.log('Form Data to be submitted:', formData);
-
-  // Show loading state
-  const submitBtn = document.getElementById('nextBtn');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = 'Submitting...';
-  submitBtn.disabled = true;
-
-  // Send data to the backend with proper authorization
-  const token = getToken();
-  console.log('Using authorization token:', token ? 'Token exists' : 'No token');
-  
-  fetch('/api.php/Campaign', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(formData)
-  })
-  .then(response => {
-    console.log('Response status:', response.status);
-    if (!response.ok) {
-      return response.text().then(text => {
-        throw new Error(`Server error (${response.status}): ${text}`);
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Success response:', data);
-    alert('Campaign submitted successfully! It will be reviewed by our team.');
-    window.location.href = '/pages/my-campaigns.html';
-  })
-  .catch(error => {
-    console.error('Error submitting campaign:', error);
-    alert('Error submitting campaign: ' + error.message);
-  })
-  .finally(() => {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-  });
-}
-
   // Image upload handling
   const imageUpload = document.getElementById('imageUpload');
   const imagePreview = document.getElementById('imagePreview');
@@ -922,7 +832,15 @@ function submitForm() {
       creatorId: getUserId(), // We'll define this function
       createdAt: new Date().toISOString(),
       status: 'pending', // Initial status for moderation
-      images: [] // We'll handle images separately
+      images: [],
+      location: {
+        country: document.getElementById('location-country').value,
+        region: document.getElementById('location-region').value,
+        coordinates: {
+          latitude: parseFloat(document.getElementById('location-latitude').value) || null,
+          longitude: parseFloat(document.getElementById('location-longitude').value) || null
+        }
+      }
     };
 
     // Get image data from preview
