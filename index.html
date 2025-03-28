@@ -98,7 +98,7 @@
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
           </button>
-          <div class="user-avatar">CR</div>
+          <div class="user-avatar"></div>
         </div>
       </div>
     </header>
@@ -820,11 +820,11 @@
               if (userData.profile && userData.profile.avatar) {
                 const avatarURL = `/img/avatars/${userData.profile.avatar}`;
                 const avatar = document.querySelector('.user-avatar');
+                const initials = userData.username ? userData.username.substring(0, 2).toUpperCase() : 'US';
                 if (avatar) {
                   avatar.innerHTML = `<img src="${avatarURL}" alt="${userData.username}" class="w-full h-full rounded-full">`;
                 } else {
                   // If no avatar, use initials
-                  const initials = userData.username ? userData.username.substring(0, 2).toUpperCase() : 'US';
                   document.querySelector('.user-avatar').textContent = initials;
                 }
               }
