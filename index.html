@@ -821,8 +821,9 @@
                 const avatarURL = `/img/avatars/${userData.profile.avatar}`;
                 const avatar = document.querySelector('.user-avatar');
                 const initials = userData.username ? userData.username.substring(0, 2).toUpperCase() : 'US';
+                console.log('Avatar URL:', avatarURL);
                 if (avatar) {
-                  avatar.innerHTML = `<img src="${avatarURL}" alt="${userData.username}" class="w-full h-full rounded-full">`;
+                  avatar.innerHTML = `<img src="${avatarURL}" alt="${userData.username}" class="user-avatar-img" />`;
                 } else {
                   // If no avatar, use initials
                   document.querySelector('.user-avatar').textContent = initials;
