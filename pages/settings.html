@@ -697,9 +697,9 @@
                   <h1>Profile Image</h1>
                   <img id="avatarImg" src="../images/color-logo.svg" alt="Profile Image" />
                   <div style="margin-top: 1rem">
-                    <button class="btn2 btn-primary" id="changeImage">Change Image</button>
+                    <button class="btn btn-primary" id="changeImage">Change Image</button>
                     <button id="removeImage"
-                      class="btn2 btn-danger"
+                      class="btn btn-danger"
                       style="margin-left: 1rem">
                       Remove Image
                     </button>
@@ -711,10 +711,13 @@
                 <textarea id="bio" rows="4"></textarea>
               </div>
               <div class="form-group">
+                <!-- <div id="location-block">
+                  <location-block />
+                </div> -->
                 <label for="location">Location</label>
                 <input type="text" id="location" />
               </div>
-              <button class="btn btn-primary">Save Changes</button>
+              <button id="saveChangesBtn" class="btn btn-primary">Save Changes</button>
             </form>
           </div>
 
@@ -1167,7 +1170,7 @@
             });
 
             // Remove the form event listener and just use the button click
-            const saveButton = $('button.btn-primary');
+            const saveButton = $('button#saveChangesBtn');
             if (saveButton) {
               saveButton.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1184,6 +1187,7 @@
             // Profile image change
             $('#changeImage').addEventListener('click', (e) => {
               e.preventDefault();
+              
               // Logic to change the profile image
               alert('Change image functionality not implemented yet.');
             });

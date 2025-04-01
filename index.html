@@ -877,7 +877,10 @@
                         </div>
                         <div class="indicator-message">
                             <p>Complete your profile to get the most out of GiveHub</p>
-                            <a href="/pages/settings.html" id="complete-profile-link">Complete Profile →</a>
+                            <a 
+                            href="/pages/settings.html" 
+                            onclick="app.loadContent(this.getAttribute('href'));return false"
+                            id="complete-profile-link">Complete Profile →</a>
                         </div>
                     </div>
                 `;
