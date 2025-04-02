@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script type="module" src="../lib/LocationBlock.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Account Settings</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap"
       rel="stylesheet" />
+    <link rel="stylesheet" href="../login.css" />
     <style>
       :root {
         --primary: #2563eb;
@@ -72,16 +74,10 @@
         color: var(--gray-700);
       }
 
-      .settings-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-
       @media (min-width: 768px) {
         .settings-layout {
           display: grid;
-          grid-template-columns: 250px 1fr;
+          grid-template-columns: 200px minmax(680px, 1fr) !important;
           gap: 2rem;
         }
       }
@@ -91,6 +87,7 @@
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         padding: 1rem;
+        min-width: 40vw;
       }
 
       .nav-item {
@@ -115,6 +112,7 @@
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         padding: 1rem;
+        min-width: 40vw;
       }
 
       @media (min-width: 768px) {
@@ -129,6 +127,7 @@
 
       .settings-section.active {
         display: block;
+        width: 100% !important;
       }
 
       #avatarDiv {
@@ -645,6 +644,7 @@
       <div class="settings-layout">
         <div class="settings-nav">
           <div class="nav-item active" data-section="profile">Profile</div>
+          <div class="nav-item" data-section="location-block">Location</div>
           <div class="nav-item" data-section="notifications">Notifications</div>
           <div class="nav-item" data-section="payment">Payment Methods</div>
           <div class="nav-item" data-section="security">Security</div>
@@ -698,11 +698,11 @@
                   <img id="avatarImg" src="../images/color-logo.svg" alt="Profile Image" />
                   <div style="margin-top: 1rem">
                     <button class="btn btn-primary" id="changeImage">Change Image</button>
-                    <button id="removeImage"
+                    <!-- <button id="removeImage"
                       class="btn btn-danger"
                       style="margin-left: 1rem">
                       Remove Image
-                    </button>
+                    </button> -->
                   </div>
                 </div>
               </div>
@@ -710,15 +710,12 @@
                 <label for="bio">Bio</label>
                 <textarea id="bio" rows="4"></textarea>
               </div>
-              <div class="form-group">
-                <!-- <div id="location-block">
-                  <location-block />
-                </div> -->
-                <label for="location">Location</label>
-                <input type="text" id="location" />
-              </div>
               <button id="saveChangesBtn" class="btn btn-primary">Save Changes</button>
             </form>
+          </div>
+
+          <div class="settings-section" id="location-block">
+            <location-block />
           </div>
 
           <!-- Notifications Section -->
@@ -1191,11 +1188,11 @@
               // Logic to change the profile image
               // alert('Change image functionality not implemented yet.');
             });
-            $('#removeImage').addEventListener('click', (e) => {
-              e.preventDefault();
-              // Logic to remove the profile image
-              $('#avatarImg').src = '../images/color-logo.svg'; // Reset to default
-            });
+            // $('#removeImage').addEventListener('click', (e) => {
+            //   e.preventDefault();
+            //   // Logic to remove the profile image
+            //   $('#avatarImg').src = '../images/color-logo.svg'; // Reset to default
+            // });
           },
           setupAvatarUpload() {
               const input = document.createElement('input');
@@ -1229,8 +1226,8 @@
                   // Upload to server
                   const formData = new FormData();
                   formData.append('avatar', file);
-                  formData.append('username', document.getElementById('username').value);
-                  formData.append('email', document.getElementById('email').value);
+                  formData.append('username', this.data.user.username);
+                  formData.append('email', this.data.user.email);
 
                   console.log('prefetch')
 
@@ -1249,7 +1246,8 @@
                   console.log('Avatar uploaded successfully:', result);
 
                   // Store the returned avatar URL
-                  document.getElementById('avatarImg').value = result.filename || result.url;
+                  // document.getElementById('avatarImg').value = result.filename || result.url;
+                  document.getElementById('avatarImg').src = result.url;
               } catch (error) {
                   this.showError('avatarError', error.message);
               }
@@ -1257,12 +1255,15 @@
           async loadUserData() {
             try {
               this.state.loading = true;
-              this.render();
+              // this.render();
 
               // Use our manager classes for consistent SDK handling
-              const [user, preferences] = await Promise.all([
-                app.settingsManager.getUserProfile(), // This calls /api/user/me
-                app.settingsManager.getPreferences(), // This calls /api/user/preferences
+              const [user] = await Promise.all([
+                app.settingsManager.getUserProfile()
+              ]);
+
+              const [preferences] = await Promise.all([
+                app.settingsManager.getPreferences()
               ]);
 
               if (!user) {
@@ -1432,8 +1433,6 @@
               $('#avatarImg').src = this.data.user.profile?.avatar ? `../img/avatars/${this.data.user.profile?.avatar}`
                  :
                 '../images/color-logo.svg';
-              $('#location').value =
-                this.data.user.personalInfo?.location || '';
             }
 
             // Update loading state
