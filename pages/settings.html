@@ -1187,9 +1187,9 @@
             // Profile image change
             $('#changeImage').addEventListener('click', (e) => {
               e.preventDefault();
-              
+              this.setupAvatarUpload();
               // Logic to change the profile image
-              alert('Change image functionality not implemented yet.');
+              // alert('Change image functionality not implemented yet.');
             });
             $('#removeImage').addEventListener('click', (e) => {
               e.preventDefault();
@@ -1197,6 +1197,62 @@
               $('#avatarImg').src = '../images/color-logo.svg'; // Reset to default
             });
           },
+          setupAvatarUpload() {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = (e) => this.handleAvatarUpload(e);
+              input.click();
+          },
+          async handleAvatarUpload(event) {
+              const file = event.target.files[0];
+              if (!file) return;
+
+              if (!file.type.startsWith('image/')) {
+                  this.showError('avatarError', 'Please select an image file');
+                  return;
+              }
+
+              console.log('handleAvatarUload');
+
+              try {
+                  // Show preview
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                      this.elements.avatarImg.src = e.target.result;
+                      this.elements.avatarImg.style.display = 'block';
+                      document.getElementById('avatarImg').value = e.target.result;
+                  };
+                  reader.readAsDataURL(file);
+
+                  // Upload to server
+                  const formData = new FormData();
+                  formData.append('avatar', file);
+                  formData.append('username', document.getElementById('username').value);
+                  formData.append('email', document.getElementById('email').value);
+
+                  console.log('prefetch')
+
+                  const response = await fetch('/api/auth/upload-avatar', {
+                      method: 'POST',
+                      body: formData
+                  });
+
+                  console.log('response', response);
+
+                  const result = await response.json();
+                  if (!result.success) {
+                      throw new Error(result.error || 'Failed to upload avatar');
+                  }
+                  
+                  console.log('Avatar uploaded successfully:', result);
+
+                  // Store the returned avatar URL
+                  document.getElementById('avatarImg').value = result.filename || result.url;
+              } catch (error) {
+                  this.showError('avatarError', error.message);
+              }
+          },          
           async loadUserData() {
             try {
               this.state.loading = true;
