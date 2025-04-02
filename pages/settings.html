@@ -1219,11 +1219,12 @@
                   // Show preview
                   const reader = new FileReader();
                   reader.onload = (e) => {
-                      this.elements.avatarImg.src = e.target.result;
-                      this.elements.avatarImg.style.display = 'block';
+                      document.getElementById('avatarImg').src = e.target.result;
+                      document.getElementById('avatarImg').style.display = 'block';
                       document.getElementById('avatarImg').value = e.target.result;
                   };
                   reader.readAsDataURL(file);
+                  console.log('prefetch1')
 
                   // Upload to server
                   const formData = new FormData();
