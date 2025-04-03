@@ -98,8 +98,8 @@ body {
 
 .form-group label {
     display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: var(--gray-700);
     margin-bottom: 0.5rem;
 }
