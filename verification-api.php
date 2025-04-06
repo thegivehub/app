@@ -113,14 +113,12 @@ class VerificationController {
      */
     public function verifyIdentity() {
         try {
-            // Get request body
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            // Check if document ID was provided
-            if (!isset($data['documentId']) || empty($data['documentId'])) {
+            // Verify authentication
+            $userId = $this->auth->getUserIdFromToken();
+            if (!$userId) {
                 return [
                     'success' => false,
-                    'error' => 'Document ID is required'
+                    'error' => 'Authentication required'
                 ];
             }
             
@@ -132,8 +130,24 @@ class VerificationController {
                 ];
             }
             
+            // Get document ID - try both JSON body and URL parameter
+            $documentId = $_POST['documentId'] ?? null;
+            
+            // If not found in POST, try to get from JSON body
+            if (!$documentId) {
+                $jsonData = json_decode(file_get_contents('php://input'), true);
+                $documentId = $jsonData['documentId'] ?? null;
+            }
+            
+            if (!$documentId) {
+                return [
+                    'success' => false,
+                    'error' => 'Document ID is required'
+                ];
+            }
+            
             // Verify selfie against document
-            $result = $this->faceVerifier->verifySelfie($_FILES['selfieFile'], $data['documentId']);
+            $result = $this->faceVerifier->verifySelfie($_FILES['selfieFile'], $documentId);
             
             return $result;
             

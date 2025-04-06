@@ -1194,11 +1194,172 @@
               // Logic to change the profile image
               // alert('Change image functionality not implemented yet.');
             });
-            // $('#removeImage').addEventListener('click', (e) => {
-            //   e.preventDefault();
-            //   // Logic to remove the profile image
-            //   $('#avatarImg').src = '../images/color-logo.svg'; // Reset to default
-            // });
+            
+            // Identity verification file uploads
+            $('#idDocumentUpload').addEventListener('click', function() {
+              $('#idDocumentInput').click();
+            });
+            
+            $('#selfieUpload').addEventListener('click', function() {
+              $('#selfieInput').click();
+            });
+            
+            // Handle file selection for ID document
+            $('#idDocumentInput').addEventListener('change', function(e) {
+              if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                  $('#idDocumentPreview').style.display = 'block';
+                  $('#idDocumentPreview img').src = e.target.result;
+                  $('#nextToSelfie').disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+              }
+            });
+            
+            // Handle file selection for selfie
+            $('#selfieInput').addEventListener('change', function(e) {
+              if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                  $('#selfiePreview').style.display = 'block';
+                  $('#selfieVideo').style.display = 'none';
+                  $('#selfiePreview img').src = e.target.result;
+                  $('#nextToReview').disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+              }
+            });
+            
+            // Handle remove buttons for uploaded files
+            $('#removeIdDocument').addEventListener('click', function() {
+              $('#idDocumentPreview').style.display = 'none';
+              $('#idDocumentInput').value = '';
+              $('#nextToSelfie').disabled = true;
+            });
+            
+            $('#removeSelfie').addEventListener('click', function() {
+              $('#selfiePreview').style.display = 'none';
+              $('#selfieVideo').style.display = 'block';
+              $('#selfieInput').value = '';
+              $('#nextToReview').disabled = true;
+            });
+            
+            // Step navigation for verification process
+            $('#nextToSelfie').addEventListener('click', function() {
+              $('.step-content[data-step="1"]').classList.remove('active');
+              $('.step-content[data-step="2"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[0].classList.add('completed');
+              $$('.step-indicator')[1].classList.add('active');
+              $$('.step-divider')[0].classList.add('completed');
+              
+              // Initialize webcam if available
+              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                  .then(function(stream) {
+                    $('#selfieVideo').srcObject = stream;
+                  })
+                  .catch(function(error) {
+                    console.error("Could not access camera:", error);
+                  });
+              }
+            });
+            
+            $('#backToDocument').addEventListener('click', function() {
+              $('.step-content[data-step="2"]').classList.remove('active');
+              $('.step-content[data-step="1"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[0].classList.remove('completed');
+              $$('.step-indicator')[1].classList.remove('active');
+              $$('.step-divider')[0].classList.remove('completed');
+              
+              // Stop webcam if it's running
+              if ($('#selfieVideo').srcObject) {
+                $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
+              }
+            });
+            
+            $('#nextToReview').addEventListener('click', function() {
+              $('.step-content[data-step="2"]').classList.remove('active');
+              $('.step-content[data-step="3"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[1].classList.add('completed');
+              $$('.step-indicator')[2].classList.add('active');
+              $$('.step-divider')[1].classList.add('completed');
+              
+              // Stop webcam if it's running
+              if ($('#selfieVideo').srcObject) {
+                $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
+              }
+              
+              // Show review images
+              $('#reviewDocumentPreview').innerHTML = $('#idDocumentPreview').innerHTML;
+              $('#reviewSelfiePreview').innerHTML = $('#selfiePreview').innerHTML;
+              $('#reviewDocumentType').textContent = $('#documentType').value;
+            });
+            
+            $('#backToSelfie').addEventListener('click', function() {
+              $('.step-content[data-step="3"]').classList.remove('active');
+              $('.step-content[data-step="2"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[1].classList.remove('completed');
+              $$('.step-indicator')[2].classList.remove('active');
+              $$('.step-divider')[1].classList.remove('completed');
+              
+              // Re-initialize webcam
+              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                  .then(function(stream) {
+                    $('#selfieVideo').srcObject = stream;
+                  });
+              }
+            });
+            
+            // Handle selfie capture button
+            $('#captureSelfie').addEventListener('click', function() {
+              const canvas = document.createElement('canvas');
+              const video = $('#selfieVideo');
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              canvas.getContext('2d').drawImage(video, 0, 0);
+              
+              const dataUrl = canvas.toDataURL('image/png');
+              $('#selfiePreview').style.display = 'block';
+              $('#selfiePreview img').src = dataUrl;
+              $('#videoContainer').style.display = 'none';
+              $('#nextToReview').disabled = false;
+            });
+            
+            // Submit verification
+            $('#submitVerification').addEventListener('click', function() {
+              $('.step-content[data-step="3"]').classList.remove('active');
+              $('.step-content[data-step="success"]').classList.add('active');
+              
+              // Update verification status
+              $('#verificationStatus .status-icon').classList.remove('pending');
+              $('#verificationStatus .status-icon').classList.add('verified');
+              $('#verificationStatus .status-icon').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+              $('#verificationStatus .status-text h3').textContent = 'Verification Submitted';
+              $('#verificationStatus .status-text p').textContent = 'We\'re reviewing your information. This typically takes 1-2 business days.';
+              
+              // Simulate API call to submit verification
+              console.log('Verification submitted:', {
+                documentType: $('#documentType').value,
+                documentImage: $('#idDocumentPreview img').src,
+                selfieImage: $('#selfiePreview img').src
+              });
+            });
           },
           setupAvatarUpload() {
               const input = document.createElement('input');
