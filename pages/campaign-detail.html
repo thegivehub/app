@@ -358,12 +358,14 @@
         },
         render() {
             const data = app.data;
+
+            console.log('Campaign Data:', data);
             
             // Basic Info
             $('#campaign-title').textContent = data.title || "Campaign Title";
             $('#campaign-description').textContent = data.description || "Campaign Description";
             $('#campaign-location').textContent = data.location?.region || "Unknown";
-            $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount, data.funding.currency);
+            $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.fundingGoal, data.funding.currency);
             $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount, data.funding.currency);
             $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount);
 
@@ -375,7 +377,7 @@
             }
 
             // Progress Bar
-            const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
+            const progress = (data.funding.raisedAmount / data.funding.fundingGoal) * 100;
             $('#progress-bar-fill').style.width = `${progress}%`;
 
             // Impact Metrics
@@ -450,7 +452,7 @@
                 progressBar.style.width = '0%';
                 setTimeout(() => {
                     progressBar.style.transition = 'width 1s ease-in-out';
-                    const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                    const progress = (app.data.funding.raisedAmount / app.data.funding.fundingGoal) * 100;
                     progressBar.style.width = `${progress}%`;
                 }, 100);
             }
