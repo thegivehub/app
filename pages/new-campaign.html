@@ -415,6 +415,7 @@
 <script>
   let currentStep = 1;
   const totalSteps = 4;
+  const owmAPIKey='0aa78454a886474fc288a25fd41ca9a4';
 
   document.getElementById('nextBtn').addEventListener('click', () => {
     if (validateCurrentStep()) {
@@ -631,8 +632,43 @@
       }
     });
   });
-  function submitForm() {
+  function getLatLong(txt) {
+      const owmAPI = `https://api.openweathermap.org/geo/1.0/direct?limit=1&q=${txt}&appid=${owmAPIKey}`;
+      console.log('Fetching coordinates for:', txt);
+      console.log('OWM API URL:', owmAPI);
+      return fetch(owmAPI)
+          .then(response => response.json())
+          .then(data => {
+              if (data.length > 0) {
+                  return {
+                      lat: data[0].lat,
+                      lon: data[0].lon
+                  };
+              } else {
+                  throw new Error('Location not found');
+              }
+          })
+          .catch(error => console.error('Error fetching coordinates:', error));
+  }
+
+  async function submitForm() {
     console.log('Submitting form...');
+    let lat=null, lon=null;
+
+    if(document.getElementById('location-latitude').value.length>0 && document.getElementById('location-longitude').value.length>0){
+        lat = parseFloat(document.getElementById('location-latitude').value);
+        lon = parseFloat(document.getElementById('location-longitude').value);
+        console.log(data.location);
+    }else{
+        if(document.getElementById('location-region').value || document.getElementById('location-country').value){
+            const latLng = await this.getLatLong(`${document.getElementById('location-region').value}, ${document.getElementById('location-country').value}`);
+            lat = latLng.lat;
+            lon = latLng.lon;
+        }else{
+            console.log('No coordinates available for the map.');
+        }                
+    }
+
 
     // Collect form data
     const formData = {
@@ -658,8 +694,8 @@
         country: document.getElementById('location-country').value,
         region: document.getElementById('location-region').value,
         coordinates: {
-          latitude: parseFloat(document.getElementById('location-latitude').value) || null,
-          longitude: parseFloat(document.getElementById('location-longitude').value) || null
+          latitude: lat,
+          longitude: lon
         }
       }
     };

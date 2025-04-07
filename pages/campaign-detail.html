@@ -256,6 +256,9 @@
         <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
         <div class="card campaign-header">
             <div class="campaign-info">
+                <a href="#" class="link" style="float:right" onclick="app.deleteCampaign(); return false;">
+                    <i class="fa-solid fa-arrow-left-long"></i> Delete This Campaign
+                </a>
                 <h1 id="campaign-title" class="campaign-title">Campaign Title</h1>
                 <p id="campaign-description" class="campaign-description"></p>
                 <div class="stats-grid">
@@ -308,17 +311,39 @@
 (function() {
     const $ = str => document.querySelector(str);
     const $$ = str => document.querySelectorAll(str);
-    
     const app = {
         data: {},
         state: {
             loaded: false,
-            map: null
+            map: null,
+            id: null
         },
         init() {
             const query = app.utils.parseSearch();
             const campaignId = query.id;
+            if (!campaignId) {
+                alert('Campaign ID is required');
+                return;
+            }
+            app.state.id = campaignId;
             app.fetch(`/api/campaign?id=${campaignId}`);
+        },
+        deleteCampaign() {
+            if(confirm('Are you sure you want to delete this campaign?')) {
+                fetch(`/api/campaign?id=${this.state.id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Campaign deleted successfully');
+                        window.location.href = '/pages/my-campaigns.html';
+                    } else {
+                        alert('Error deleting campaign');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
         },
         utils: {
             parseSearch() {
@@ -356,7 +381,7 @@
                 })
                 .catch(error => console.error('Fetch error:', error));
         },
-        render() {
+        async render() {
             const data = app.data;
 
             console.log('Campaign Data:', data);
@@ -374,11 +399,11 @@
             }
 
             // Map
-            if (data.location?.coordinates) {
+            if (data.location?.coordinates?.latitude && data.location?.coordinates?.longitude) {
+                app.renderMap(data.location?.coordinates?.latitude, 
+                            data.location?.coordinates?.longitude, 
+                            `${data.location?.region}, ${data.location?.country}`);
                 console.log(data.location);
-                app.renderMap(data.location.coordinates.latitude, 
-                            data.location.coordinates.longitude, 
-                            `${data.location.region}, ${data.location.country}`);
             }else{
                 console.log('No coordinates available for the map.');
             }
