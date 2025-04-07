@@ -329,8 +329,8 @@
           ? campaign.images[0] 
           : '/img/campaign-placeholder.jpg';
           
-        const raised = campaign.raised || 0;
-        const progress = calculateProgress(raised, campaign.fundingGoal);
+        const raised = campaign.raisedAmount || 0;
+        const progress = calculateProgress(raised, campaign.funding?.goalAmount ?? 0);
         
         const campaignCard = document.createElement('div');
         campaignCard.className = 'campaign-card';
@@ -341,7 +341,7 @@
             <div class="campaign-type">${campaign.type}</div>
             <p class="campaign-description">${truncateText(campaign.description, 120)}</p>
             <div>
-              <strong>${formatCurrency(campaign.fundingGoal)}</strong> goal
+              <strong>${formatCurrency(campaign.funding?.goalAmount ?? 0)}</strong> goal
               <div class="progress-bar">
                 <div class="progress-fill" style="width: ${progress}%"></div>
               </div>
@@ -383,6 +383,7 @@
         return response.json();
       })
       .then(data => {
+        console.log(data);
         renderCampaigns(data);
       })
       .catch(error => {
