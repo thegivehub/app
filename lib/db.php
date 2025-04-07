@@ -33,7 +33,7 @@ class Database {
             $this->db = $this->client->selectDatabase($dbName);
             
             if (APP_DEBUG) {
-                error_log("MongoDB connection established to {$host}:{$port}/{$dbName}");
+                //error_log("MongoDB connection established to {$host}:{$port}/{$dbName}");
             }
         } catch (Exception $e) {
             error_log("MongoDB connection failed: " . $e->getMessage());
