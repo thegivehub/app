@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Administration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        /* KYC Admin specific styles */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .stat-card.pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .stat-card.approved {
+            border-left: 4px solid var(--success);
+        }
+
+        .stat-card.rejected {
+            border-left: 4px solid var(--danger);
+        }
+
+        .stat-card.total {
+            border-left: 4px solid var(--primary);
+        }
+
+        .verification-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .verification-table th, 
+        .verification-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .verification-table th {
+            font-weight: 500;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .verification-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .verification-table tr:hover {
+            background-color: var(--gray-50);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status-approved {
+            background-color: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-rejected {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .status-pending {
+            background-color: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-error {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background-color: white;
+            color: var(--gray-700);
+        }
+
+        .filter-buttons {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                margin-bottom: 1rem;
+            }
+            
+            .filter-buttons {
+                width: 100%;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            overflow-y: auto;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-dialog {
+            margin: 1.75rem auto;
+            max-width: 500px;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.2s;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--gray-800);
+        }
+
+        .close {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            background-color: white;
+            color: var(--gray-700);
+        }
+
+        .form-control-static {
+            padding: 0.5rem;
+            background-color: var(--gray-100);
+            border-radius: 4px;
+            min-height: 38px;
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Main Content -->
+        <main class="admin-content">
+            <div class="admin-header">
+                <h1 class="admin-title">Identity Verification Administration</h1>
+                <div class="admin-actions">
+                    <button id="refresh-btn" class="btn btn-outline">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <!-- KYC Stats Overview -->
+            <div class="stats-overview">
+                <div class="stat-card total">
+                    <div class="stat-label">Total Verifications</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card approved">
+                    <div class="stat-label">Approved</div>
+                    <div class="stat-value" id="stat-approved">0</div>
+                </div>
+                <div class="stat-card rejected">
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-value" id="stat-rejected">0</div>
+                </div>
+                <div class="stat-card pending">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                </div>
+            </div>
+            
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="filter-status" class="filter-label">Status</label>
+                    <select id="filter-status" class="filter-control">
+                        <option value="">All Statuses</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="ERROR">Error</option>
+                        <option value="EXPIRED">Expired</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-start-date" class="filter-label">Start Date</label>
+                    <input type="date" id="filter-start-date" class="filter-control">
+                </div>
+                <div class="filter-group">
+                    <label for="filter-end-date" class="filter-label">End Date</label>
+                    <input type="date" id="filter-end-date" class="filter-control">
+                </div>
+                <div class="filter-buttons">
+                    <button id="apply-filters" class="btn btn-primary">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Verification List -->
+            <div class="user-table-container">
+                <table class="verification-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="verification-list">
+                        <tr>
+                            <td colspan="6" class="text-center">Loading verification data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Manual Override -->
+    <div class="modal" id="override-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="overrideModalLabel">Manual Verification Override</h5>
+                    <button type="button" class="close" id="close-modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="override-form">
+                        <input type="hidden" id="override-user-id">
+                        
+                        <div class="form-group">
+                            <label for="override-user-info" class="form-label">User:</label>
+                            <div id="override-user-info" class="form-control-static"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="override-status" class="form-label">Status:</label>
+                            <select id="override-status" class="form-control" required>
+                                <option value="">Select Status</option>
+                                <option value="APPROVED">Approve Verification</option>
+                                <option value="REJECTED">Reject Verification</option>
+                                <option value="PENDING">Reset to Pending</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="override-reason" class="form-label">Reason:</label>
+                            <textarea id="override-reason" class="form-control" rows="3" required></textarea>
+                            <small class="form-text">Provide a detailed reason for this manual override (for audit purposes).</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancel-override">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-override">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Admin JavaScript -->
+    <script>
+        // Initialization when the document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const verificationList = document.getElementById('verification-list');
+            const filterStatus = document.getElementById('filter-status');
+            const filterStartDate = document.getElementById('filter-start-date');
+            const filterEndDate = document.getElementById('filter-end-date');
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            const refreshBtn = document.getElementById('refresh-btn');
+            
+            // Stats elements
+            const statTotal = document.getElementById('stat-total');
+            const statApproved = document.getElementById('stat-approved');
+            const statRejected = document.getElementById('stat-rejected');
+            const statPending = document.getElementById('stat-pending');
+            
+            // Override modal elements
+            const overrideModal = document.getElementById('override-modal');
+            const overrideUserId = document.getElementById('override-user-id');
+            const overrideUserInfo = document.getElementById('override-user-info');
+            const overrideStatus = document.getElementById('override-status');
+            const overrideReason = document.getElementById('override-reason');
+            const saveOverrideBtn = document.getElementById('save-override');
+            const cancelOverrideBtn = document.getElementById('cancel-override');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            // Initialize
+            loadVerificationData();
+
+            // Add event listeners
+            applyFiltersBtn.addEventListener('click', loadVerificationData);
+            refreshBtn.addEventListener('click', loadVerificationData);
+            saveOverrideBtn.addEventListener('click', saveOverride);
+            cancelOverrideBtn.addEventListener('click', closeOverrideModal);
+            closeModalBtn.addEventListener('click', closeOverrideModal);
+
+            // Get current filters
+            function getFilters() {
+                return {
+                    status: filterStatus.value,
+                    startDate: filterStartDate.value || null,
+                    endDate: filterEndDate.value || null
+                };
+            }
+
+            // Format date for display
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+
+            // Load verification report data
+            async function loadVerificationData() {
+                try {
+                    const filters = getFilters();
+                    let url = '/api.php/kyc/report';
+                    
+                    // Add filters to URL if present
+                    const params = [];
+                    if (filters.status) params.push(`status=${filters.status}`);
+                    if (filters.startDate) params.push(`startDate=${filters.startDate}`);
+                    if (filters.endDate) params.push(`endDate=${filters.endDate}`);
+                    
+                    if (params.length > 0) {
+                        url += '?' + params.join('&');
+                    }
+                    
+                    // Start loading indicator
+                    verificationList.innerHTML = `<tr><td colspan="6" class="text-center">Loading verification data...</td></tr>`;
+                    
+                    // Get admin token from parent window
+                    const adminToken = window.parent.localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Authentication token missing');
+                    }
+                    
+                    // Make API request
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load verification data');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update statistics
+                    updateStats(data.stats);
+                    
+                    // Display verifications
+                    displayVerifications(data.verifications);
+                } catch (error) {
+                    console.error('Error loading verification data:', error);
+                    verificationList.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                Error loading data: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Update statistics display
+            function updateStats(stats) {
+                statTotal.textContent = stats.total || 0;
+                statApproved.textContent = stats.approved || 0;
+                statRejected.textContent = stats.rejected || 0;
+                statPending.textContent = stats.pending || 0;
+            }
+
+            // Display verifications in the table
+            function displayVerifications(verifications) {
+                if (!verifications || verifications.length === 0) {
+                    verificationList.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">No verification records found</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                
+                verifications.forEach(v => {
+                    html += `
+                        <tr>
+                            <td>${v.userName || 'Unknown'}</td>
+                            <td>${v.email || 'N/A'}</td>
+                            <td>
+                                <span class="status-badge status-${v.status.toLowerCase()}">${v.status}</span>
+                            </td>
+                            <td>${formatDate(v.created)}</td>
+                            <td>${formatDate(v.updated)}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-outline view-details" data-id="${v.id}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-primary override-btn" data-id="${v.id}" data-user="${v.userName}" data-email="${v.email}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                verificationList.innerHTML = html;
+                
+                // Add event listeners to action buttons
+                document.querySelectorAll('.override-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        openOverrideModal(
+                            this.getAttribute('data-id'),
+                            this.getAttribute('data-user'),
+                            this.getAttribute('data-email')
+                        );
+                    });
+                });
+                
+                document.querySelectorAll('.view-details').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        viewVerificationDetails(this.getAttribute('data-id'));
+                    });
+                });
+            }
+
+            // Open the override modal
+            function openOverrideModal(userId, userName, email) {
+                overrideUserId.value = userId;
+                overrideUserInfo.textContent = `${userName} (${email})`;
+                overrideStatus.value = '';
+                overrideReason.value = '';
+                
+                overrideModal.classList.add('show');
+            }
+
+            // Close the override modal
+            function closeOverrideModal() {
+                overrideModal.classList.remove('show');
+            }
+
+            // Save manual override
+            async function saveOverride() {
+                try {
+                    const userId = overrideUserId.value;
+                    const status = overrideStatus.value;
+                    const reason = overrideReason.value;
+                    
+                    if (!userId || !status || !reason) {
+                        alert('Please fill all required fields');
+                        return;
+                    }
+                    
+                    // Get admin token from parent window
+                    const adminToken = window.parent.localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Authentication token missing');
+                    }
+                    
+                    // Make API request
+                    const response = await fetch('/api.php/kyc/override', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId,
+                            status,
+                            reason
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to process override');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Close the modal and reload data
+                        closeOverrideModal();
+                        loadVerificationData();
+                        
+                        // Notify parent window 
+                        if (window.parent && window.parent.AdminController) {
+                            window.parent.AdminController.showNotification('Verification status updated successfully', 'success');
+                        }
+                    } else {
+                        throw new Error(result.message || 'Operation failed');
+                    }
+                } catch (error) {
+                    console.error('Override error:', error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
+
+            // View verification details
+            function viewVerificationDetails(id) {
+                // This would typically open a details modal or navigate to a details page
+                // For now, we'll just show an alert
+                alert(`View verification details for ID: ${id} (Not implemented in this demo)`);
+            }
+        });
+    </script>
+</body>
+</html> 
