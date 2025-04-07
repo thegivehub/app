@@ -316,9 +316,38 @@
         <!-- Step 2: Funding Goals -->
         <div class="form-section" id="step2">
           <div class="form-group">
-            <label for="fundingGoal">Funding Goal</label>
-            <input type="number" id="fundingGoal" required min="1" />
-            <div class="help-text">Set a realistic funding goal in USD</div>
+            <div id="currency-select">
+
+            <label for="currency">Currency</label>
+              <select id="currency" required>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+                <option value="CAD">CAD</option>
+                <option value="CHF">CHF</option>
+                <option value="CNY">CNY</option>
+                <option value="SEK">SEK</option>
+                <option value="NZD">NZD</option>
+                <option value="MXN">MXN</option>
+                <option value="SGD">SGD</option>
+                <option value="HKD">HKD</option>
+                <option value="NOK">NOK</option>
+                <option value="KRW">KRW</option>
+                <option value="ZZZ">Other</option>
+              </select>
+              <div class="error">Currency is required</div>
+              <div class="help-text">
+                Choose the currency for the campaign
+              </div>
+            </div>
+            <div id="amount-select">
+              <label for="goalAmount">Funding Goal</label>
+              <input type="number" id="goalAmount" required min="1" />
+              <div class="help-text">Set a funding goal in your selected currency</div>
+              <div class="error">A non-zero goal amount is required</div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -463,7 +492,14 @@
         title: document.getElementById('campaignTitle').value,
         type: document.getElementById('campaignType').value,
         description: document.getElementById('description').value,
-        fundingGoal: document.getElementById('fundingGoal').value,
+        funding:{
+          currency: document.getElementById('currency').value,
+          goalAmount: document.getElementById('goalAmount').value,
+          minContribution: parseFloat(document.getElementById('minContribution').value),
+          donorCount: [],
+          transactions: [],
+          raisedAmount: 0
+        },
         deadline: document.getElementById('deadline').value,
         minContribution: document.getElementById('minContribution').value
       };
@@ -493,7 +529,8 @@
           <p><strong>Description:</strong> ${campaignData.description}</p>
           
           <h3>Funding Details</h3>
-          <p><strong>Funding Goal:</strong> $${Number(campaignData.fundingGoal).toLocaleString()}</p>
+          <p><strong>Funding Goal:</strong> $${Number(campaignData.funding.goalAmount).toLocaleString()}</p>
+          <p><strong>Currency:</strong> ${campaignData.funding.currency}</p>
           <p><strong>Campaign Deadline:</strong> ${formattedDate}</p>
           <p><strong>Minimum Contribution:</strong> $${Number(campaignData.minContribution).toLocaleString()}</p>
           
@@ -602,7 +639,14 @@
       title: document.getElementById('campaignTitle').value,
       type: document.getElementById('campaignType').value,
       description: document.getElementById('description').value,
-      fundingGoal: parseFloat(document.getElementById('fundingGoal').value),
+      funding: {
+        currency: document.getElementById('currency').value,
+        goalAmount: parseFloat(document.getElementById('goalAmount').value),
+        minContribution: parseFloat(document.getElementById('minContribution').value),
+        donorCount: [],
+        transactions: [],
+        raisedAmount: 0
+      },
       deadline: document.getElementById('deadline').value,
       minContribution: parseFloat(document.getElementById('minContribution').value),
       // Add user ID if available in session

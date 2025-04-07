@@ -365,19 +365,26 @@
             $('#campaign-title').textContent = data.title || "Campaign Title";
             $('#campaign-description').textContent = data.description || "Campaign Description";
             $('#campaign-location').textContent = data.location?.region || "Unknown";
-            $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.fundingGoal, data.funding.currency);
-            $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount, data.funding.currency);
-            $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount);
+            if(data.funding){
+                $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount, data.funding.currency);
+                $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount, data.funding.currency);
+                $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount);
+            }else{
+                console.log('Funding data not available.');
+            }
 
             // Map
             if (data.location?.coordinates) {
+                console.log(data.location);
                 app.renderMap(data.location.coordinates.latitude, 
                             data.location.coordinates.longitude, 
                             `${data.location.region}, ${data.location.country}`);
+            }else{
+                console.log('No coordinates available for the map.');
             }
 
             // Progress Bar
-            const progress = (data.funding.raisedAmount / data.funding.fundingGoal) * 100;
+            const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
             $('#progress-bar-fill').style.width = `${progress}%`;
 
             // Impact Metrics
@@ -431,9 +438,10 @@
                 app.state.map.remove();
             }
             
-            app.state.map = L.map('map').setView([lat, lng], 2);
+            app.state.map = L.map('map').setView([lat, lng], 7);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
+                minZoom: 2,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(app.state.map);
 
@@ -452,7 +460,7 @@
                 progressBar.style.width = '0%';
                 setTimeout(() => {
                     progressBar.style.transition = 'width 1s ease-in-out';
-                    const progress = (app.data.funding.raisedAmount / app.data.funding.fundingGoal) * 100;
+                    const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
                     progressBar.style.width = `${progress}%`;
                 }, 100);
             }
