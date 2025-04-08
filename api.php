@@ -337,7 +337,8 @@ switch ($method) {
     case 'PUT':
         // Update
         if ($id) {
-            $data = json_decode(file_get_contents('php://input'), true);
+            $data = $posted;
+            // json_decode(file_get_contents('php://input'), true);
             if ($data) {
                 $result = $instance->update($id, $data);
                 echo json_encode($result);
