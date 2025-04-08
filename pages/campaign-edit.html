@@ -2339,7 +2339,8 @@ Thanks for considering,
             fetch(`/api/campaign?id=${this.data._id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify(updatedCampaign)
             })
