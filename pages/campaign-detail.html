@@ -77,6 +77,9 @@
             display: grid;
             gap: 24px;
             grid-template-columns: 2fr 1fr;
+            position: relative;
+            background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+            border: 1px solid #e2e8f0;
         }
 
         @media (max-width: 768px) {
@@ -89,7 +92,10 @@
             font-size: 2.5rem;
             line-height: 1.2;
             margin-bottom: 16px;
-            color: var(--text-color);
+            color: #1e293b;
+            border-bottom: 3px solid var(--success-color);
+            padding-bottom: 12px;
+            display: inline-block;
         }
 
         .campaign-description {
@@ -106,10 +112,17 @@
         }
 
         .stat-card {
-            background: #f8fafc;
+            background: white;
             padding: 16px;
             border-radius: var(--border-radius);
             text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
         .stat-value {
@@ -133,14 +146,18 @@
 
         .progress-container {
             margin: 24px 0;
+            background: linear-gradient(to right, #dcfce7, #f0fdf4);
+            padding: 24px;
+            border-radius: var(--border-radius);
         }
 
         .progress-bar {
-            background-color: #e2e8f0;
+            background-color: white;
             border-radius: 9999px;
             overflow: hidden;
-            height: 24px;
+            height: 32px;
             margin: 8px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .progress-bar div {
@@ -159,7 +176,9 @@
         .section-title {
             font-size: 1.5rem;
             margin-bottom: 16px;
-            color: var(--text-color);
+            color: #1e293b;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
         }
 
         .impact-metrics, .milestones {
@@ -169,10 +188,21 @@
         .impact-metrics li, .milestones li {
             padding: 12px 16px;
             border-bottom: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
         }
 
         .impact-metrics li:last-child, .milestones li:last-child {
             border-bottom: none;
+        }
+
+        .impact-metrics li:hover, .milestones li:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
         }
 
         .media-gallery {
@@ -242,9 +272,185 @@
         }
         .link:hover {
             color: #fff;
-
             text-decoration: underline;
             background-color: #0066ffcc;
+        }
+
+        /* Sticky Donate Button */
+        .donate-button-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .donate-button {
+            background-color: var(--success-color);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 9999px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .donate-button:hover {
+            transform: translateY(-2px);
+            background-color: #15803d;
+        }
+
+        .donate-button i {
+            font-size: 1.5rem;
+        }
+
+        /* Inline Editing Styles */
+        [contenteditable="true"] {
+            position: relative;
+            outline: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        [contenteditable="true"]:hover {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        [contenteditable="true"]:focus {
+            background-color: rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Edit Mode Styles */
+        .edit-mode [contenteditable="true"] {
+            border: 1px dashed #2563eb;
+        }
+
+        .edit-mode [contenteditable="true"]:hover::before {
+            content: "Click to edit";
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2563eb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .edit-controls {
+            display: none;
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .edit-mode .edit-controls {
+            display: flex;
+        }
+
+        .edit-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-button {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .save-button:hover {
+            background-color: #15803d;
+        }
+
+        .cancel-button {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .cancel-button:hover {
+            background-color: #b91c1c;
+        }
+
+        .media-upload {
+            display: none;
+        }
+
+        .edit-mode .media-upload {
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .media-upload-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .media-upload-button:hover {
+            background-color: #1e40af;
+        }
+
+        .progress-edit {
+            display: none;
+        }
+
+        .edit-mode .progress-edit {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .progress-edit input {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            width: 120px;
+        }
+
+        .milestone-controls {
+            display: none;
+        }
+
+        .edit-mode .milestone-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .add-milestone-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
         }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -253,20 +459,36 @@
 <body>
 <main>
     <div class="container">
+        <div class="edit-controls">
+            <button class="edit-button save-button" onclick="app.saveChanges()">
+                <i class="fa-solid fa-save"></i>
+                Save Changes
+            </button>
+            <button class="edit-button cancel-button" onclick="app.cancelChanges()">
+                <i class="fa-solid fa-times"></i>
+                Cancel
+            </button>
+        </div>
+        <div class="donate-button-container">
+            <button class="donate-button" onclick="app.handleDonate()">
+                <i class="fa-solid fa-heart"></i>
+                Donate Now
+            </button>
+        </div>
         <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
         <div class="card campaign-header">
             <div class="campaign-info">
                 <span style="float:right">
-                <a href="#" class="link" onclick="app.editCampaign(); return false;">
-                    Edit
+                <a href="#" class="link" onclick="app.toggleEditMode(); return false;">
+                    <i class="fa-solid fa-edit"></i> Edit
                 </a>
                 |
                 <a href="#" class="link" onclick="app.deleteCampaign(); return false;">
                     Delete
                 </a>
                 </span>
-                <h1 id="campaign-title" class="campaign-title">Campaign Title</h1>
-                <p id="campaign-description" class="campaign-description"></p>
+                <h1 id="campaign-title" class="campaign-title" contenteditable="false">Campaign Title</h1>
+                <p id="campaign-description" class="campaign-description" contenteditable="false"></p>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value" id="campaign-donors">0</div>
@@ -309,6 +531,13 @@
 
         <div class="card">
             <h2 class="section-title">Media Gallery</h2>
+            <div class="media-upload">
+                <label class="media-upload-button">
+                    <i class="fa-solid fa-upload"></i>
+                    Add New Image
+                    <input type="file" accept="image/*" style="display: none" onchange="app.handleImageUpload(event)">
+                </label>
+            </div>
             <div id="media-gallery" class="media-gallery"></div>
         </div>
     </div>
@@ -322,7 +551,9 @@
         state: {
             loaded: false,
             map: null,
-            id: null
+            id: null,
+            isEditMode: false,
+            originalData: null
         },
         init() {
             const query = app.utils.parseSearch();
@@ -354,6 +585,104 @@
                     }
                 })
                 .catch(error => console.error('Error:', error));
+            }
+        },
+        toggleEditMode() {
+            if (!app.state.isEditMode) {
+                // Store original data for cancellation
+                app.state.originalData = JSON.parse(JSON.stringify(app.data));
+                app.state.isEditMode = true;
+                document.body.classList.add('edit-mode');
+                
+                // Enable content editing
+                $$('[contenteditable="false"]').forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                });
+            }
+        },
+        cancelChanges() {
+            if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+                app.state.isEditMode = false;
+                document.body.classList.remove('edit-mode');
+                
+                // Disable content editing
+                $$('[contenteditable="true"]').forEach(el => {
+                    el.setAttribute('contenteditable', 'false');
+                });
+                
+                // Restore original data
+                app.data = JSON.parse(JSON.stringify(app.state.originalData));
+                app.render();
+            }
+        },
+        async saveChanges() {
+            try {
+                // Collect all editable content
+                const updatedData = {
+                    ...app.data,
+                    title: $('#campaign-title').textContent,
+                    description: $('#campaign-description').textContent,
+                    funding: {
+                        ...app.data.funding,
+                        raisedAmount: parseFloat($('#raised-amount-input').value || 0)
+                    }
+                };
+
+                // Send to server
+                const response = await fetch(`/api/campaign?id=${app.state.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (!response.ok) throw new Error('Failed to save changes');
+
+                const result = await response.json();
+                if (result.success) {
+                    app.state.isEditMode = false;
+                    document.body.classList.remove('edit-mode');
+                    $$('[contenteditable="true"]').forEach(el => {
+                        el.setAttribute('contenteditable', 'false');
+                    });
+                    alert('Changes saved successfully!');
+                    app.data = updatedData;
+                    app.render();
+                }
+            } catch (error) {
+                console.error('Error saving changes:', error);
+                alert('Failed to save changes. Please try again.');
+            }
+        },
+        async handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('campaignId', app.state.id);
+
+                const response = await fetch('/api/campaign/media', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Failed to upload image');
+
+                const result = await response.json();
+                if (result.success) {
+                    app.data.media.push({
+                        type: 'image',
+                        url: result.url,
+                        caption: file.name
+                    });
+                    app.render();
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image. Please try again.');
             }
         },
         utils: {
@@ -422,6 +751,16 @@
             // Progress Bar
             const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
             $('#progress-bar-fill').style.width = `${progress}%`;
+
+            // Add donation handling
+            app.handleDonate = function() {
+                // You can customize this to integrate with your payment system
+                const amount = prompt("Enter donation amount:", "10");
+                if (amount) {
+                    // Here you would typically redirect to a payment gateway
+                    alert("Thank you for your interest in donating! This feature will be integrated with a payment system soon.");
+                }
+            };
 
             // Impact Metrics
             const metricsHtml = data.impact.metrics.map(metric => `
