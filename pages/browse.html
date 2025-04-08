@@ -25,6 +25,7 @@
             gap: 20px;
             width: 90%;
             max-width: 1200px;
+            margin-bottom: 20px;
         }
         .campaign-card {
             background-color: #fff;
@@ -69,20 +70,108 @@
             text-align: right;
             width: 100%;
         }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background-color: #f0f0f0;
+        }
+        .pagination button:disabled {
+            background-color: #f0f0f0;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .pagination .current-page {
+            padding: 8px 12px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        .loading.active {
+            display: block;
+        }
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
 
 <h1>Browse Campaigns</h1>
+<div class="loading">Loading campaigns...</div>
 <div class="campaign-grid" id="campaign-grid"></div>
+<div class="pagination" id="pagination">
+    <button id="prev-page" disabled>Previous</button>
+    <span class="current-page">Page <span id="current-page-num">1</span></span>
+    <button id="next-page">Next</button>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    fetch('/api/campaign')  // Adjust URL as needed
-        .then(response => response.json())
-        .then(campaigns => {
-            console.log(`Received ${campaigns.length} campaigns from API`);
-            const campaignGrid = document.getElementById('campaign-grid');
+    // State management
+    const state = {
+        currentPage: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+        isLoading: false
+    };
+
+    // DOM elements
+    const campaignGrid = document.getElementById('campaign-grid');
+    const loadingElement = document.querySelector('.loading');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const currentPageNum = document.getElementById('current-page-num');
+
+    // Show/hide loading state
+    const setLoading = (loading) => {
+        state.isLoading = loading;
+        loadingElement.classList.toggle('active', loading);
+        prevPageBtn.disabled = loading || state.currentPage === 1;
+        nextPageBtn.disabled = loading;
+    };
+
+    // Fetch campaigns for the current page
+    const fetchCampaigns = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`/api/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}`);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to load campaigns: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Update total items if provided in response
+            if (data.total !== undefined) {
+                state.totalItems = data.total;
+            }
+            
+            // Get the campaigns array (handle both array and object responses)
+            const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
+            
+            // Clear existing campaigns
+            campaignGrid.innerHTML = '';
             
             campaigns.forEach(campaign => {
                 try {
@@ -139,11 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     progressBar.classList.add('progress-bar');
                     const progressFill = document.createElement('div');
                     
-                    if (campaign.fundingGoal) {
-                        progressText.textContent = `Progress: ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.raisedAmount || 0)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.fundingGoal)}`;
-                        progressFill.style.width = '0%';
-                    }
-
                     // Safely calculate progress
                     if (campaign.funding && 
                         campaign.funding.raisedAmount !== undefined && 
@@ -151,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         campaign.funding.goalAmount > 0) {
                         
                         const raisedAmount = campaign.funding.raisedAmount;
-                        const goalAmount = campaign.funding.goalAmount || campaign.fundingGoal;
+                        const goalAmount = campaign.funding.goalAmount;
                         const currency = campaign.funding.currency || 'USD';
                         const progress = (raisedAmount / goalAmount) * 100;
                         
@@ -159,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         progressFill.style.width = `${Math.min(progress, 100)}%`; // Cap at 100%
                     } else if (campaign.funding && campaign.funding.raisedAmount !== undefined) {
                         const currency = campaign.funding.currency || 'USD';
-                        progressText.textContent = `Raised: ${campaign.funding.raisedAmount}`;
+                        progressText.textContent = `Raised: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(campaign.funding.raisedAmount)}`;
                         progressFill.style.width = '0%';
                     } else {
                         progressText.textContent = 'Progress: No donations yet';
@@ -184,12 +268,51 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error(`Error rendering campaign:`, campaign, error);
                 }
             });
-        })
-        .catch(error => {
+
+            // Update pagination controls
+            updatePaginationControls();
+            
+        } catch (error) {
             console.error("Error fetching campaigns:", error);
-            const campaignGrid = document.getElementById('campaign-grid');
             campaignGrid.innerHTML = '<p class="error-message">Failed to load campaigns. Please try again later.</p>';
-        });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Update pagination controls
+    const updatePaginationControls = () => {
+        currentPageNum.textContent = state.currentPage;
+        prevPageBtn.disabled = state.currentPage === 1;
+        
+        // If we have total items, we can determine if there are more pages
+        if (state.totalItems) {
+            const totalPages = Math.ceil(state.totalItems / state.itemsPerPage);
+            nextPageBtn.disabled = state.currentPage >= totalPages;
+        } else {
+            // If we don't have total items, enable next if we got a full page of items
+            const currentItems = campaignGrid.children.length;
+            nextPageBtn.disabled = currentItems < state.itemsPerPage;
+        }
+    };
+
+    // Event listeners for pagination
+    prevPageBtn.addEventListener('click', () => {
+        if (state.currentPage > 1 && !state.isLoading) {
+            state.currentPage--;
+            fetchCampaigns();
+        }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+        if (!state.isLoading) {
+            state.currentPage++;
+            fetchCampaigns();
+        }
+    });
+
+    // Initial load
+    fetchCampaigns();
 });
 </script>
 
