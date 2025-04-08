@@ -347,6 +347,7 @@ switch ($method) {
         // Update
         if ($id) {
             $data = $posted;
+            file_put_contents("logs/puts.log", json_encode($data)."\n", FILE_APPEND);
             // $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
                 $result = $instance->update($id, $data);
