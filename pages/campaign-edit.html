@@ -1626,7 +1626,19 @@ Thanks for considering,
             this.bindEvents();
             const query = this.utils.parseSearch();
             const campaignId = query.id;
-            this.fetch(`/api/campaign?id=${campaignId}`);
+            const app=this;
+            this.fetch(`/api/campaign?id=${campaignId}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            }).then(data => {
+                app.data = data;
+                app.state.loaded = true;
+                app.render();
+            }).catch(error => {
+                console.error('Error fetching campaign data:', error);
+            });
             this.initCharacterCounters();
         },
 
@@ -1760,20 +1772,27 @@ Thanks for considering,
         },
 
         fetch(url) {
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    this.data = data;
-                    this.state.loaded = true;
-                    this.render();
+            const app=this;
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                app.data = data;
+                app.state.loaded = true;
+                app.render();
 
-                    // Initialize SEO data from campaign data
-                    this.initSeoFromCampaign();
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    this.utils.showNotification('Failed to load campaign data', 'error');
-                });
+                // Initialize SEO data from campaign data
+                app.initSeoFromCampaign();
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                app.utils.showNotification('Failed to load campaign data', 'error');
+            });
         },
 
         toggleEditMode(isEditing) {

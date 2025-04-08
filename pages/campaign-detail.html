@@ -716,14 +716,19 @@
         },
         fetch(url) {
             const app=this;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    app.data = data;
-                    app.state.loaded = true;
-                    app.render();
-                })
-                .catch(error => console.error('Fetch error:', error));
+            fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                app.data = data;
+                app.state.loaded = true;
+                app.render();
+            })
+            .catch(error => console.error('Fetch error:', error));
         },
         render() {
             const data = app.data;
