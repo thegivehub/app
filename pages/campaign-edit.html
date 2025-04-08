@@ -2362,11 +2362,15 @@ Thanks for considering,
                 
                 // Update SEO data after campaign update
                 this.initSeoFromCampaign();
-                location.href='campaign-detail.html?id=' + passData._id;
             })
             .catch(error => {
                 console.error('Error updating campaign:', error);
                 this.utils.showNotification('Failed to update campaign', 'error');
+            }).finally(() => {
+                console.log('Campaign updated');
+                console.log(passData);
+                this.state.loaded = true;
+                location.href='campaign-detail.html?id=' + passData._id;
             });
         },
         

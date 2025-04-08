@@ -715,6 +715,7 @@
             }
         },
         fetch(url) {
+            const app=this;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -724,7 +725,7 @@
                 })
                 .catch(error => console.error('Fetch error:', error));
         },
-        async render() {
+        render() {
             const data = app.data;
 
             console.log('Campaign Data:', data);
@@ -766,7 +767,7 @@
             };
 
             // Impact Metrics
-            const impactMetrics = data.impact.metrics || [];
+            const impactMetrics = data.impact?.metrics || [];
             if (impactMetrics.length === 0) {
                 $('#impact-metrics').innerHTML = '<li>No impact metrics available.</li>';
             } else {
@@ -783,7 +784,7 @@
             }
 
             // Milestones
-            const milestones = data.timeline.milestones || [];
+            const milestones = data.timeline?.milestones || [];
             if (milestones.length === 0) {
                 $('#milestones').innerHTML = '<li>No milestones available.</li>';
             } else {
