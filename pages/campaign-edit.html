@@ -2312,6 +2312,7 @@ Thanks for considering,
         
         saveCampaign() {
             // Collect form data
+            console.log(this.data);
             const updatedCampaign = {
                 ...this.data,
                 title: $('#title-input').value,
@@ -2331,6 +2332,8 @@ Thanks for considering,
                     raisedAmount: parseFloat($('#raised-amount').value)
                 }
             };
+
+            console.log(updatedCampaign);
             
             // Send update to server
             fetch(`/api/campaign?id=${this.data._id}`, {
