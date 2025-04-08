@@ -2310,7 +2310,7 @@ Thanks for considering,
             this.utils.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
         },
         
-        saveCampaign() {
+        async saveCampaign() {
             // Collect form data
             console.log(this.data);
             const updatedCampaign = {
@@ -2325,6 +2325,7 @@ Thanks for considering,
                         longitude: parseFloat($('#lng-input').value)
                     }
                 },
+                images:[],
                 funding: {
                     ...this.data.funding,
                     goalAmount: parseFloat($('#goal-amount').value),
@@ -2334,9 +2335,12 @@ Thanks for considering,
             };
 
             console.log(updatedCampaign);
+
+            console.log(this.data);
             
             // Send update to server
-            fetch(`/api/campaign?id=${this.data._id}`, {
+            const passData = this.data;
+            await fetch(`/api/campaign?id=${this.data._id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2358,6 +2362,7 @@ Thanks for considering,
                 
                 // Update SEO data after campaign update
                 this.initSeoFromCampaign();
+                location.href='campaign-detail.html?id=' + passData._id;
             })
             .catch(error => {
                 console.error('Error updating campaign:', error);
