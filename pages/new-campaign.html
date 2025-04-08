@@ -546,35 +546,6 @@
       document.getElementById('campaignPreview').innerHTML = previewHtml;
     }
   }
-
-  // Helper function to get auth token from localStorage
-  function getToken() {
-    return localStorage.getItem('authToken') || '';
-  }
-
-  // Helper function to get user ID from localStorage or session
-  function getUserId() {
-    // First try localStorage
-    const userId = localStorage.getItem('userId');
-    if (userId) return userId;
-    
-    // If not in localStorage, try to extract from JWT token
-    const token = getToken();
-    if (token) {
-      try {
-        // Parse JWT token (without verification)
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(window.atob(base64));
-        
-        return payload.sub || payload.userId || payload._id || null;
-      } catch (e) {
-        console.error('Error parsing token:', e);
-      }
-    }
-    
-    return null;
-  }
   
   // Image upload handling
   const imageUpload = document.getElementById('imageUpload');
