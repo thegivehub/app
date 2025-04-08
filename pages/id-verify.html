@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="module" src="../lib/LocationBlock.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Settings</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/css/login.css" />
+    <link rel="stylesheet" href="/css/settings.css" />
+    <style>
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: #4A90E2;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-row .form-group {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      .review-details {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+      }
+
+      .review-details h4 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .review-details p {
+        margin: 0.5rem 0;
+        color: #495057;
+      }
+
+      .review-details strong {
+        color: #2c3e50;
+        font-weight: 500;
+      }
+
+      .step-indicator {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+      }
+
+      .step-indicator .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 0.75rem;
+        transition: all 0.3s;
+      }
+
+      .step-indicator.active .step-number {
+        background: #4A90E2;
+        color: white;
+      }
+
+      .step-indicator.completed .step-number {
+        background: #28a745;
+        color: white;
+      }
+
+      .step-divider {
+        flex: 1;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 1rem;
+      }
+
+      .step-divider.completed {
+        background: #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="settings-header">
+        <h1>Identity Verification</h1>
+        <div id="saveStatus" class="success-message"></div>
+      </div>
+
+      <div class="settings-content">
+          <!-- Identity Verification Section -->
+          <div class="settings-section" id="verification">
+            <h2>Identity Verification</h2>
+            <p class="section-description">
+              Verify your identity to gain full access to The Give Hub. This
+              helps us maintain a trusted community and comply with regulations.
+            </p>
+
+            <div class="verification-status-container">
+              <div class="verification-status" id="verificationStatus">
+                <div class="status-icon pending">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                  </svg>
+                </div>
+                <div class="status-text">
+                  <h3>Verification Pending</h3>
+                  <p>Please complete the verification process below.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="verification-steps" id="verificationSteps">
+              <div class="step-indicator">
+                <div class="step-number">1</div>
+                <span>Personal Information</span>
+              </div>
+              <div class="step-divider"></div>
+              <div class="step-indicator">
+                <div class="step-number">2</div>
+                <span>Upload ID</span>
+              </div>
+              <div class="step-divider"></div>
+              <div class="step-indicator">
+                <div class="step-number">3</div>
+                <span>Take Selfie</span>
+              </div>
+              <div class="step-divider"></div>
+              <div class="step-indicator">
+                <div class="step-number">4</div>
+                <span>Review</span>
+              </div>
+            </div>
+
+            <div class="verification-step-content" id="verificationStepContent">
+              <!-- Step 1: Personal Information -->
+              <div class="step-content active" data-step="1">
+                <h3>Personal Information</h3>
+                <p>Please provide your personal details exactly as they appear on your ID document.</p>
+
+                <div class="form-group">
+                  <label for="firstName">Legal First Name</label>
+                  <input type="text" id="firstName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="lastName">Legal Last Name</label>
+                  <input type="text" id="lastName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="dateOfBirth">Date of Birth</label>
+                  <input type="date" id="dateOfBirth" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="address">Street Address</label>
+                  <input type="text" id="address" required>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="state">State/Province</label>
+                    <input type="text" id="state" required>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="postalCode">Postal Code</label>
+                    <input type="text" id="postalCode" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" required>
+                      <option value="">Select country</option>
+                      <option value="US">United States</option>
+                      <option value="CA">Canada</option>
+                      <!-- Add more countries as needed -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn btn-primary" id="nextToDocument">
+                    Continue
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 2: ID Document Upload -->
+              <div class="step-content" data-step="2">
+                <h3>Upload an identification document</h3>
+                <p>
+                  Please provide a clear photo of your government-issued ID
+                  (passport, driver's license, or ID card).
+                </p>
+
+                <div class="document-type-selection">
+                  <label for="documentType">Document Type</label>
+                  <select id="documentType" required>
+                    <option value="">Select document type</option>
+                    <option value="passport">Passport</option>
+                    <option value="drivers_license">Driver's License</option>
+                    <option value="national_id">Government ID Card</option>
+                    <option value="residence_permit">Residence Permit</option>
+                  </select>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="documentNumber">Document Number</label>
+                    <input type="text" id="documentNumber" required placeholder="Enter the ID number from your document">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="documentExpiry">Document Expiry Date</label>
+                    <input type="date" id="documentExpiry" required>
+                  </div>
+                </div>
+
+                <div class="document-upload-container">
+                  <div class="upload-area" id="idDocumentUpload">
+                    <div class="upload-icon">
+                      <svg
+                        width="48"
+                        height="48"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <p>
+                      Drag and drop your ID document here or click to browse
+                    </p>
+                    <input
+                      type="file"
+                      id="idDocumentInput"
+                      accept="image/*"
+                      style="display: none" />
+                  </div>
+                  <div
+                    class="document-preview"
+                    id="idDocumentPreview"
+                    style="display: none">
+                    <img src="" alt="ID Document Preview" />
+                    <button
+                      type="button"
+                      class="remove-button"
+                      id="removeIdDocument">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-buttons">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="nextToSelfie"
+                    disabled>
+                    Continue
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 3: Selfie Capture -->
+              <div class="step-content" data-step="3">
+                <h3>Take a Selfie</h3>
+                <p>
+                  Please take a clear photo of your face. Make sure you're in a
+                  well-lit area and your face is clearly visible.
+                </p>
+
+                <div class="selfie-capture-container">
+                  <div class="video-container" id="videoContainer">
+                    <video id="selfieVideo" autoplay playsinline></video>
+                    <div class="face-outline"></div>
+                    <button
+                      type="button"
+                      class="capture-button"
+                      id="captureSelfie">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <div
+                    class="selfie-preview"
+                    id="selfiePreview"
+                    style="display: none">
+                    <img src="" alt="Selfie Preview" />
+                    <button
+                      type="button"
+                      class="remove-button"
+                      id="removeSelfie">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="upload-alternative">
+                  <p>Or upload a selfie:</p>
+                  <div class="upload-area small" id="selfieUpload">
+                    <div class="upload-icon small">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <p>Click to upload</p>
+                    <input
+                      type="file"
+                      id="selfieInput"
+                      accept="image/*"
+                      style="display: none" />
+                  </div>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn" id="backToDocument">
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="nextToReview"
+                    disabled>
+                    Continue
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 4: Review and Submit -->
+              <div class="step-content" data-step="4">
+                <h3>Review Information</h3>
+                <p>Please review your information before submitting.</p>
+
+                <div class="review-container">
+                  <div class="review-item">
+                    <h4>ID Document</h4>
+                    <div
+                      class="review-preview"
+                      id="reviewDocumentPreview"></div>
+                    <div class="review-details">
+                      <p>
+                        <strong>Document Type:</strong>
+                        <span id="reviewDocumentType"></span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="review-item">
+                    <h4>Selfie</h4>
+                    <div class="review-preview" id="reviewSelfiePreview"></div>
+                  </div>
+                </div>
+
+                <div class="verification-disclaimer">
+                  <p>By submitting this information, you confirm that:</p>
+                  <ul>
+                    <li>
+                      The ID document provided is valid and belongs to you
+                    </li>
+                    <li>
+                      The selfie provided is current and shows your face clearly
+                    </li>
+                    <li>
+                      You consent to The Give Hub verifying your identity using
+                      this information
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn" id="backToSelfie">
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="submitVerification">
+                    Submit Verification
+                  </button>
+                </div>
+              </div>
+
+              <!-- Success State -->
+              <div class="step-content" data-step="success">
+                <div class="success-message">
+                  <svg
+                    class="success-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <h3>Verification Submitted</h3>
+                  <p>
+                    Your identity verification request has been submitted
+                    successfully. We'll review your information and update your
+                    verification status shortly.
+                  </p>
+                  <p class="review-time">
+                    This process typically takes 1-2 business days.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      id="kyc-verification-reminder"
+      class="verification-reminder"
+      style="display: none">
+      <div class="alert alert-warning">
+        <h4>Identity Verification Required</h4>
+        <p>
+          To protect our community and comply with regulations, we need to
+          verify your identity.
+        </p>
+        <p>This is a simple process that takes only a few minutes.</p>
+        <button id="start-verification-btn" class="btn btn-primary">
+          Start Verification
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const $ = (str) => document.querySelector(str);
+        const $$ = (str) => document.querySelectorAll(str);
+
+        const app = {
+          data: {
+            user: null,
+            preferences: null,
+            paymentMethods: [],
+          },
+          state: {
+            currentSection: 'verification',
+            loading: false,
+            saveStatus: null,
+          },
+          config: {
+            apiBase: location.protocol + "//" + location.hostname + '/api',
+          },
+          init() {
+            // First check if user is authenticated
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+              window.location.href = '/pages/login.html';
+              return;
+            }
+
+            this.bindEvents();
+            this.loadUserData();
+          },
+          bindEvents() {
+            // Navigation
+            $$('.nav-item').forEach((item) => {
+              item.addEventListener('click', () => {
+                this.changeSection(item.dataset.section);
+              });
+            });
+
+            // Remove the form event listener and just use the button click
+            const saveButton = $('button#saveChangesBtn');
+            if (saveButton) {
+              saveButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.saveProfile();
+              });
+            }
+            // Notification toggles
+            $$('input[type="checkbox"]').forEach((toggle) => {
+              toggle.addEventListener('change', () => {
+                this.savePreferences();
+              });
+            });
+
+            // Identity verification file uploads
+            $('#idDocumentUpload').addEventListener('click', function() {
+              $('#idDocumentInput').click();
+            });
+            
+            $('#selfieUpload').addEventListener('click', function() {
+              $('#selfieInput').click();
+            });
+            
+            // Handle file selection for ID document
+            $('#idDocumentInput').addEventListener('change', function(e) {
+              if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                  $('#idDocumentPreview').style.display = 'block';
+                  $('#idDocumentPreview img').src = e.target.result;
+                  $('#nextToSelfie').disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+              }
+            });
+            
+            // Handle file selection for selfie
+            $('#selfieInput').addEventListener('change', function(e) {
+              if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                  $('#selfiePreview').style.display = 'block';
+                  $('#selfieVideo').style.display = 'none';
+                  $('#selfiePreview img').src = e.target.result;
+                  $('#nextToReview').disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+              }
+            });
+            
+            // Handle remove buttons for uploaded files
+            $('#removeIdDocument').addEventListener('click', function() {
+              $('#idDocumentPreview').style.display = 'none';
+              $('#idDocumentInput').value = '';
+              $('#nextToSelfie').disabled = true;
+            });
+            
+            $('#removeSelfie').addEventListener('click', function() {
+              $('#selfiePreview').style.display = 'none';
+              $('#selfieVideo').style.display = 'block';
+              $('#selfieInput').value = '';
+              $('#nextToReview').disabled = true;
+            });
+            
+            // Step navigation for verification process
+            $('#nextToSelfie').addEventListener('click', function() {
+              // Validate document information
+              const requiredFields = ['documentType', 'documentNumber', 'documentExpiry'];
+              const missingFields = requiredFields.filter(field => !$('#' + field).value);
+              
+              if (missingFields.length > 0) {
+                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                return;
+              }
+
+              if (!$('#idDocumentPreview img').src) {
+                alert('Please upload your ID document');
+                return;
+              }
+
+              $('.step-content[data-step="2"]').classList.remove('active');
+              $('.step-content[data-step="3"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[1].classList.add('completed');
+              $$('.step-indicator')[2].classList.add('active');
+              $$('.step-divider')[1].classList.add('completed');
+              
+              // Initialize webcam
+              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                  .then(function(stream) {
+                    $('#selfieVideo').srcObject = stream;
+                  })
+                  .catch(function(error) {
+                    console.error("Could not access camera:", error);
+                  });
+              }
+            });
+            
+            $('#backToDocument').addEventListener('click', function() {
+              $('.step-content[data-step="3"]').classList.remove('active');
+              $('.step-content[data-step="2"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[1].classList.remove('completed');
+              $$('.step-indicator')[2].classList.remove('active');
+              $$('.step-divider')[1].classList.remove('completed');
+              
+              // Stop webcam
+              if ($('#selfieVideo').srcObject) {
+                $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
+              }
+            });
+            
+            $('#nextToReview').addEventListener('click', function() {
+              $('.step-content[data-step="3"]').classList.remove('active');
+              $('.step-content[data-step="4"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[2].classList.add('completed');
+              $$('.step-indicator')[3].classList.add('active');
+              $$('.step-divider')[2].classList.add('completed');
+              
+              // Stop webcam
+              if ($('#selfieVideo').srcObject) {
+                $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
+              }
+              
+              // Update review section with all collected information
+              $('#reviewDocumentPreview').innerHTML = $('#idDocumentPreview').innerHTML;
+              $('#reviewSelfiePreview').innerHTML = $('#selfiePreview').innerHTML;
+              $('#reviewDocumentType').textContent = $('#documentType').value;
+
+              // Add personal information to review
+              const reviewDetails = document.createElement('div');
+              reviewDetails.innerHTML = `
+                <h4>Personal Information</h4>
+                <p><strong>Name:</strong> ${$('#firstName').value} ${$('#lastName').value}</p>
+                <p><strong>Date of Birth:</strong> ${$('#dateOfBirth').value}</p>
+                <p><strong>Address:</strong> ${$('#address').value}</p>
+                <p><strong>City:</strong> ${$('#city').value}</p>
+                <p><strong>State:</strong> ${$('#state').value}</p>
+                <p><strong>Postal Code:</strong> ${$('#postalCode').value}</p>
+                <p><strong>Country:</strong> ${$('#country').value}</p>
+                <h4>Document Information</h4>
+                <p><strong>Document Type:</strong> ${$('#documentType').value}</p>
+                <p><strong>Document Number:</strong> ${$('#documentNumber').value}</p>
+                <p><strong>Expiry Date:</strong> ${$('#documentExpiry').value}</p>
+              `;
+              $('.review-details').appendChild(reviewDetails);
+            });
+            
+            $('#backToSelfie').addEventListener('click', function() {
+              $('.step-content[data-step="4"]').classList.remove('active');
+              $('.step-content[data-step="3"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[2].classList.remove('completed');
+              $$('.step-indicator')[3].classList.remove('active');
+              $$('.step-divider')[2].classList.remove('completed');
+              
+              // Re-initialize webcam
+              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                  .then(function(stream) {
+                    $('#selfieVideo').srcObject = stream;
+                  });
+              }
+            });
+            
+            // Handle selfie capture button
+            $('#captureSelfie').addEventListener('click', function() {
+              const canvas = document.createElement('canvas');
+              const video = $('#selfieVideo');
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              canvas.getContext('2d').drawImage(video, 0, 0);
+              
+              const dataUrl = canvas.toDataURL('image/png');
+              $('#selfiePreview').style.display = 'block';
+              $('#selfiePreview img').src = dataUrl;
+              $('#videoContainer').style.display = 'none';
+              $('#nextToReview').disabled = false;
+            });
+            
+            // Submit verification
+            $('#submitVerification').addEventListener('click', async function() {
+              try {
+                // Gather all form data
+                const formData = {
+                  // Personal Information
+                  firstName: $('#firstName').value,
+                  lastName: $('#lastName').value,
+                  dateOfBirth: $('#dateOfBirth').value,
+                  address: $('#address').value,
+                  city: $('#city').value,
+                  state: $('#state').value,
+                  postalCode: $('#postalCode').value,
+                  country: $('#country').value,
+                  
+                  // Document Information
+                  documentType: $('#documentType').value,
+                  documentNumber: $('#documentNumber').value,
+                  documentExpiry: $('#documentExpiry').value,
+                  
+                  // System fields
+                  status: 'pending',
+                  verificationAttempts: 1,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  ipAddress: '', // Will be set by server
+                  userAgent: navigator.userAgent
+                };
+
+                // Create FormData objects for document and selfie
+                const documentFormData = new FormData();
+                const documentFile = await fetch($('#idDocumentPreview img').src)
+                  .then(res => res.blob())
+                  .then(blob => new File([blob], "document.jpg", { type: "image/jpeg" }));
+                documentFormData.append('documentFile', documentFile);
+                documentFormData.append('data', JSON.stringify(formData));
+
+                // Upload document first
+                const documentResponse = await fetch('/api/documents/upload', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                  },
+                  body: documentFormData
+                });
+
+                if (!documentResponse.ok) {
+                  throw new Error('Failed to upload document');
+                }
+
+                const documentResult = await documentResponse.json();
+                if (!documentResult.success) {
+                  throw new Error(documentResult.error || 'Failed to upload document');
+                }
+
+                // Now upload selfie and verify identity
+                const selfieFormData = new FormData();
+                const selfieFile = await fetch($('#selfiePreview img').src)
+                  .then(res => res.blob())
+                  .then(blob => new File([blob], "selfie.jpg", { type: "image/jpeg" }));
+                selfieFormData.append('selfieFile', selfieFile);
+                selfieFormData.append('documentId', documentResult.documentId);
+
+                const verificationResponse = await fetch('/api/documents/verify', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                  },
+                  body: selfieFormData
+                });
+
+                if (!verificationResponse.ok) {
+                  throw new Error('Failed to verify identity');
+                }
+
+                const verificationResult = await verificationResponse.json();
+                if (!verificationResult.success) {
+                  throw new Error(verificationResult.error || 'Identity verification failed');
+                }
+
+                // If we get here, everything was successful
+                $('.step-content[data-step="4"]').classList.remove('active');
+                $('.step-content[data-step="success"]').classList.add('active');
+                
+                // Update verification status
+                $('#verificationStatus .status-icon').classList.remove('pending');
+                $('#verificationStatus .status-icon').classList.add('verified');
+                $('#verificationStatus .status-icon').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+                $('#verificationStatus .status-text h3').textContent = 'Verification Submitted';
+                $('#verificationStatus .status-text p').textContent = 'We\'re reviewing your information. This typically takes 1-2 business days.';
+
+              } catch (error) {
+                console.error('Verification error:', error);
+                alert('Error submitting verification: ' + error.message);
+              }
+            });
+
+            // Add navigation between personal info and document upload
+            $('#nextToDocument').addEventListener('click', function() {
+              // Validate personal information
+              const requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'address', 'city', 'state', 'postalCode', 'country'];
+              const missingFields = requiredFields.filter(field => !$('#' + field).value);
+              
+              if (missingFields.length > 0) {
+                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                return;
+              }
+
+              $('.step-content[data-step="1"]').classList.remove('active');
+              $('.step-content[data-step="2"]').classList.add('active');
+              
+              // Update step indicators
+              $$('.step-indicator')[0].classList.add('completed');
+              $$('.step-indicator')[1].classList.add('active');
+              $$('.step-divider')[0].classList.add('completed');
+            });
+          },
+          setupAvatarUpload() {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = (e) => this.handleAvatarUpload(e);
+              input.click();
+          },
+          async handleAvatarUpload(event) {
+              const file = event.target.files[0];
+              if (!file) return;
+
+              if (!file.type.startsWith('image/')) {
+                  this.showError('avatarError', 'Please select an image file');
+                  return;
+              }
+
+              console.log('handleAvatarUload');
+
+              try {
+                  // Show preview
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                      document.getElementById('avatarImg').src = e.target.result;
+                      document.getElementById('avatarImg').style.display = 'block';
+                      document.getElementById('avatarImg').value = e.target.result;
+                  };
+                  reader.readAsDataURL(file);
+                  console.log('prefetch1')
+
+                  // Upload to server
+                  const formData = new FormData();
+                  formData.append('avatar', file);
+                  formData.append('username', this.data.user.username);
+                  formData.append('email', this.data.user.email);
+
+                  console.log('prefetch')
+
+                  const response = await fetch('/api/auth/upload-avatar', {
+                      method: 'POST',
+                      body: formData
+                  });
+
+                  console.log('response', response);
+
+                  const result = await response.json();
+                  if (!result.success) {
+                      throw new Error(result.error || 'Failed to upload avatar');
+                  }
+                  
+                  console.log('Avatar uploaded successfully:', result);
+
+                  // Store the returned avatar URL
+                  // document.getElementById('avatarImg').value = result.filename || result.url;
+                  document.getElementById('avatarImg').src = result.url;
+              } catch (error) {
+                  this.showError('avatarError', error.message);
+              }
+          },          
+          async loadUserData() {
+            try {
+              this.state.loading = true;
+              // this.render();
+
+              // Use our manager classes for consistent SDK handling
+              const [user] = await Promise.all([
+                app.settingsManager.getUserProfile()
+              ]);
+
+              const [preferences] = await Promise.all([
+                app.settingsManager.getPreferences()
+              ]);
+
+              if (!user) {
+                throw new Error('Failed to load user data');
+              }
+
+              console.log('Loaded user data:', user);
+              console.log('Loaded preferences:', preferences);
+
+              this.data.user = user;
+              this.data.preferences = preferences;
+
+              this.state.loading = false;
+              this.render();
+            } catch (error) {
+              console.error('Error loading user data:', error);
+              this.showError('Failed to load user data');
+
+              // If token is invalid/missing, redirect to login
+              if (error.message.includes('No authentication token')) {
+                window.location.href = '/pages/login.html';
+              }
+            }
+          },
+
+          async fetchData(collection, id) {
+            const url = `${this.config.apiBase}/${collection}${
+              id ? `?id=${id}` : ''
+            }`;
+            const response = await fetch(url);
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+          },
+
+          async saveProfile(evt) {
+            try {
+              if (evt) evt.preventDefault();
+
+              const formData = {
+                displayName: $('#displayName').value,
+                personalInfo: {
+                  firstName: $('#first_name').value,
+                  lastName: $('#last_name').value,
+                  phone: $('#phone').value,
+                  email: $('#email').value,
+                  location: $('#location').value,
+                },
+                email: $('#email').value,
+                profile: {
+                  bio: $('#bio').value,
+                  avatar: $('#avatarImg').src.includes('color-logo.svg')
+                    ? null
+                    : $('#avatarImg').src.split('/').pop(), // Extract filename
+                },
+              };
+
+              console.log('Saving profile:', formData);
+              await app.settingsManager.updateProfile(formData);
+              this.showSuccess('Profile updated successfully');
+
+              // Reload user data to ensure we have latest state
+              await this.loadUserData();
+            } catch (error) {
+              console.error('Error saving profile:', error);
+              this.showError('Failed to save profile');
+            }
+
+            return false;
+          },
+
+          async savePreferences() {
+            try {
+              const preferences = {
+                emailNotifications: {
+                  campaignUpdates: $('#notifCampaign').checked,
+                  newDonations: $('#notifDonations').checked,
+                  milestones: $('#notifMilestones').checked,
+                  marketing: $('#notifMarketing').checked,
+                },
+              };
+
+              await app.settingsManager.updatePreferences(preferences);
+              this.showSuccess('Preferences updated successfully');
+            } catch (error) {
+              console.error('Error saving preferences:', error);
+              this.showError('Failed to save preferences');
+            }
+          },
+
+          async updateData(collection, id, data) {
+            const url = `${this.config.apiBase}/${collection}?id=${id}`;
+            const response = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(data),
+            });
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+          },
+
+          changeSection(section) {
+            this.state.currentSection = section;
+            this.render();
+          },
+
+          getCurrentUserId() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+              window.location.href = '/pages/login.html';
+              return null;
+            }
+
+            const decoded = app.api.decodeToken(token);
+            return decoded?.sub; // 'sub' is the standard JWT claim for user ID
+          },
+          showSuccess(message) {
+            this.state.saveStatus = { type: 'success', message };
+            this.render();
+            setTimeout(() => {
+              this.state.saveStatus = null;
+              this.render();
+            }, 3000);
+          },
+          showError(message) {
+            this.state.saveStatus = { type: 'error', message };
+            this.render();
+          },
+          render() {
+            // Update active section
+            $$('.nav-item').forEach((item) => {
+              item.classList.toggle(
+                'active',
+                item.dataset.section === this.state.currentSection
+              );
+            });
+            $$('.settings-section').forEach((section) => {
+              section.classList.toggle(
+                'active',
+                section.id === this.state.currentSection
+              );
+            });
+
+            // Update save status message
+            const statusEl = $('#saveStatus');
+            if (this.state.saveStatus) {
+              statusEl.textContent = this.state.saveStatus.message;
+              statusEl.className = `success-message ${this.state.saveStatus.type}`;
+              statusEl.style.display = 'block';
+            } else {
+              statusEl.style.display = 'none';
+            }
+
+           // Update loading state
+            document.body.classList.toggle('loading', this.state.loading);
+          },
+          // Check if KYC verification is required and show the reminder if needed
+          async checkKycVerification() {
+            try {
+              // Only proceed if we have the KYC manager module
+              if (!window.app || !window.app.kycManager) {
+                return;
+              }
+
+              // Check if verification is required
+              const isRequired =
+                await window.app.kycManager.isVerificationRequired();
+
+              if (isRequired) {
+                document.getElementById(
+                  'kyc-verification-reminder'
+                ).style.display = 'block';
+
+                // Add event listener to the verification button
+                document
+                  .getElementById('start-verification-btn')
+                  .addEventListener('click', function () {
+                    window.location.href = '/verification.html';
+                    // pages/kyc-verification.html  ??
+                  });
+              }
+            } catch (error) {
+              console.error('Error checking KYC verification status:', error);
+            }
+          },
+        };
+
+        window.app = app;
+        document.addEventListener('DOMContentLoaded', () => app.init());
+        document.addEventListener('DOMContentLoaded', app.checkKycVerification);
+      })();
+    </script>
+    <script src="/lib/APIConfig.js"></script>
+    <script src="/lib/UserManager.js"></script>
+    <script src="/lib/SettingsManager.js"></script>
+  </body>
+</html>

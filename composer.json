@@ -9,7 +9,9 @@
         "ext-mongodb": "*",
         "ext-json": "*",
         "ramsey/uuid": "^4.0",
-        "zulucrypto/stellar-api": "^0.7.0"
+        "zulucrypto/stellar-api": "^0.7.0",
+        "square/square": "^40.0",
+        "aws/aws-sdk-php": "^3.337"
     },
     "autoload": {
         "classmap": [

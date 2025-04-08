@@ -1,14 +1,14 @@
 <?php
 // document-api.php
 require_once __DIR__ . '/lib/autoload.php';
-require_once __DIR__ . '/lib/DocumentUploader.php';
+require_once __DIR__ . '/lib/Document.php';
 
 // Parse the request
 $method = $_SERVER['REQUEST_METHOD'];
 $action = isset($_GET['action']) ? $_GET['action'] : 'upload';
 
 // Initialize document uploader
-$uploader = new DocumentUploader();
+$uploader = new Document();
 
 // Handle CORS
 header('Access-Control-Allow-Origin: *');
