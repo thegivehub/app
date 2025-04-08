@@ -30,9 +30,11 @@ class AdminCampaignController {
     /**
      * Get all campaigns or campaigns with a specific status
      * @param string $status Optional status filter
+     * @param int $page Page number (default: 1)
+     * @param int $limit Number of records per page (default: 20)
      * @return array
      */
-    public function getCampaigns($status = null) {
+    public function getCampaigns($status = null, $page = 1, $limit = 20) {
         if (!$this->isAdmin()) {
             http_response_code(403);
             return ['error' => 'Unauthorized access'];
@@ -44,7 +46,12 @@ class AdminCampaignController {
                 $filter['status'] = $status;
             }
 
-            $campaigns = $this->collection->find($filter);
+            $options = [
+                'page' => (int)$page,
+                'limit' => (int)$limit
+            ];
+
+            $campaigns = $this->collection->find($filter, $options);
             
             return $campaigns;
         } catch (Exception $e) {
@@ -195,8 +202,12 @@ class AdminCampaignController {
         if (empty($pathParts)) {
             // Handle base campaigns endpoint
             if ($method === 'GET') {
-                // List campaigns
-                $result = $this->getCampaigns($status);
+                // Get pagination parameters
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+                
+                // List campaigns with pagination
+                $result = $this->getCampaigns($status, $page, $limit);
                 echo json_encode($result);
                 return;
             }

@@ -496,7 +496,7 @@ class Auth {
         
         return ['success' => true];
     }
-    private function getUserIdFromToken() {
+    public function getUserIdFromToken() {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
         

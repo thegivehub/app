@@ -120,15 +120,23 @@ class Campaign {
         ];
     }
 
-    public function read($id = null) {
-        return $this->get($id);
+    public function read($id = null, $options = []) {
+        return $this->get($id, $options);
     }
 
-    public function get($id = null) {
+    public function get($id = null, $options = []) {
         if ($id) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
-            $out = $this->collection->find();
+            // Default limit to 20 records if not specified
+            if (!isset($options['limit'])) {
+                $options['limit'] = 20;
+            }
+            // Default to page 1 if not specified
+            if (!isset($options['page'])) {
+                $options['page'] = 1;
+            }
+            $out = $this->collection->find([], $options);
             if (is_array($out)) {
                 return $out;
             } else {

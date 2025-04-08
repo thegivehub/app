@@ -180,7 +180,7 @@ class KycController {
      * 
      * @return string|null User ID
      */
-    private function getUserId() {
+    public function getUserId() {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
         

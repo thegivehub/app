@@ -326,10 +326,19 @@ switch ($method) {
 
     case 'GET':
         // Read
+        // Handle pagination parameters
+        $options = [];
+        if (isset($_GET['page'])) {
+            $options['page'] = (int)$_GET['page'];
+        }
+        if (isset($_GET['limit'])) {
+            $options['limit'] = (int)$_GET['limit'];
+        }
+        
         if ($id) {
             $result = $instance->read($id);
         } else {
-            $result = $instance->read();
+            $result = $instance->read(null, $options);
         }
         echo json_encode($result);
         break;
