@@ -11,3 +11,11 @@
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
 </IfModule>
+
+# Enable URL rewriting
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Route verification API endpoints to verification-api.php
+    #RewriteRule ^api/verification/(.*)$ verification-api.php/$1 [QSA,L]
+</IfModule>
