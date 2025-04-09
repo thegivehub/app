@@ -715,16 +715,22 @@
             }
         },
         fetch(url) {
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    app.data = data;
-                    app.state.loaded = true;
-                    app.render();
-                })
-                .catch(error => console.error('Fetch error:', error));
+            const app=this;
+            fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                app.data = data;
+                app.state.loaded = true;
+                app.render();
+            })
+            .catch(error => console.error('Fetch error:', error));
         },
-        async render() {
+        render() {
             const data = app.data;
 
             console.log('Campaign Data:', data);
@@ -766,30 +772,45 @@
             };
 
             // Impact Metrics
-            const metricsHtml = data.impact.metrics.map(metric => `
-                <li>
-                    <div class="flex justify-between items-center">
-                        <strong>${metric.name}</strong>
-                        <span>${metric.current}/${metric.target} ${metric.unit}</span>
-                    </div>
-                    <div class="text-sm text-gray-600">Baseline: ${metric.baseline} ${metric.unit}</div>
-                </li>
-            `).join('');
-            $('#impact-metrics').innerHTML = metricsHtml;
+            const impactMetrics = data.impact?.metrics || [];
+            if (impactMetrics.length === 0) {
+                $('#impact-metrics').innerHTML = '<li>No impact metrics available.</li>';
+            } else {
+                const metricsHtml = impactMetrics.map(metric => `
+                    <li>
+                        <div class="flex justify-between items-center">
+                            <strong>${metric.name}</strong>
+                            <span>${metric.current}/${metric.target} ${metric.unit}</span>
+                        </div>
+                        <div class="text-sm text-gray-600">Baseline: ${metric.baseline} ${metric.unit}</div>
+                    </li>
+                `).join('');
+                $('#impact-metrics').innerHTML = metricsHtml;
+            }
 
             // Milestones
-            const milestonesHtml = data.timeline.milestones.map(milestone => `
-                <li>
-                    <div class="flex justify-between items-center">
-                        <strong>${milestone.title}</strong>
-                        <span class="status-badge ${app.utils.getStatusClass(milestone.status)}">${milestone.status}</span>
-                    </div>
-                    <p class="text-gray-600 mt-2">${milestone.description}</p>
-                </li>
-            `).join('');
-            $('#milestones').innerHTML = milestonesHtml;
+            const milestones = data.timeline?.milestones || [];
+            if (milestones.length === 0) {
+                $('#milestones').innerHTML = '<li>No milestones available.</li>';
+            } else {
+                const milestonesHtml = data.timeline.milestones.map(milestone => `
+                    <li>
+                        <div class="flex justify-between items-center">
+                            <strong>${milestone.title}</strong>
+                            <span class="status-badge ${app.utils.getStatusClass(milestone.status)}">${milestone.status}</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">${milestone.description}</p>
+                    </li>
+                `).join('');
+                $('#milestones').innerHTML = milestonesHtml;
+            }
 
             // Media Gallery
+
+            if (!data.media || data.media.length === 0) {
+                $('#media-gallery').innerHTML = '<p>No media available.</p>';
+                return;
+            }
             const mediaHtml = data.media.map(media => {
                 if (media.type === 'image') {
                     return `
