@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campaign Browser</title>
+    <script src="/lib/APIConfig.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,6 +42,20 @@
         }
         .campaign-card:hover {
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .campaign-image-container {
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+        }
+        .campaign-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         .campaign-title {
             font-size: 1.2em;
@@ -154,130 +169,201 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchCampaigns = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}`);
             
-            if (!response.ok) {
-                throw new Error(`Failed to load campaigns: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            
-            // Update total items if provided in response
-            if (data.total !== undefined) {
-                state.totalItems = data.total;
-            }
-            
-            // Get the campaigns array (handle both array and object responses)
-            const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
-            
-            // Clear existing campaigns
-            campaignGrid.innerHTML = '';
-            
-            campaigns.forEach(campaign => {
-                try {
-                    // Create card element
-                    const card = document.createElement('div');
-                    card.classList.add('campaign-card');
-
-                    // Campaign title
-                    const title = document.createElement('h2');
-                    title.classList.add('campaign-title');
-                    title.textContent = campaign.title || "Untitled Campaign";
-                    card.appendChild(title);
-
-                    // Campaign location
-                    const location = document.createElement('p');
-                    location.classList.add('campaign-location');
-                    
-                    // Safely access location properties
-                    if (campaign.location && campaign.location.region && campaign.location.country) {
-                        location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
-                    } else if (campaign.location && campaign.location.region) {
-                        location.textContent = `Location: ${campaign.location.region}`;
-                    } else if (campaign.location && campaign.location.country) {
-                        location.textContent = `Location: ${campaign.location.country}`;
-                    } else {
-                        location.textContent = 'Location: Not specified';
-                    }
-                    card.appendChild(location);
-
-                    // Campaign funding goal
-                    const goal = document.createElement('p');
-                    goal.classList.add('campaign-goal');
-                    
-                    // Safely access funding properties
-                    if (campaign.funding && campaign.funding.goalAmount !== undefined) {
-                        const currency = campaign.funding.currency || 'USD';
-                        let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.funding.goalAmount);
-                        goal.textContent = `Goal: ${amt}`;
-                    } else if (campaign.fundingGoal) {
-                        const currency = 'USD';
-                        let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.fundingGoal);
-                        goal.textContent = `Goal: ${amt}`;
-                    } else {
-                        goal.textContent = 'Goal: Not specified';
-                    }
-                    card.appendChild(goal);
-
-                    // Campaign progress
-                    const progressText = document.createElement('p');
-                    progressText.classList.add('campaign-progress');
-                    
-                    // Progress bar
-                    const progressBar = document.createElement('div');
-                    progressBar.classList.add('progress-bar');
-                    const progressFill = document.createElement('div');
-                    
-                    // Safely calculate progress
-                    if (campaign.funding && 
-                        campaign.funding.raisedAmount !== undefined && 
-                        campaign.funding.goalAmount !== undefined && 
-                        campaign.funding.goalAmount > 0) {
-                        
-                        const raisedAmount = campaign.funding.raisedAmount;
-                        const goalAmount = campaign.funding.goalAmount;
-                        const currency = campaign.funding.currency || 'USD';
-                        const progress = (raisedAmount / goalAmount) * 100;
-                        
-                        progressText.textContent = `Progress: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(raisedAmount)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(goalAmount)}`;
-                        progressFill.style.width = `${Math.min(progress, 100)}%`; // Cap at 100%
-                    } else if (campaign.funding && campaign.funding.raisedAmount !== undefined) {
-                        const currency = campaign.funding.currency || 'USD';
-                        progressText.textContent = `Raised: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(campaign.funding.raisedAmount)}`;
-                        progressFill.style.width = '0%';
-                    } else {
-                        progressText.textContent = 'Progress: No donations yet';
-                        progressFill.style.width = '0%';
-                    }
-                    
-                    card.appendChild(progressText);
-                    progressBar.appendChild(progressFill);
-                    card.appendChild(progressBar);
-
-                    // View more link
-                    const viewMore = document.createElement('a');
-                    viewMore.classList.add('view-more');
-                    viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ''}`;
-                    viewMore.textContent = 'View More';
-                    card.appendChild(viewMore);
-
-                    // Append card to grid
-                    campaignGrid.appendChild(card);
-                    
-                } catch (error) {
-                    console.error(`Error rendering campaign:`, campaign, error);
+            // Check if app.api is available for authenticated requests
+            if (window.app && window.app.api) {
+                // Use the fetchWithAuth helper
+                const data = await window.app.api.fetchWithAuth(`/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}`);
+                
+                // Update total items if provided in response
+                if (data.total !== undefined) {
+                    state.totalItems = data.total;
                 }
-            });
-
-            // Update pagination controls
-            updatePaginationControls();
-            
+                
+                // Get the campaigns array (handle both array and object responses)
+                const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
+                
+                renderCampaigns(campaigns);
+            } else {
+                // Fallback to direct fetch with Authorization header
+                const token = localStorage.getItem('accessToken');
+                
+                const fetchOptions = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                };
+                
+                // Add token to Authorization header if available
+                if (token) {
+                    fetchOptions.headers["Authorization"] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`/api/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}`, fetchOptions);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load campaigns: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update total items if provided in response
+                if (data.total !== undefined) {
+                    state.totalItems = data.total;
+                }
+                
+                // Get the campaigns array (handle both array and object responses)
+                const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
+                
+                renderCampaigns(campaigns);
+            }
         } catch (error) {
             console.error("Error fetching campaigns:", error);
             campaignGrid.innerHTML = '<p class="error-message">Failed to load campaigns. Please try again later.</p>';
         } finally {
             setLoading(false);
         }
+    };
+    
+    // Render campaign cards
+    const renderCampaigns = (campaigns) => {
+        // Clear existing campaigns
+        campaignGrid.innerHTML = '';
+        
+        campaigns.forEach(campaign => {
+            try {
+                // Create card element
+                const card = document.createElement('div');
+                card.classList.add('campaign-card');
+
+                // Campaign image
+                const imageContainer = document.createElement('div');
+                imageContainer.classList.add('campaign-image-container');
+                
+                const image = document.createElement('img');
+                image.classList.add('campaign-image');
+                
+                // Check for image in different possible locations in the data structure
+                let imageUrl = '/images/placeholder-campaign.jpg'; // Default placeholder
+                
+                if (campaign.images && campaign.images.length > 0) {
+                    imageUrl = campaign.images[0].url || campaign.images[0];
+                } else if (campaign.image) {
+                    imageUrl = campaign.image;
+                } else if (campaign.media && campaign.media.images && campaign.media.images.length > 0) {
+                    imageUrl = campaign.media.images[0].url || campaign.media.images[0];
+                } else if (campaign.featuredImage) {
+                    imageUrl = campaign.featuredImage;
+                }
+                
+                // Handle relative vs absolute URLs
+                if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                    imageUrl = '/images/' + imageUrl;
+                }
+                
+                image.src = imageUrl;
+                image.alt = campaign.title || "Campaign image";
+                image.onerror = function() {
+                    this.src = '/images/placeholder-campaign.jpg';
+                    this.onerror = null; // Prevent infinite loop if placeholder also fails
+                };
+                
+                imageContainer.appendChild(image);
+                card.appendChild(imageContainer);
+
+                // Campaign title
+                const title = document.createElement('h2');
+                title.classList.add('campaign-title');
+                title.textContent = campaign.title || "Untitled Campaign";
+                card.appendChild(title);
+
+                // Campaign location
+                const location = document.createElement('p');
+                location.classList.add('campaign-location');
+                
+                // Safely access location properties
+                if (campaign.location && campaign.location.region && campaign.location.country) {
+                    location.textContent = `Location: ${campaign.location.region}, ${campaign.location.country}`;
+                } else if (campaign.location && campaign.location.region) {
+                    location.textContent = `Location: ${campaign.location.region}`;
+                } else if (campaign.location && campaign.location.country) {
+                    location.textContent = `Location: ${campaign.location.country}`;
+                } else {
+                    location.textContent = 'Location: Not specified';
+                }
+                card.appendChild(location);
+
+                // Campaign funding goal
+                const goal = document.createElement('p');
+                goal.classList.add('campaign-goal');
+                
+                // Safely access funding properties
+                if (campaign.funding && campaign.funding.goalAmount !== undefined) {
+                    const currency = campaign.funding.currency || 'USD';
+                    let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.funding.goalAmount);
+                    goal.textContent = `Goal: ${amt}`;
+                } else if (campaign.fundingGoal) {
+                    const currency = 'USD';
+                    let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.fundingGoal);
+                    goal.textContent = `Goal: ${amt}`;
+                } else {
+                    goal.textContent = 'Goal: Not specified';
+                }
+                card.appendChild(goal);
+
+                // Campaign progress
+                const progressText = document.createElement('p');
+                progressText.classList.add('campaign-progress');
+                
+                // Progress bar
+                const progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+                const progressFill = document.createElement('div');
+                
+                // Safely calculate progress
+                if (campaign.funding && 
+                    campaign.funding.raisedAmount !== undefined && 
+                    campaign.funding.goalAmount !== undefined && 
+                    campaign.funding.goalAmount > 0) {
+                    
+                    const raisedAmount = campaign.funding.raisedAmount;
+                    const goalAmount = campaign.funding.goalAmount;
+                    const currency = campaign.funding.currency || 'USD';
+                    const progress = (raisedAmount / goalAmount) * 100;
+                    
+                    progressText.textContent = `Progress: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(raisedAmount)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(goalAmount)}`;
+                    progressFill.style.width = `${Math.min(progress, 100)}%`; // Cap at 100%
+                } else if (campaign.funding && campaign.funding.raisedAmount !== undefined) {
+                    const currency = campaign.funding.currency || 'USD';
+                    progressText.textContent = `Raised: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(campaign.funding.raisedAmount)}`;
+                    progressFill.style.width = '0%';
+                } else {
+                    progressText.textContent = 'Progress: No donations yet';
+                    progressFill.style.width = '0%';
+                }
+                
+                card.appendChild(progressText);
+                progressBar.appendChild(progressFill);
+                card.appendChild(progressBar);
+
+                // View more link
+                const viewMore = document.createElement('a');
+                viewMore.classList.add('view-more');
+                viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ''}`;
+                viewMore.textContent = 'View More';
+                card.appendChild(viewMore);
+
+                // Append card to grid
+                campaignGrid.appendChild(card);
+                
+            } catch (error) {
+                console.error(`Error rendering campaign:`, campaign, error);
+            }
+        });
+
+        // Update pagination controls
+        updatePaginationControls();
     };
 
     // Update pagination controls

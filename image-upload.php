@@ -31,12 +31,6 @@ function logMessage($message, array $context = [], $level = 'info') {
     error_log($logEntry, 3, $logFile);
 }
 
-// Ensure the uploads directory exists
-$uploadsDir = __DIR__ . '/uploads/campaign_images';
-if (!is_dir($uploadsDir)) {
-    mkdir($uploadsDir, 0755, true);
-}
-
 // Check if this is a POST request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -56,7 +50,39 @@ if (!$data || !isset($data['image'])) {
 
 // Extract the base64 image data
 $imageData = $data['image'];
-$campaignId = $data['campaignId'] ?? '';
+
+// Get object type and ID information
+$objectType = $data['objectType'] ?? 'campaign';
+$objectId = $data['objectId'] ?? ($data['campaignId'] ?? '');
+
+// Determine upload directory based on object type
+$uploadsBaseDir = __DIR__ . '/uploads';
+switch ($objectType) {
+    case 'user':
+        $uploadsDir = $uploadsBaseDir . '/user_images';
+        $filePrefix = 'user_';
+        $collectionName = 'users';
+        $fieldName = 'profileImage';
+        break;
+    case 'document':
+        $uploadsDir = $uploadsBaseDir . '/documents';
+        $filePrefix = 'doc_';
+        $collectionName = 'documents';
+        $fieldName = 'imageUrl';
+        break;
+    case 'campaign':
+    default:
+        $uploadsDir = $uploadsBaseDir . '/campaign_images';
+        $filePrefix = 'campaign_';
+        $collectionName = 'campaigns';
+        $fieldName = 'images';
+        break;
+}
+
+// Ensure the uploads directory exists
+if (!is_dir($uploadsDir)) {
+    mkdir($uploadsDir, 0755, true);
+}
 
 // Check if the image data is a data URL
 if (strpos($imageData, 'data:image/') !== 0) {
@@ -71,7 +97,7 @@ $imageInfo = explode(';', $parts[0]);
 $imageType = str_replace('data:image/', '', $imageInfo[0]);
 
 // Generate a unique filename
-$filename = uniqid('campaign_') . '_' . time() . '.' . $imageType;
+$filename = uniqid($filePrefix) . '_' . time() . '.' . $imageType;
 $filePath = $uploadsDir . '/' . $filename;
 
 // Extract the actual base64 content and save to file
@@ -86,31 +112,41 @@ if (!file_put_contents($filePath, $imageContent)) {
 // Generate the URL for the saved image
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
-$imageUrl = $protocol . '://' . $host . '/uploads/campaign_images/' . $filename;
+$relativePath = str_replace(__DIR__, '', $uploadsDir);
+$imageUrl = $protocol . '://' . $host . $relativePath . '/' . $filename;
 
-// Update campaign record if campaignId is provided
-if (!empty($campaignId)) {
+// Update the associated object record if an ID is provided
+if (!empty($objectId)) {
     try {
         $db = new Database("givehub");
-        $campaigns = $db->getCollection('campaigns');
+        $collection = $db->getCollection($collectionName);
         
-        // Find the existing campaign
-        $campaign = $campaigns->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+        // Find the existing object
+        $object = $collection->findOne(['_id' => new MongoDB\BSON\ObjectId($objectId)]);
         
-        if ($campaign) {
-            // Add the new image URL to the campaign's images array
-            $images = isset($campaign['images']) ? $campaign['images'] : [];
-            $images[] = $imageUrl;
+        if ($object) {
+            $updateData = [];
             
-            // Update the campaign with the new images array
-            $campaigns->updateOne(
-                ['_id' => new MongoDB\BSON\ObjectId($campaignId)],
-                ['$set' => ['images' => $images]]
+            // Handle different field update strategies based on object type
+            if ($objectType === 'campaign') {
+                // For campaigns, append to the images array
+                $images = isset($object[$fieldName]) ? $object[$fieldName] : [];
+                $images[] = $imageUrl;
+                $updateData = ['$set' => [$fieldName => $images]];
+            } else {
+                // For users and documents, replace the single image field
+                $updateData = ['$set' => [$fieldName => $imageUrl]];
+            }
+            
+            // Update the object with the new image data
+            $collection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($objectId)],
+                $updateData
             );
         }
     } catch (Exception $e) {
-        logMessage('Error updating campaign with image', [
-            'campaignId' => $campaignId,
+        logMessage('Error updating ' . $objectType . ' with image', [
+            'objectId' => $objectId,
             'error' => $e->getMessage()
         ], 'error');
     }
@@ -120,5 +156,6 @@ if (!empty($campaignId)) {
 echo json_encode([
     'success' => true,
     'url' => $imageUrl,
-    'filename' => $filename
+    'filename' => $filename,
+    'objectType' => $objectType
 ]);
