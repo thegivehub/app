@@ -1,14 +1,26 @@
 <?php
 require_once __DIR__ .'/db.php';
+require_once __DIR__ .'/Auth.php';
+require_once __DIR__ .'/DocumentUploader.php';
 
 class Campaign {
     private $collection;
+    private $auth;
+    private $documentUploader;
 
     public function __construct() {
         $db = new Database("givehub");
         $this->collection = $db->getCollection('campaigns');
+        $this->auth = new Auth();
+        $this->documentUploader = new DocumentUploader($this->auth, null, 'campaign');
     }
 
+    /**
+     * Create a new campaign
+     * 
+     * @param array $data Campaign data
+     * @return array Creation result with campaign ID and data
+     */
     public function create($data) {
         // Log incoming data for debugging
         error_log("Creating campaign with data: " . print_r($data, true));
@@ -24,6 +36,51 @@ class Campaign {
         
         if (!isset($data['raised'])) {
             $data['raised'] = 0;
+        }
+        
+        // Process any base64 images in the data
+        if (isset($data['image']) && strpos($data['image'], 'data:image/') === 0) {
+            $imageResult = $this->documentUploader->processBase64Image($data['image'], 'campaign');
+            
+            if ($imageResult['success']) {
+                // Replace base64 data with the URL
+                $data['imageUrl'] = $imageResult['url'];
+                // Remove the base64 data to save space
+                unset($data['image']);
+            } else {
+                error_log("Failed to process campaign image: " . ($imageResult['error'] ?? 'Unknown error'));
+            }
+        }
+        
+        // Process gallery images if they exist
+        if (isset($data['gallery']) && is_array($data['gallery'])) {
+            $processedGallery = [];
+            
+            foreach ($data['gallery'] as $index => $galleryItem) {
+                if (isset($galleryItem['image']) && strpos($galleryItem['image'], 'data:image/') === 0) {
+                    $galleryResult = $this->documentUploader->processBase64Image(
+                        $galleryItem['image'],
+                        'campaign',
+                        isset($data['_id']) ? $data['_id'] : null
+                    );
+                    
+                    if ($galleryResult['success']) {
+                        $processedGallery[] = [
+                            'url' => $galleryResult['url'],
+                            'caption' => $galleryItem['caption'] ?? '',
+                            'uploadedAt' => new MongoDB\BSON\UTCDateTime()
+                        ];
+                    }
+                } else if (isset($galleryItem['url'])) {
+                    // Keep existing URLs
+                    $processedGallery[] = $galleryItem;
+                }
+            }
+            
+            // Replace gallery with processed URLs
+            if (!empty($processedGallery)) {
+                $data['gallery'] = $processedGallery;
+            }
         }
         
         // Check all possible creator ID fields and log their presence/absence
@@ -355,6 +412,26 @@ class Campaign {
         
         error_log("Could not find user ID in token or session");
         return null;
+    }
+
+    /**
+     * Upload a campaign image
+     * 
+     * @param array $file The uploaded file from $_FILES
+     * @param string $campaignId Campaign ID
+     * @param string $imageType Type of campaign image (main, gallery, etc.)
+     * @return array Upload result
+     */
+    public function uploadCampaignImage($file, $campaignId, $imageType = 'main') {
+        try {
+            return $this->documentUploader->uploadCampaignImage($file, $campaignId, $imageType);
+        } catch (Exception $e) {
+            error_log('Campaign image upload error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
 }

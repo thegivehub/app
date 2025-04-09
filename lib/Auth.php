@@ -518,6 +518,24 @@ class Auth {
         $userId = $this->getUserIdFromToken();
         return $this->db->users->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
     }
+
+    public function isAuthenticated() {
+        try {
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? '';
+            
+            if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                return false;
+            }
+            
+            $token = $matches[1];
+            $decoded = $this->decodeToken($token);
+            
+            return $decoded !== null;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 }
 
 

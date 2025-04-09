@@ -2,11 +2,13 @@
 // lib/Document.php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Auth.php';
+require_once __DIR__ . '/DocumentUploader.php';
 
 class Document {
     private $db;
     private $auth;
     private $config;
+    private $documentUploader;
 
     public function __construct() {
         $this->db = new Database();
@@ -25,6 +27,10 @@ class Document {
             'max_size' => 10 * 1024 * 1024, // 10MB
             'min_size' => 5 * 1024, // 5KB
         ];
+        
+        // Initialize the document uploader
+        $documentCollection = $this->db->getCollection('documents');
+        $this->documentUploader = new DocumentUploader($this->auth, $documentCollection, 'document');
         
         // Ensure upload directory exists
         if (!is_dir($this->config['upload_dir'])) {
@@ -47,7 +53,7 @@ class Document {
             if (!$userId) {
                 throw new Exception('Authentication required');
             }
-            
+
             // Validate file
             $this->validateFile($file);
             
@@ -60,18 +66,67 @@ class Document {
                 throw new Exception('Failed to save uploaded file');
             }
             
-            // Create document record
+            // Generate relative URL path
+            $urlPath = '/uploads/documents/' . $filename;
+
+            // Check if this is a selfie upload
+            $isSelfie = isset($_POST['type']) && $_POST['type'] === 'selfie';
+            $documentId = $_POST['documentId'] ?? null;
+
+            if ($isSelfie && $documentId) {
+                // Update existing document with selfie
+                $documentCollection = $this->db->getCollection('documents');
+                $result = $documentCollection->updateOne(
+                    ['_id' => new MongoDB\BSON\ObjectId($documentId)],
+                    [
+                        '$set' => [
+                            'selfieImageUrl' => $urlPath,
+                            'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                        ]
+                    ]
+                );
+
+                if (!$result['success']) {
+                    throw new Exception('Failed to update document with selfie');
+                }
+
+                return [
+                    'success' => true,
+                    'documentId' => $documentId,
+                    'selfieUrl' => $urlPath,
+                    'message' => 'Selfie uploaded successfully'
+                ];
+            }
+
+            // Create new document record
             $document = [
                 'userId' => new MongoDB\BSON\ObjectId($userId),
-                'filename' => $filename,
-                'originalName' => $file['name'],
-                'type' => $type,
-                'description' => $description,
-                'mimeType' => $file['type'],
-                'size' => $file['size'],
+                'firstName' => $_POST['firstName'] ?? '',
+                'lastName' => $_POST['lastName'] ?? '',
+                'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($_POST['dateOfBirth']) * 1000),
+                'address' => $_POST['address'] ?? '',
+                'city' => $_POST['city'] ?? '',
+                'state' => $_POST['state'] ?? '',
+                'postalCode' => $_POST['postalCode'] ?? '',
+                'country' => $_POST['country'] ?? '',
+                'documentType' => $_POST['documentType'] ?? $type,
+                'documentNumber' => $_POST['documentNumber'] ?? '',
+                'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime($_POST['documentExpiry']) * 1000),
+                'documentImageUrl' => $urlPath,
+                'selfieImageUrl' => null,
+                'similarityScore' => 0,
                 'status' => 'pending',
-                'uploadDate' => new MongoDB\BSON\UTCDateTime(),
-                'verificationHistory' => []
+                'verificationAttempts' => 0,
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime(),
+                'ipAddress' => $_SERVER['REMOTE_ADDR'],
+                'userAgent' => $_SERVER['HTTP_USER_AGENT'],
+                'metadata' => [
+                    'documentAuthenticityScore' => 0,
+                    'documentQualityScore' => 0,
+                    'faceDetectionScore' => 0,
+                    'livenessScore' => 0
+                ]
             ];
             
             // Save document metadata to database
@@ -90,12 +145,80 @@ class Document {
                 'documentId' => $result['id'],
                 'filename' => $filename,
                 'type' => $type,
+                'url' => $urlPath,
                 'status' => 'pending',
                 'message' => 'Document uploaded successfully and pending verification'
             ];
             
         } catch (Exception $e) {
             error_log('Document upload error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Process a base64 encoded document image
+     * 
+     * @param string $base64Image Base64 encoded image data
+     * @param string $type Document type (id_card, passport, etc.)
+     * @param string $description Optional description
+     * @return array Response with processing status and document ID
+     */
+    public function processBase64Document($base64Image, $type, $description = '') {
+        try {
+            // Get user ID from token
+            $userId = $this->auth->getUserIdFromToken();
+            if (!$userId) {
+                throw new Exception('Authentication required');
+            }
+            
+            // Use the DocumentUploader to process the base64 image
+            $result = $this->documentUploader->processBase64Image($base64Image, 'document');
+            
+            if (!$result['success']) {
+                throw new Exception($result['error'] ?? 'Failed to process document image');
+            }
+            
+            // Create document record
+            $document = [
+                'userId' => new MongoDB\BSON\ObjectId($userId),
+                'filename' => $result['filename'],
+                'originalName' => 'Base64 Upload',
+                'type' => $type,
+                'description' => $description,
+                'mimeType' => 'image/jpeg', // Assuming JPEG for base64 images
+                'fileUrl' => $result['url'],
+                'status' => 'pending',
+                'uploadDate' => new MongoDB\BSON\UTCDateTime(),
+                'verificationHistory' => []
+            ];
+            
+            // Save document metadata to database
+            $documentCollection = $this->db->getCollection('documents');
+            $dbResult = $documentCollection->insertOne($document);
+            
+            if (!$dbResult['success']) {
+                throw new Exception('Failed to save document metadata');
+            }
+            
+            // Update user verification status
+            $this->updateUserVerificationStatus($userId, $type, 'pending');
+            
+            return [
+                'success' => true,
+                'documentId' => $dbResult['id'],
+                'filename' => $result['filename'],
+                'type' => $type,
+                'url' => $result['url'],
+                'status' => 'pending',
+                'message' => 'Document uploaded successfully and pending verification'
+            ];
+            
+        } catch (Exception $e) {
+            error_log('Base64 document processing error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()

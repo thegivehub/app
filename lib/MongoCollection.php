@@ -49,8 +49,7 @@ class MongoCollection {
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
-                'result' => $result
+                'error' => $e->getMessage()
             ];
         }
     }

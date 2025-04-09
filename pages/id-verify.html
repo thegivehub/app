@@ -119,12 +119,9 @@
   </head>
   <body>
     <div class="container">
-      <div class="settings-header">
-        <h1>Identity Verification</h1>
-        <div id="saveStatus" class="success-message"></div>
-      </div>
 
       <div class="settings-content">
+        <div id="saveStatus" class="success-message"></div>
           <!-- Identity Verification Section -->
           <div class="settings-section" id="verification">
             <h2>Identity Verification</h2>
@@ -291,6 +288,7 @@
                     <input
                       type="file"
                       id="idDocumentInput"
+                      name="document"
                       accept="image/*"
                       style="display: none" />
                   </div>
@@ -400,6 +398,7 @@
                     <input
                       type="file"
                       id="selfieInput"
+                      name="selfie"
                       accept="image/*"
                       style="display: none" />
                   </div>
@@ -527,6 +526,9 @@
             user: null,
             preferences: null,
             paymentMethods: [],
+            capturedSelfie: null,
+            documentId: null,
+            verificationComplete: false
           },
           state: {
             currentSection: 'verification',
@@ -626,8 +628,60 @@
               $('#nextToReview').disabled = true;
             });
             
+            // Add navigation between personal info and document upload
+            $('#nextToDocument').addEventListener('click', async function() {
+              // Validate personal information
+              const requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'address', 'city', 'state', 'postalCode', 'country'];
+              const missingFields = requiredFields.filter(field => !$('#' + field).value);
+              
+              if (missingFields.length > 0) {
+                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                return;
+              }
+
+              try {
+                // Disable button while processing
+                $('#nextToDocument').disabled = true;
+                
+                // Send personal information to server
+                const personalInfo = {
+                  firstName: $('#firstName').value,
+                  lastName: $('#lastName').value,
+                  dateOfBirth: $('#dateOfBirth').value,
+                  address: $('#address').value,
+                  city: $('#city').value,
+                  state: $('#state').value,
+                  postalCode: $('#postalCode').value,
+                  country: $('#country').value
+                };
+                
+                // Upload personal info and get document ID
+                const result = await app.uploadPersonalInfo(personalInfo);
+                if (result.documentId) {
+                  app.data.documentId = result.documentId;
+                  console.log('Personal info saved, document ID:', app.data.documentId);
+                } else {
+                  throw new Error('Failed to get document ID from server');
+                }
+                
+                // Proceed to next step
+                $('.step-content[data-step="1"]').classList.remove('active');
+                $('.step-content[data-step="2"]').classList.add('active');
+                
+                // Update step indicators
+                $$('.step-indicator')[0].classList.add('completed');
+                $$('.step-indicator')[1].classList.add('active');
+                $$('.step-divider')[0].classList.add('completed');
+              } catch (error) {
+                console.error('Error saving personal information:', error);
+                alert(error.message || 'Failed to save personal information');
+              } finally {
+                $('#nextToDocument').disabled = false;
+              }
+            });
+            
             // Step navigation for verification process
-            $('#nextToSelfie').addEventListener('click', function() {
+            $('#nextToSelfie').addEventListener('click', async function() {
               // Validate document information
               const requiredFields = ['documentType', 'documentNumber', 'documentExpiry'];
               const missingFields = requiredFields.filter(field => !$('#' + field).value);
@@ -637,31 +691,138 @@
                 return;
               }
 
-              if (!$('#idDocumentPreview img').src) {
+              if (!$('#idDocumentInput').files[0]) {
                 alert('Please upload your ID document');
                 return;
               }
 
-              $('.step-content[data-step="2"]').classList.remove('active');
-              $('.step-content[data-step="3"]').classList.add('active');
-              
-              // Update step indicators
-              $$('.step-indicator')[1].classList.add('completed');
-              $$('.step-indicator')[2].classList.add('active');
-              $$('.step-divider')[1].classList.add('completed');
-              
-              // Initialize webcam
-              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                  .then(function(stream) {
-                    $('#selfieVideo').srcObject = stream;
-                  })
-                  .catch(function(error) {
-                    console.error("Could not access camera:", error);
-                  });
+              try {
+                // Disable button while processing
+                $('#nextToSelfie').disabled = true;
+                
+                // Upload the document
+                const documentFile = $('#idDocumentInput').files[0];
+                const documentInfo = {
+                  documentType: $('#documentType').value,
+                  documentNumber: $('#documentNumber').value,
+                  documentExpiry: $('#documentExpiry').value
+                };
+                
+                const result = await app.uploadDocumentFile(documentFile, documentInfo);
+                console.log('Document upload result:', result);
+                
+                // Proceed to next step
+                $('.step-content[data-step="2"]').classList.remove('active');
+                $('.step-content[data-step="3"]').classList.add('active');
+                
+                // Update step indicators
+                $$('.step-indicator')[1].classList.add('completed');
+                $$('.step-indicator')[2].classList.add('active');
+                $$('.step-divider')[1].classList.add('completed');
+                
+                // Initialize webcam
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                  navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                      $('#selfieVideo').srcObject = stream;
+                    })
+                    .catch(function(error) {
+                      console.error("Could not access camera:", error);
+                    });
+                }
+              } catch (error) {
+                console.error('Error uploading document:', error);
+                alert(error.message || 'Failed to upload document');
+              } finally {
+                $('#nextToSelfie').disabled = false;
               }
             });
             
+            $('#nextToReview').addEventListener('click', async function() {
+              try {
+                // Disable button while processing
+                $('#nextToReview').disabled = true;
+                
+                // Check if we have a selfie to upload
+                const selfieFile = app.data.capturedSelfie || $('#selfieInput').files[0];
+                if (!selfieFile) {
+                  throw new Error('Please take or upload a selfie');
+                }
+                
+                // Upload the selfie
+                console.log('Uploading selfie...', selfieFile);
+                const selfieResult = await app.uploadSelfie(selfieFile, app.data.documentId);
+                console.log('Selfie upload result:', selfieResult);
+                
+                // Proceed to review step
+                $('.step-content[data-step="3"]').classList.remove('active');
+                $('.step-content[data-step="4"]').classList.add('active');
+                
+                // Update step indicators
+                $$('.step-indicator')[2].classList.add('completed');
+                $$('.step-indicator')[3].classList.add('active');
+                $$('.step-divider')[2].classList.add('completed');
+                
+                // Stop webcam
+                if ($('#selfieVideo').srcObject) {
+                  $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
+                }
+                
+                // Update review section with all collected information
+                $('#reviewDocumentPreview').innerHTML = $('#idDocumentPreview').innerHTML;
+                $('#reviewSelfiePreview').innerHTML = $('#selfiePreview').innerHTML;
+                $('#reviewDocumentType').textContent = $('#documentType').value;
+
+                // Add personal information to review
+                const reviewDetails = document.createElement('div');
+                reviewDetails.classList.add('review-details');
+                reviewDetails.innerHTML = `
+                  <h4>Personal Information</h4>
+                  <p><strong>Name:</strong> ${$('#firstName').value} ${$('#lastName').value}</p>
+                  <p><strong>Date of Birth:</strong> ${$('#dateOfBirth').value}</p>
+                  <p><strong>Address:</strong> ${$('#address').value}</p>
+                  <p><strong>City:</strong> ${$('#city').value}</p>
+                  <p><strong>State:</strong> ${$('#state').value}</p>
+                  <p><strong>Postal Code:</strong> ${$('#postalCode').value}</p>
+                  <p><strong>Country:</strong> ${$('#country').value}</p>
+                  <h4>Document Information</h4>
+                  <p><strong>Document Type:</strong> ${$('#documentType').value}</p>
+                  <p><strong>Document Number:</strong> ${$('#documentNumber').value}</p>
+                  <p><strong>Expiry Date:</strong> ${$('#documentExpiry').value}</p>
+                `;
+                $('.review-container').appendChild(reviewDetails);
+              } catch (error) {
+                console.error('Error uploading selfie:', error);
+                alert(error.message || 'Failed to upload selfie');
+              } finally {
+                $('#nextToReview').disabled = false;
+              }
+            });
+            
+            // Submit verification
+            $('#submitVerification').addEventListener('click', async function() {
+              try {
+                $('#submitVerification').disabled = true;
+                
+                // Mark verification as reviewed/complete
+                const result = await app.completeVerification(app.data.documentId);
+                console.log('Verification completed:', result);
+                
+                // Show success state
+                $('.step-content[data-step="4"]').classList.remove('active');
+                $('.step-content[data-step="success"]').classList.add('active');
+                
+                app.data.verificationComplete = true;
+                
+              } catch (error) {
+                console.error('Verification completion error:', error);
+                alert(error.message || 'Failed to complete verification');
+              } finally {
+                $('#submitVerification').disabled = false;
+              }
+            });
+
+            // Back navigation
             $('#backToDocument').addEventListener('click', function() {
               $('.step-content[data-step="3"]').classList.remove('active');
               $('.step-content[data-step="2"]').classList.add('active');
@@ -677,62 +838,6 @@
               }
             });
             
-            $('#nextToReview').addEventListener('click', function() {
-              $('.step-content[data-step="3"]').classList.remove('active');
-              $('.step-content[data-step="4"]').classList.add('active');
-              
-              // Update step indicators
-              $$('.step-indicator')[2].classList.add('completed');
-              $$('.step-indicator')[3].classList.add('active');
-              $$('.step-divider')[2].classList.add('completed');
-              
-              // Stop webcam
-              if ($('#selfieVideo').srcObject) {
-                $('#selfieVideo').srcObject.getTracks().forEach(track => track.stop());
-              }
-              
-              // Update review section with all collected information
-              $('#reviewDocumentPreview').innerHTML = $('#idDocumentPreview').innerHTML;
-              $('#reviewSelfiePreview').innerHTML = $('#selfiePreview').innerHTML;
-              $('#reviewDocumentType').textContent = $('#documentType').value;
-
-              // Add personal information to review
-              const reviewDetails = document.createElement('div');
-              reviewDetails.innerHTML = `
-                <h4>Personal Information</h4>
-                <p><strong>Name:</strong> ${$('#firstName').value} ${$('#lastName').value}</p>
-                <p><strong>Date of Birth:</strong> ${$('#dateOfBirth').value}</p>
-                <p><strong>Address:</strong> ${$('#address').value}</p>
-                <p><strong>City:</strong> ${$('#city').value}</p>
-                <p><strong>State:</strong> ${$('#state').value}</p>
-                <p><strong>Postal Code:</strong> ${$('#postalCode').value}</p>
-                <p><strong>Country:</strong> ${$('#country').value}</p>
-                <h4>Document Information</h4>
-                <p><strong>Document Type:</strong> ${$('#documentType').value}</p>
-                <p><strong>Document Number:</strong> ${$('#documentNumber').value}</p>
-                <p><strong>Expiry Date:</strong> ${$('#documentExpiry').value}</p>
-              `;
-              $('.review-details').appendChild(reviewDetails);
-            });
-            
-            $('#backToSelfie').addEventListener('click', function() {
-              $('.step-content[data-step="4"]').classList.remove('active');
-              $('.step-content[data-step="3"]').classList.add('active');
-              
-              // Update step indicators
-              $$('.step-indicator')[2].classList.remove('completed');
-              $$('.step-indicator')[3].classList.remove('active');
-              $$('.step-divider')[2].classList.remove('completed');
-              
-              // Re-initialize webcam
-              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                  .then(function(stream) {
-                    $('#selfieVideo').srcObject = stream;
-                  });
-              }
-            });
-            
             // Handle selfie capture button
             $('#captureSelfie').addEventListener('click', function() {
               const canvas = document.createElement('canvas');
@@ -741,128 +846,22 @@
               canvas.height = video.videoHeight;
               canvas.getContext('2d').drawImage(video, 0, 0);
               
-              const dataUrl = canvas.toDataURL('image/png');
-              $('#selfiePreview').style.display = 'block';
-              $('#selfiePreview img').src = dataUrl;
-              $('#videoContainer').style.display = 'none';
-              $('#nextToReview').disabled = false;
-            });
-            
-            // Submit verification
-            $('#submitVerification').addEventListener('click', async function() {
-              try {
-                // Gather all form data
-                const formData = {
-                  // Personal Information
-                  firstName: $('#firstName').value,
-                  lastName: $('#lastName').value,
-                  dateOfBirth: $('#dateOfBirth').value,
-                  address: $('#address').value,
-                  city: $('#city').value,
-                  state: $('#state').value,
-                  postalCode: $('#postalCode').value,
-                  country: $('#country').value,
-                  
-                  // Document Information
-                  documentType: $('#documentType').value,
-                  documentNumber: $('#documentNumber').value,
-                  documentExpiry: $('#documentExpiry').value,
-                  
-                  // System fields
-                  status: 'pending',
-                  verificationAttempts: 1,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  ipAddress: '', // Will be set by server
-                  userAgent: navigator.userAgent
-                };
-
-                // Create FormData objects for document and selfie
-                const documentFormData = new FormData();
-                const documentFile = await fetch($('#idDocumentPreview img').src)
-                  .then(res => res.blob())
-                  .then(blob => new File([blob], "document.jpg", { type: "image/jpeg" }));
-                documentFormData.append('documentFile', documentFile);
-                documentFormData.append('data', JSON.stringify(formData));
-
-                // Upload document first
-                const documentResponse = await fetch('/api/documents/upload', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                  },
-                  body: documentFormData
-                });
-
-                if (!documentResponse.ok) {
-                  throw new Error('Failed to upload document');
-                }
-
-                const documentResult = await documentResponse.json();
-                if (!documentResult.success) {
-                  throw new Error(documentResult.error || 'Failed to upload document');
-                }
-
-                // Now upload selfie and verify identity
-                const selfieFormData = new FormData();
-                const selfieFile = await fetch($('#selfiePreview img').src)
-                  .then(res => res.blob())
-                  .then(blob => new File([blob], "selfie.jpg", { type: "image/jpeg" }));
-                selfieFormData.append('selfieFile', selfieFile);
-                selfieFormData.append('documentId', documentResult.documentId);
-
-                const verificationResponse = await fetch('/api/documents/verify', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                  },
-                  body: selfieFormData
-                });
-
-                if (!verificationResponse.ok) {
-                  throw new Error('Failed to verify identity');
-                }
-
-                const verificationResult = await verificationResponse.json();
-                if (!verificationResult.success) {
-                  throw new Error(verificationResult.error || 'Identity verification failed');
-                }
-
-                // If we get here, everything was successful
-                $('.step-content[data-step="4"]').classList.remove('active');
-                $('.step-content[data-step="success"]').classList.add('active');
+              // Convert the canvas to a blob and store globally
+              canvas.toBlob(function(blob) {
+                // Create a File object from the blob
+                const capturedFile = new File([blob], "selfie.png", { type: "image/png" });
                 
-                // Update verification status
-                $('#verificationStatus .status-icon').classList.remove('pending');
-                $('#verificationStatus .status-icon').classList.add('verified');
-                $('#verificationStatus .status-icon').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
-                $('#verificationStatus .status-text h3').textContent = 'Verification Submitted';
-                $('#verificationStatus .status-text p').textContent = 'We\'re reviewing your information. This typically takes 1-2 business days.';
-
-              } catch (error) {
-                console.error('Verification error:', error);
-                alert('Error submitting verification: ' + error.message);
-              }
-            });
-
-            // Add navigation between personal info and document upload
-            $('#nextToDocument').addEventListener('click', function() {
-              // Validate personal information
-              const requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'address', 'city', 'state', 'postalCode', 'country'];
-              const missingFields = requiredFields.filter(field => !$('#' + field).value);
-              
-              if (missingFields.length > 0) {
-                alert('Please fill in all required fields: ' + missingFields.join(', '));
-                return;
-              }
-
-              $('.step-content[data-step="1"]').classList.remove('active');
-              $('.step-content[data-step="2"]').classList.add('active');
-              
-              // Update step indicators
-              $$('.step-indicator')[0].classList.add('completed');
-              $$('.step-indicator')[1].classList.add('active');
-              $$('.step-divider')[0].classList.add('completed');
+                // Store the file in the app data object instead of on the input element
+                app.data.capturedSelfie = capturedFile;
+                console.log("Selfie captured:", capturedFile);
+                
+                // Update the preview
+                const dataUrl = canvas.toDataURL('image/png');
+                $('#selfiePreview').style.display = 'block';
+                $('#selfiePreview img').src = dataUrl;
+                $('#videoContainer').style.display = 'none';
+                $('#nextToReview').disabled = false;
+              }, 'image/png');
             });
           },
           setupAvatarUpload() {
@@ -904,6 +903,9 @@
 
                   const response = await fetch('/api/auth/upload-avatar', {
                       method: 'POST',
+                      headers: {
+                          'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                      },
                       body: formData
                   });
 
@@ -964,7 +966,11 @@
             const url = `${this.config.apiBase}/${collection}${
               id ? `?id=${id}` : ''
             }`;
-            const response = await fetch(url);
+            const response = await fetch(url, {
+              headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+              }
+            });
             if (!response.ok)
               throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
@@ -1031,6 +1037,7 @@
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
               },
               body: JSON.stringify(data),
             });
@@ -1121,6 +1128,175 @@
               }
             } catch (error) {
               console.error('Error checking KYC verification status:', error);
+            }
+          },
+          async uploadPersonalInfo(personalData) {
+            try {
+              // Store personal data in the application state for later use
+              // We'll need to send it with the document upload
+              Object.assign(this.data, personalData);
+              
+              // Return a success response without calling the API yet
+              // We'll send this data with the document upload
+              return {
+                success: true,
+                message: 'Personal information saved for document upload'
+              };
+            } catch (error) {
+              console.error('Error processing personal information:', error);
+              throw error;
+            }
+          },
+
+          async uploadDocumentFile(file, documentInfo) {
+            const formData = new FormData();
+            
+            // Add the file
+            formData.append('document', file);
+            
+            // Add document type parameter to match backend expectation
+            formData.append('type', 'document');
+            formData.append('documentType', documentInfo.documentType);
+            
+            // Add personal information from earlier step
+            if (this.data.firstName) formData.append('firstName', this.data.firstName);
+            if (this.data.lastName) formData.append('lastName', this.data.lastName);
+            if (this.data.dateOfBirth) formData.append('dateOfBirth', this.data.dateOfBirth);
+            if (this.data.address) formData.append('address', this.data.address);
+            if (this.data.city) formData.append('city', this.data.city);
+            if (this.data.state) formData.append('state', this.data.state);
+            if (this.data.postalCode) formData.append('postalCode', this.data.postalCode);
+            if (this.data.country) formData.append('country', this.data.country);
+            
+            // Add document metadata
+            if (documentInfo.documentNumber) formData.append('documentNumber', documentInfo.documentNumber);
+            if (documentInfo.documentExpiry) formData.append('documentExpiry', documentInfo.documentExpiry);
+
+            try {
+              console.log('Uploading document with form data...');
+              
+              // Log FormData for debugging
+              for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name + ' (' + pair[1].size + ' bytes)' : pair[1]));
+              }
+              
+              const response = await fetch(this.config.apiBase + '/documents/upload', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                },
+                body: formData
+              });
+
+              const result = await response.json();
+              if (!result.success) {
+                throw new Error(result.error || 'Failed to upload document');
+              }
+
+              // Store document ID for selfie upload
+              if (result.documentId) {
+                this.data.documentId = result.documentId;
+                console.log('Document uploaded, ID:', this.data.documentId);
+              }
+
+              return result;
+            } catch (error) {
+              console.error('Error uploading document:', error);
+              throw error;
+            }
+          },
+
+          async uploadSelfie(file, documentId) {
+            // Validate if selfie is required for this document type
+            const documentType = $('#documentType').value;
+            const requiresSelfie = ['passport', 'national_id'].includes(documentType);
+
+            if (!requiresSelfie) {
+              console.log('Selfie not required for document type:', documentType);
+              return { success: true, message: 'Selfie not required for this document type' };
+            }
+
+            const formData = new FormData();
+            
+            // Debug the file object
+            console.log("uploadSelfie received file:", file);
+            console.log("File name:", file.name);
+            console.log("File type:", file.type);
+            console.log("File size:", file.size);
+            
+            // Use the correct field name that the server expects
+            formData.append('selfie', file);
+            
+            // Set type to selfie for backend
+            formData.append('type', 'selfie');
+            
+            // Use document ID from app data or parameter
+            const docId = documentId || this.data.documentId;
+            if (!docId) {
+              throw new Error('Document ID is required to upload selfie');
+            }
+            
+            formData.append('documentId', docId);
+
+            try {
+              // Log FormData (for debugging)
+              console.log('FormData entries:');
+              for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name + ' (' + pair[1].size + ' bytes)' : pair[1]));
+              }
+              
+              const response = await fetch(this.config.apiBase + '/documents/upload', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                },
+                body: formData
+              });
+              
+              const result = await response.json();
+              console.log('Upload selfie result:', result);
+              
+              if (!result.success) {
+                throw new Error(result.error || 'Failed to upload selfie');
+              }
+
+              return result;
+            } catch (error) {
+              console.error('Error uploading selfie:', error);
+              throw error;
+            }
+          },
+          
+          async completeVerification(documentId) {
+            if (!documentId) {
+              throw new Error('Document ID is required to complete verification');
+            }
+            
+            try {
+              // The verification process should be triggered automatically when both document and selfie
+              // are uploaded, so we just need to update the document status to mark it as reviewed
+              
+              const response = await fetch(this.config.apiBase + '/documents/verify', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                },
+                body: JSON.stringify({
+                  documentId: documentId,
+                  reviewed: true
+                })
+              });
+
+              const result = await response.json();
+              if (!result.success) {
+                throw new Error(result.error || 'Failed to complete verification');
+              }
+
+              return result;
+            } catch (error) {
+              console.error('Error completing verification:', error);
+              throw error;
             }
           },
         };

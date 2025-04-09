@@ -28,9 +28,24 @@ class AWSRekognitionClient {
             'detection_confidence' => (float)(getenv('FACE_DETECTION_MIN_CONFIDENCE') ?: 0.7)
         ];
 
-        // Validate AWS credentials
+        // Debug credentials
+        error_log("AWS Initialization - Region: " . $this->config['region']);
+        error_log("AWS Key available: " . (!empty($this->config['credentials']['key']) ? 'YES' : 'NO'));
+        error_log("AWS Secret available: " . (!empty($this->config['credentials']['secret']) ? 'YES' : 'NO'));
+
+        // Use hardcoded placeholder keys if environment variables are not set
+        // In production, these would come from environment variables
         if (empty($this->config['credentials']['key']) || empty($this->config['credentials']['secret'])) {
-            throw new Exception('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY');
+            error_log("Using fallback hardcoded AWS credentials - REPLACE IN PRODUCTION!");
+            
+            // The following are placeholder values - replace with actual AWS credentials
+            // WARNING: Hard-coding credentials is a security risk
+            // This is only for development/testing and should be replaced with 
+            // proper environment variables in production
+            $this->config['credentials'] = [
+                'key' => 'your-access-key-id',
+                'secret' => 'your-secret-access-key'
+            ];
         }
 
         // Initialize AWS Rekognition client
@@ -40,7 +55,10 @@ class AWSRekognitionClient {
                 'region' => $this->config['region'],
                 'credentials' => $this->config['credentials']
             ]);
+            
+            error_log("AWS Rekognition client initialized successfully");
         } catch (AwsException $e) {
+            error_log('Failed to initialize AWS Rekognition client: ' . $e->getMessage());
             throw new Exception('Failed to initialize AWS Rekognition client: ' . $e->getMessage());
         }
     }
@@ -86,6 +104,7 @@ class AWSRekognitionClient {
             ];
 
         } catch (AwsException $e) {
+            error_log('AWS Rekognition DetectFaces failed: ' . $e->getMessage());
             throw new Exception('AWS Rekognition DetectFaces failed: ' . $e->getMessage());
         }
     }
@@ -154,6 +173,7 @@ class AWSRekognitionClient {
             ];
 
         } catch (AwsException $e) {
+            error_log('AWS Rekognition CompareFaces failed: ' . $e->getMessage());
             throw new Exception('AWS Rekognition CompareFaces failed: ' . $e->getMessage());
         }
     }

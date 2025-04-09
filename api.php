@@ -345,12 +345,16 @@ switch ($method) {
 
     case 'PUT':
         // Update
-        if ($id) {
+        if ($id && ($id != "undefined")) {
             $data = $posted;
             file_put_contents("logs/puts.log", json_encode($data)."\n", FILE_APPEND);
             // $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
                 $result = $instance->update($id, $data);
+
+                $out = ["result"=>$result, "newdata"=>$instance->get($id)];
+                file_put_contents("logs/results.log", $id . ": ".json_encode($out)."\n", FILE_APPEND);
+
                 echo json_encode($result);
             } else {
                 http_response_code(400);

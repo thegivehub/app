@@ -1,15 +1,18 @@
 <?php
 require_once __DIR__ . '/Auth.php';
 require_once __DIR__ . '/Model.php';
+require_once __DIR__ . '/DocumentUploader.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 class User extends Model {
     protected $auth;
+    protected $documentUploader;
 
     public function __construct() {
         parent::__construct(); // This must come first to initialize $collection
         $this->auth = new Auth();
+        $this->documentUploader = new DocumentUploader($this->auth, null, 'profile');
     }
 
     public function updateProfile($userId, $data) {
@@ -31,6 +34,23 @@ class User extends Model {
                 'email' => $data['email'],
                 'updated' => new MongoDB\BSON\UTCDateTime()
             ];
+
+            // Handle base64 profile image if present
+            if (isset($data['profile']['avatar']) && strpos($data['profile']['avatar'], 'data:image/') === 0) {
+                // Process base64 image and get URL
+                $imageResult = $this->documentUploader->processBase64Image(
+                    $data['profile']['avatar'],
+                    'profile',
+                    $userId
+                );
+                
+                if ($imageResult['success']) {
+                    // Update avatar with the new URL
+                    $updateData['profile']['avatar'] = $imageResult['url'];
+                } else {
+                    error_log("Failed to process profile image: " . ($imageResult['error'] ?? 'Unknown error'));
+                }
+            }
 
             error_log("Structured update data: " . json_encode($updateData));
 
@@ -54,6 +74,36 @@ class User extends Model {
         } catch (Exception $e) {
             error_log("Error updating user profile: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Upload a profile image for the user
+     * 
+     * @param array $file The uploaded file from $_FILES
+     * @return array Response with upload status and URL
+     */
+    public function uploadProfileImage($file) {
+        try {
+            $userId = $this->auth->getUserIdFromToken();
+            if (!$userId) {
+                throw new Exception('Authentication required');
+            }
+            
+            // Use DocumentUploader to handle the file upload
+            $result = $this->documentUploader->uploadProfileImage($file);
+            
+            if ($result['success']) {
+                return $result;
+            } else {
+                throw new Exception($result['error'] ?? 'Failed to upload profile image');
+            }
+        } catch (Exception $e) {
+            error_log("Profile image upload error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
         }
     }
 
