@@ -20,7 +20,7 @@ class Donor extends Model {
             [
                 '$facet' => [
                     'totalDonors' => [
-                        ['$match' => ['created' => ['$lte' => $now]]],
+                        ['$match' => ['createdAt' => ['$lte' => $now]]],
                         ['$count' => 'count']
                     ],
                     'activeDonors' => [
@@ -52,7 +52,7 @@ class Donor extends Model {
             [
                 '$facet' => [
                     'totalDonors' => [
-                        ['$match' => ['created' => ['$lte' => $monthAgo]]],
+                        ['$match' => ['createdAt' => ['$lte' => $monthAgo]]],
                         ['$count' => 'count']
                     ],
                     'activeDonors' => [

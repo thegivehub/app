@@ -97,8 +97,8 @@ class TransactionProcessor extends Model {
                 'type' => $isRecurring ? 'recurring' : 'one-time',
                 'status' => 'pending',
                 'visibility' => $isAnonymous ? 'anonymous' : 'public',
-                'created' => new MongoDB\BSON\UTCDateTime(),
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             // Create Stellar keypair from secret
@@ -236,7 +236,7 @@ class TransactionProcessor extends Model {
                         'funding.donorCount' => 1
                     ],
                     '$set' => [
-                        'updated' => new MongoDB\BSON\UTCDateTime()
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
                     ]
                 ]
             );
@@ -317,7 +317,7 @@ class TransactionProcessor extends Model {
                     'campaignTitle' => $campaign['title']
                 ],
                 'read' => false,
-                'created' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             $notificationsCollection->insertOne($notification);
@@ -363,7 +363,7 @@ class TransactionProcessor extends Model {
                     'donationType' => $isRecurring ? 'recurring' : 'one-time',
                     'totalDonated' => 0,
                     'donationHistory' => [],
-                    'created' => new MongoDB\BSON\UTCDateTime(),
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
                     'lastActive' => new MongoDB\BSON\UTCDateTime()
                 ];
                 
@@ -564,8 +564,8 @@ class TransactionProcessor extends Model {
                     'type' => 'milestone',
                     'status' => 'completed',
                     'authorizedBy' => new MongoDB\BSON\ObjectId($authorizedBy),
-                    'created' => new MongoDB\BSON\UTCDateTime(),
-                    'updated' => new MongoDB\BSON\UTCDateTime()
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
                 ];
                 
                 $transactionsCollection->insertOne($transactionRecord);
@@ -638,7 +638,7 @@ class TransactionProcessor extends Model {
                     'campaignTitle' => $campaign['title']
                 ],
                 'read' => false,
-                'created' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             $notificationsCollection->insertOne($notification);
@@ -667,7 +667,7 @@ class TransactionProcessor extends Model {
                         'campaignTitle' => $campaign['title']
                     ],
                     'read' => false,
-                    'created' => new MongoDB\BSON\UTCDateTime()
+                    'createdAt' => new MongoDB\BSON\UTCDateTime()
                 ];
                 
                 $notificationsCollection->insertOne($donorNotification);
@@ -778,7 +778,7 @@ class TransactionProcessor extends Model {
                     'milestones' => $milestonesWithDates,
                     'transactionHash' => $hash,
                     'initialFunding' => floatval($initialFunding),
-                    'created' => new MongoDB\BSON\UTCDateTime(),
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
                     'createdBy' => isset($params['userId']) ? new MongoDB\BSON\ObjectId($params['userId']) : null,
                     'status' => 'active'
                 ];
@@ -831,10 +831,10 @@ class TransactionProcessor extends Model {
                 'status' => $tx['status'],
                 'type' => $tx['type'],
                 'visibility' => $tx['visibility'] ?? 'public',
-                'date' => $tx['created']->toDateTime()->format('Y-m-d H:i:s'),
+                'date' => $tx['createdAt']->toDateTime()->format('Y-m-d H:i:s'),
                 'txHash' => $tx['transaction']['txHash'] ?? null,
                 'stellarAddress' => $tx['transaction']['stellarAddress'] ?? null,
-                'updated' => $tx['updated']->toDateTime()->format('Y-m-d H:i:s'),
+                'updatedAt' => $tx['updatedAt']->toDateTime()->format('Y-m-d H:i:s'),
             ];
 
             // Get blockchain transaction details if hash exists
@@ -1233,17 +1233,17 @@ class TransactionProcessor extends Model {
 
             // Apply date range filter
             if (isset($options['dateFrom'])) {
-                if (!isset($query['created'])) {
-                    $query['created'] = [];
+                if (!isset($query['createdAt'])) {
+                    $query['createdAt'] = [];
                 }
-                $query['created']['$gte'] = new MongoDB\BSON\UTCDateTime(strtotime($options['dateFrom']) * 1000);
+                $query['createdAt']['$gte'] = new MongoDB\BSON\UTCDateTime(strtotime($options['dateFrom']) * 1000);
             }
 
             if (isset($options['dateTo'])) {
-                if (!isset($query['created'])) {
-                    $query['created'] = [];
+                if (!isset($query['createdAt'])) {
+                    $query['createdAt'] = [];
                 }
-                $query['created']['$lte'] = new MongoDB\BSON\UTCDateTime(strtotime($options['dateTo']) * 1000);
+                $query['createdAt']['$lte'] = new MongoDB\BSON\UTCDateTime(strtotime($options['dateTo']) * 1000);
             }
 
             // Get all donations for the campaign
@@ -1285,7 +1285,7 @@ class TransactionProcessor extends Model {
                 }
 
                 // Process for monthly chart data
-                $date = $donation['created']->toDateTime();
+                $date = $donation['createdAt']->toDateTime();
                 $monthKey = $date->format('Y-m');
 
                 if (!isset($monthlyData[$monthKey])) {
@@ -1329,7 +1329,7 @@ class TransactionProcessor extends Model {
                 $campaignDetails = [
                     'title' => $campaign['title'],
                     'status' => $campaign['status'],
-                    'created' => $campaign['created']->toDateTime()->format('Y-m-d H:i:s'),
+                    'createdAt' => $campaign['createdAt']->toDateTime()->format('Y-m-d H:i:s'),
                     'targetAmount' => $campaign['funding']['targetAmount'] ?? 0,
                     'raisedAmount' => $campaign['funding']['raisedAmount'] ?? 0,
                     'progress' => ($campaign['funding']['targetAmount'] > 0) ?

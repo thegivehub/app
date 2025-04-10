@@ -157,7 +157,7 @@ class AdminUserController {
         $options['limit'] = $limit;
         
         // Set sort options
-        $sort = isset($_GET['sort']) ? $_GET['sort'] : 'created';
+        $sort = isset($_GET['sort']) ? $_GET['sort'] : 'createdAt';
         $order = isset($_GET['order']) && $_GET['order'] === 'asc' ? 1 : -1;
         $options['sort'] = [$sort => $order];
         
@@ -254,26 +254,46 @@ class AdminUserController {
                 $this->sendError(409, "User with this email or username already exists");
             }
             
+            // Get current admin ID if available
+            $adminId = null;
+            try {
+                $auth = new Auth();
+                $adminId = $auth->getUserIdFromToken();
+            } catch (Exception $e) {
+                error_log("Failed to get admin ID: " . $e->getMessage());
+            }
+
             // Prepare user data
             $userData = [
                 'email' => $data['email'],
                 'username' => $data['username'],
-                'status' => $data['status'] ?? 'active',
                 'personalInfo' => [
-                    'firstName' => $data['firstName'],
-                    'lastName' => $data['lastName'],
+                    'firstName' => $data['firstName'] ?? '',
+                    'lastName' => $data['lastName'] ?? '',
                     'email' => $data['email'],
-                    'phone' => $data['phone'] ?? null
+                    'language' => $data['language'] ?? 'en',
+                    'country' => $data['country'] ?? '',
+                    'phone' => $data['phone'] ?? '',
                 ],
-                'displayName' => $data['firstName'] . ' ' . $data['lastName'],
                 'auth' => [
                     'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
                     'verified' => true,
+                    'twoFactorEnabled' => false,
                     'lastLogin' => new MongoDB\BSON\UTCDateTime()
                 ],
-                'roles' => in_array('admin', $data['roles'] ?? []) ? ['user', 'admin'] : ['user'],
-                'created' => new MongoDB\BSON\UTCDateTime(),
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'profile' => [
+                    'avatar' => null,
+                    'bio' => $data['bio'] ?? '',
+                    'preferences' => [
+                        'emailNotifications' => true,
+                        'currency' => 'USD',
+                    ]
+                ],
+                'roles' => $data['roles'] ?? ['user'],
+                'status' => 'active',
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime(),
+                'createdBy' => $adminId
             ];
             
             // Insert user
@@ -357,7 +377,7 @@ class AdminUserController {
             }
             
             // Set update timestamp
-            $updateData['updated'] = new MongoDB\BSON\UTCDateTime();
+            $updateData['updatedAt'] = new MongoDB\BSON\UTCDateTime();
             
             // Update user
             $result = $this->db->getCollection('users')->updateOne(
@@ -423,7 +443,7 @@ class AdminUserController {
                 ['_id' => new MongoDB\BSON\ObjectId($id)],
                 ['$set' => [
                     'auth.passwordHash' => password_hash($password, PASSWORD_DEFAULT),
-                    'updated' => new MongoDB\BSON\UTCDateTime()
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
                 ]]
             );
             

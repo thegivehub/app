@@ -91,8 +91,8 @@ class JumioService {
                     'jumioReference' => $response['transactionReference'],
                     'redirectUrl' => $response['redirectUrl'],
                     'status' => 'INITIATED',
-                    'created' => new MongoDB\BSON\UTCDateTime(),
-                    'updated' => new MongoDB\BSON\UTCDateTime(),
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime(),
                     'requestData' => $requestData,
                     'responseData' => $response
                 ];
@@ -169,7 +169,7 @@ class JumioService {
             $status = $payload['verificationStatus'] ?? 'UNKNOWN';
             $updateData = [
                 'status' => $status,
-                'updated' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime(),
                 'webhookData' => $payload
             ];
             
@@ -234,7 +234,7 @@ class JumioService {
             // Find the most recent verification for the user
             $verification = $this->kycCollection->findOne(
                 ['userId' => new MongoDB\BSON\ObjectId($userId)],
-                ['sort' => ['created' => -1]]
+                ['sort' => ['createdAt' => -1]]
             );
             
             if (!$verification) {
@@ -254,7 +254,7 @@ class JumioService {
                 'result' => $result,
                 'verified' => ($result === 'APPROVED'),
                 'redirectUrl' => $verification['redirectUrl'] ?? null,
-                'lastUpdated' => $verification['updated'] ?? null,
+                'lastUpdated' => $verification['updatedAt'] ?? null,
                 'verificationId' => (string)$verification['_id']
             ];
         } catch (Exception $e) {
@@ -312,7 +312,7 @@ class JumioService {
             // Find the most recent verification
             $verification = $this->kycCollection->findOne(
                 ['userId' => new MongoDB\BSON\ObjectId($userId)],
-                ['sort' => ['created' => -1]]
+                ['sort' => ['createdAt' => -1]]
             );
             
             // If no verification exists, create a new manual one
@@ -324,8 +324,8 @@ class JumioService {
                     'manual' => true,
                     'reason' => $reason,
                     'adminId' => new MongoDB\BSON\ObjectId($adminId),
-                    'created' => new MongoDB\BSON\UTCDateTime(),
-                    'updated' => new MongoDB\BSON\UTCDateTime()
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
                 ];
                 
                 $insertResult = $this->kycCollection->insertOne($manualVerification);
@@ -344,7 +344,7 @@ class JumioService {
                 'manual' => true,
                 'reason' => $reason,
                 'adminId' => new MongoDB\BSON\ObjectId($adminId),
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             $updateResult = $this->kycCollection->updateOne(
@@ -379,13 +379,13 @@ class JumioService {
             // Apply filters
             if (isset($filters['startDate'])) {
                 $startDate = new DateTime($filters['startDate']);
-                $query['created']['$gte'] = new MongoDB\BSON\UTCDateTime($startDate->getTimestamp() * 1000);
+                $query['createdAt']['$gte'] = new MongoDB\BSON\UTCDateTime($startDate->getTimestamp() * 1000);
             }
             
             if (isset($filters['endDate'])) {
                 $endDate = new DateTime($filters['endDate']);
                 $endDate->setTime(23, 59, 59);
-                $query['created']['$lte'] = new MongoDB\BSON\UTCDateTime($endDate->getTimestamp() * 1000);
+                $query['createdAt']['$lte'] = new MongoDB\BSON\UTCDateTime($endDate->getTimestamp() * 1000);
             }
             
             if (isset($filters['status'])) {
@@ -394,7 +394,7 @@ class JumioService {
             
             // Get verification records
             $verifications = $this->kycCollection->find($query, [
-                'sort' => ['created' => -1]
+                'sort' => ['createdAt' => -1]
             ]);
             
             // Aggregate statistics
@@ -426,8 +426,8 @@ class JumioService {
                     'userName' => $user['displayName'] ?? 'Unknown',
                     'status' => $verification['status'] ?? 'UNKNOWN',
                     'result' => $result,
-                    'created' => $verification['created'],
-                    'updated' => $verification['updated'],
+                    'createdAt' => $verification['createdAt'],
+                    'updatedAt' => $verification['updatedAt'],
                     'isManual' => $verification['manual'] ?? false
                 ];
                 

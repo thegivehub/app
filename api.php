@@ -122,6 +122,41 @@ if (!$endpoint || !class_exists($endpoint)) {
 }
 $pathParts = preg_split("/\//", $_SERVER['PATH_INFO']);
 array_shift($pathParts);
+
+// Add extra logging for Document endpoints to debug issues
+if ($endpoint === 'Documents' && isset($pathParts) && count($pathParts) > 1) {
+    $action = $pathParts[1];
+    error_log("Documents endpoint with action: " . $action);
+    error_log("HTTP Method: " . $method);
+    error_log("Posted data: " . json_encode($posted));
+    
+    // Handle specific Document actions
+    switch ($action) {
+        case 'verify':
+            if ($method === 'POST') {
+                // Ensure we have a proper documentId as a string
+                if (isset($posted['documentId'])) {
+                    $documentId = $posted['documentId'];
+                    error_log("Document verify with ID: " . $documentId);
+                    
+                    // Call verify with the document ID as parameter and posted data
+                    $result = $instance->verify($documentId, $posted);
+                    sendAPIJson(200, $result);
+                    exit;
+                } else {
+                    error_log("Document verify missing documentId");
+                    sendAPIJson(400, ["error" => "Missing documentId parameter"]);
+                    exit;
+                }
+            }
+            break;
+            
+        case 'upload':
+            error_log("Document upload action, delegating to handler");
+            break;
+    }
+}
+
 if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
     $kycController = new KycController();
     
@@ -204,6 +239,11 @@ if (isset($pathParts) && $pathParts[0] === 'admin') {
             // New endpoint for reports
             $adminReportsController = new AdminReportsController();
             $adminReportsController->handleRequest();
+            exit;
+        } else if ($pathParts[1] === 'kyc') {
+            // KYC administration endpoints
+            $adminKycController = new AdminKycController();
+            $adminKycController->handleRequest();
             exit;
         }
     }
@@ -336,9 +376,11 @@ switch ($method) {
         if ($data) {
             $result = $instance->create($data);
             echo json_encode($result);
+            exit;
         } else {
             http_response_code(400);
             echo json_encode(["error" => "Invalid data"]);
+            exit;
         }
         break;
 
@@ -359,6 +401,7 @@ switch ($method) {
             $result = $instance->read(null, $options);
         }
         echo json_encode($result);
+        exit;
         break;
 
     case 'PUT':
@@ -374,13 +417,16 @@ switch ($method) {
                 file_put_contents("logs/results.log", $id . ": ".json_encode($out)."\n", FILE_APPEND);
 
                 echo json_encode($result);
+                exit;
             } else {
                 http_response_code(400);
                 echo json_encode(["error" => "Invalid data"]);
+                exit;
             }
         } else {
             http_response_code(400);
             echo json_encode(["error" => "ID required"]);
+            exit;
         }
         break;
 
@@ -389,9 +435,11 @@ switch ($method) {
         if ($id) {
             $result = $instance->delete($id);
             echo json_encode($result);
+            exit;
         } else {
             http_response_code(400);
             echo json_encode(["error" => "ID required"]);
+            exit;
         }
         break;
 
@@ -400,4 +448,9 @@ switch ($method) {
         echo json_encode(["error" => "Method not allowed"]);
         break;
 }
+
+// If no matching endpoint is found
+//http_response_code(404);
+//echo json_encode(['success' => false, 'error' => 'Endpoint not found']);
+exit;
 

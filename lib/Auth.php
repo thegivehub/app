@@ -76,19 +76,19 @@ class Auth {
                     ]
                 ], $data['profile'] ?? []),
                 'roles' => ['user'],
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
 
             if ($existingUser) {
                 // If user exists but isn't verified, update their info
                 if ($existingUser['status'] === 'pending' || !isset($existingUser['auth']['verified']) || !$existingUser['auth']['verified']) {
+                    $userData['updatedAt'] = new MongoDB\BSON\UTCDateTime(); // Add timestamp for update
+                    
                     $result = $this->db->users->updateOne(
                         ['email' => $data['email']],
                         [
-                            '$set' => $userData,
-                            '$setOnInsert' => [
-                                'created' => new MongoDB\BSON\UTCDateTime()
-                            ]
+                            '$set' => $userData
                         ],
                         ['upsert' => true]
                     );
@@ -103,7 +103,6 @@ class Auth {
                 }
             } else {
                 // New user
-                $userData['created'] = new MongoDB\BSON\UTCDateTime();
                 $result = $this->db->users->insertOne($userData);
 
                 if (!$result['success']) {
@@ -149,7 +148,8 @@ class Auth {
                 'auth.verificationCode' => $verificationCode,
                 'auth.verificationExpires' => $verificationExpires,
                 'auth.verified' => false,
-                'auth.twoFactorEnabled' => false
+                'auth.twoFactorEnabled' => false,
+                'updatedAt' => new MongoDB\BSON\UTCDateTime() // Manually add timestamp
             ];
 
             file_put_contents("verify.log", date("Ymdhis") . "\nCREATING NEW RECORD\n-------\n".json_encode($userData)."\n", FILE_APPEND);
@@ -160,8 +160,8 @@ class Auth {
                     '$set' => $updateData,
                     '$setOnInsert' => [
                         'status' => 'pending',
-                        'created' => new MongoDB\BSON\UTCDateTime(),
-                        'roles' => ['user']
+                        'roles' => ['user'],
+                        'createdAt' => new MongoDB\BSON\UTCDateTime() // Manually add timestamp for new documents
                     ]
                 ],
                 ['upsert' => true]
@@ -187,7 +187,6 @@ class Auth {
     }
 
     public function requestVerification($data) {
-        return [ 'success' => true, 'message' => 'Email verified successfully' ];
         try {
             if (!isset($data['email']) || !isset($data['code'])) {
                 throw new Exception('Email and verification code required');
@@ -212,7 +211,8 @@ class Auth {
                 [
                     '$set' => [
                         'status' => 'active',
-                        'auth.verified' => true
+                        'auth.verified' => true,
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime() // Manually add timestamp
                     ],
                     '$unset' => [
                         'auth.verificationCode' => '',
@@ -276,7 +276,8 @@ class Auth {
                 [
                     '$set' => [
                         'auth.lastLogin' => new MongoDB\BSON\UTCDateTime(),
-                        'auth.refreshToken' => $tokens['refreshToken']
+                        'auth.refreshToken' => $tokens['refreshToken'],
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime() // Manually add timestamp
                     ]
                 ]
             );
@@ -582,6 +583,58 @@ class Auth {
             return $decoded !== null;
         } catch (Exception $e) {
             return false;
+        }
+    }
+
+    public function verifyCode($data) {
+        try {
+            if (!isset($data['email']) || !isset($data['code'])) {
+                throw new Exception('Email and verification code required');
+            }
+
+            // Find user with matching code
+            $user = $this->db->users->findOne([
+                'email' => $data['email'],
+                'auth.verificationCode' => (int)$data['code'],
+                'auth.verificationExpires' => [
+                    '$gt' => new MongoDB\BSON\UTCDateTime()
+                ]
+            ]);
+
+            if (!$user) {
+                throw new Exception('Invalid or expired verification code');
+            }
+
+            // Update user status
+            $result = $this->db->users->updateOne(
+                ['_id' => $user['_id']],
+                [
+                    '$set' => [
+                        'status' => 'active',
+                        'auth.verified' => true,
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime() // Manually add timestamp
+                    ],
+                    '$unset' => [
+                        'auth.verificationCode' => '',
+                        'auth.verificationExpires' => ''
+                    ]
+                ]
+            );
+
+            if (!$result->getModifiedCount()) {
+                throw new Exception('Failed to verify user');
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Email verified successfully'
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
         }
     }
 }

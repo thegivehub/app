@@ -65,7 +65,7 @@ class AddressManager {
             $addresses = $this->collection->find([
                 'userId' => $userId
             ], [
-                'sort' => ['isDefault' => -1, 'created' => -1]
+                'sort' => ['isDefault' => -1, 'createdAt' => -1]
             ]);
             
             return [
@@ -144,8 +144,8 @@ class AddressManager {
                 'zip' => $validationResult['normalized']['zip'] ?? '',
                 'country' => $validationResult['normalized']['country'],
                 'isDefault' => isset($data['isDefault']) && $data['isDefault'] ? true : false,
-                'created' => new MongoDB\BSON\UTCDateTime(),
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             // If this is set as default, update any existing default addresses
@@ -233,7 +233,7 @@ class AddressManager {
                 'zip' => $validationResult['normalized']['zip'] ?? '',
                 'country' => $validationResult['normalized']['country'],
                 'isDefault' => isset($data['isDefault']) && $data['isDefault'] ? true : false,
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             // If this is being set as default, update any existing default addresses
@@ -297,7 +297,7 @@ class AddressManager {
             if ($address['isDefault']) {
                 $addresses = $this->collection->find(
                     ['userId' => $userId],
-                    ['sort' => ['created' => -1], 'limit' => 1]
+                    ['sort' => ['createdAt' => -1], 'limit' => 1]
                 );
                 
                 if (!empty($addresses)) {

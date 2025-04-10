@@ -42,7 +42,6 @@ class MongoCollection {
      * Handles:
      * - ObjectId conversion for fields ending with 'Id' or named '_id'
      * - Date conversion for fields ending with 'At', 'Date', or matching date patterns
-     * - Automatically adds createdAt and updatedAt timestamps 
      * 
      * @param array $document The document to prepare
      * @param bool $isUpdate Whether this is for an update operation
@@ -56,13 +55,8 @@ class MongoCollection {
         
         $now = new MongoDB\BSON\UTCDateTime(time() * 1000);
         
-        // Add timestamps for new documents or updates
-        if (!$isUpdate && !isset($document['createdAt'])) {
-            $document['createdAt'] = $now;
-        }
-        if (!isset($document['updatedAt'])) {
-            $document['updatedAt'] = $now;
-        }
+        // Removed automatic timestamps
+        // This is now the responsibility of the application code
         
         // Process each field
         foreach ($document as $key => $value) {
@@ -151,13 +145,9 @@ class MongoCollection {
             if (isset($update['$setOnInsert'])) {
                 $update['$setOnInsert'] = $this->prepareDocument($update['$setOnInsert'], false);
             }
-            // Add automatic updatedAt to $set if not present
-            if (!isset($update['$set']['updatedAt'])) {
-                if (!isset($update['$set'])) {
-                    $update['$set'] = [];
-                }
-                $update['$set']['updatedAt'] = new MongoDB\BSON\UTCDateTime(time() * 1000);
-            }
+            
+            // Removed automatic updatedAt timestamp
+            // This is now the responsibility of the application code
         }
         
         return $update;

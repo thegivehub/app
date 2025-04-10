@@ -32,7 +32,7 @@ class User extends Model {
                 'personalInfo' => $data['personalInfo'],
                 'profile' => $data['profile'],
                 'email' => $data['email'],
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
 
             // Handle base64 profile image if present
@@ -233,8 +233,8 @@ class User extends Model {
                     ]
                 ], $data['profile'] ?? []),
                 'roles' => ['user'],
-                'created' => new MongoDB\BSON\UTCDateTime(),
-                'updated' => new MongoDB\BSON\UTCDateTime()
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
             
             // Continue with user creation and return success response...
@@ -276,7 +276,7 @@ class User extends Model {
                 ['_id' => $objectId],
                 ['$set' => [
                     'personalInfo.address' => $result['normalized'],
-                    'updated' => new MongoDB\BSON\UTCDateTime()
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
                 ]]
             );
             
