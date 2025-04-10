@@ -4,195 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Campaigns</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --red-500: #ef4444;
-      --green-100: #dcfce7;
-      --green-500: #22c55e;
-      --yellow-100: #fef9c3;
-      --yellow-500: #eab308;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-        Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.6;
-      color: var(--gray-700);
-      background: #f8fafc;
-      padding: 2rem;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .btn-icon {
-      margin-right: 0.5rem;
-    }
-
-    .campaigns-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .campaign-card {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .campaign-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .campaign-image {
-      height: 200px;
-      background-size: cover;
-      background-position: center;
-      background-color: var(--gray-200);
-    }
-
-    .campaign-content {
-      padding: 1.5rem;
-    }
-
-    .campaign-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .campaign-type {
-      font-size: 0.875rem;
-      color: var(--primary);
-      margin-bottom: 1rem;
-    }
-
-    .campaign-description {
-      color: var(--gray-600);
-      margin-bottom: 1rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .campaign-meta {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 1rem;
-      font-size: 0.875rem;
-    }
-
-    .campaign-status {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-weight: 500;
-      font-size: 0.75rem;
-    }
-
-    .status-pending {
-      background-color: var(--yellow-100);
-      color: var(--yellow-500);
-    }
-
-    .status-active {
-      background-color: var(--green-100);
-      color: var(--green-500);
-    }
-
-    .progress-bar {
-      height: 8px;
-      background: var(--gray-200);
-      border-radius: 4px;
-      margin-top: 0.5rem;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary);
-    }
-
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: var(--gray-600);
-    }
-
-    .no-campaigns {
-      text-align: center;
-      padding: 3rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .no-campaigns h2 {
-      margin-bottom: 1rem;
-    }
-
-    .no-campaigns p {
-      margin-bottom: 1.5rem;
-      color: var(--gray-600);
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 1rem;
-      }
-      
-      .campaigns-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/my-campaigns.css">
 </head>
 <body>
   <div class="container">
@@ -325,9 +137,18 @@
       container.innerHTML = '';
       
       campaigns.forEach(campaign => {
-        const imageUrl = campaign.images && campaign.images.length > 0 
-          ? campaign.images[0] 
-          : '/img/campaign-placeholder.jpg';
+        let imageUrl = '/img/campaign-placeholder.jpg';
+
+        if (campaign.images && campaign.images[0]) {
+          let img = campaign.images[0];
+          if (typeof(img) === "string") {
+            imageUrl = img;
+          } else if (img.url) {
+            imageUrl = img.url;
+          }
+        } else if (campaign.gallery && campaign.gallery[0]) {
+          imageUrl = campaign.gallery[0].url;
+        }
           
         const raised = campaign.raisedAmount || 0;
         const progress = calculateProgress(raised, campaign.funding?.goalAmount ?? 0);

@@ -52,9 +52,41 @@ class Campaign {
             }
         }
         
-        // Process gallery images if they exist
-        if (isset($data['gallery']) && is_array($data['gallery'])) {
-            $processedGallery = [];
+        // Process additional images if they exist (changed from gallery to images)
+        if (isset($data['images']) && is_array($data['images'])) {
+            $processedImages = [];
+            
+            foreach ($data['images'] as $index => $imageItem) {
+                if (isset($imageItem['image']) && strpos($imageItem['image'], 'data:image/') === 0) {
+                    $imageResult = $this->documentUploader->processBase64Image(
+                        $imageItem['image'],
+                        'campaign',
+                        isset($data['_id']) ? $data['_id'] : null
+                    );
+                    
+                    if ($imageResult['success']) {
+                        $processedImages[] = [
+                            'url' => $imageResult['url'],
+                            'caption' => $imageItem['caption'] ?? '',
+                            'uploadedAt' => new MongoDB\BSON\UTCDateTime()
+                        ];
+                    }
+                } else if (isset($imageItem['url'])) {
+                    // Keep existing URLs
+                    $processedImages[] = $imageItem;
+                }
+            }
+            
+            // Replace images with processed URLs
+            if (!empty($processedImages)) {
+                $data['images'] = $processedImages;
+            }
+        }
+        
+        // Check for backward compatibility with gallery field
+        if (isset($data['gallery']) && is_array($data['gallery']) && !isset($data['images'])) {
+            error_log("Found legacy 'gallery' field, processing as 'images'");
+            $processedImages = [];
             
             foreach ($data['gallery'] as $index => $galleryItem) {
                 if (isset($galleryItem['image']) && strpos($galleryItem['image'], 'data:image/') === 0) {
@@ -65,7 +97,7 @@ class Campaign {
                     );
                     
                     if ($galleryResult['success']) {
-                        $processedGallery[] = [
+                        $processedImages[] = [
                             'url' => $galleryResult['url'],
                             'caption' => $galleryItem['caption'] ?? '',
                             'uploadedAt' => new MongoDB\BSON\UTCDateTime()
@@ -73,13 +105,15 @@ class Campaign {
                     }
                 } else if (isset($galleryItem['url'])) {
                     // Keep existing URLs
-                    $processedGallery[] = $galleryItem;
+                    $processedImages[] = $galleryItem;
                 }
             }
             
             // Replace gallery with processed URLs
-            if (!empty($processedGallery)) {
-                $data['gallery'] = $processedGallery;
+            if (!empty($processedImages)) {
+                $data['images'] = $processedImages;
+                // Keep gallery for backward compatibility
+                $data['gallery'] = $processedImages;
             }
         }
         

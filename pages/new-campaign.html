@@ -629,7 +629,6 @@
     if(document.getElementById('location-latitude').value.length>0 && document.getElementById('location-longitude').value.length>0){
         lat = parseFloat(document.getElementById('location-latitude').value);
         lon = parseFloat(document.getElementById('location-longitude').value);
-        console.log(data.location);
     }else{
         if(document.getElementById('location-region').value || document.getElementById('location-country').value){
             const latLng = await this.getLatLong(`${document.getElementById('location-region').value}, ${document.getElementById('location-country').value}`);
@@ -673,13 +672,28 @@
 
     // Get image data from preview
     const imageElements = document.querySelectorAll('#imagePreview .preview-item');
-    imageElements.forEach(img => {
+    // Set main image (first image)
+    if (imageElements.length > 0) {
+      const mainImg = imageElements[0];
+      if (mainImg.style.backgroundImage) {
+        const url = mainImg.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+        formData.image = url;
+      }
+    }
+    
+    // Add additional images to images array
+    formData.images = [];
+    imageElements.forEach((img, index) => {
       if (img.style.backgroundImage) {
         const url = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-        formData.images.push(url);
+        // Add all images to images array (backend will handle duplicates if needed)
+        formData.images.push({
+          image: url,
+          caption: `Image ${index + 1}`
+        });
       }
     });
-
+    
     console.log('Form Data:', formData);
 
     // Show loading state
