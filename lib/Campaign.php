@@ -227,6 +227,25 @@ class Campaign {
             if (!isset($options['page'])) {
                 $options['page'] = 1;
             }
+            
+            // Handle sorting
+            if (isset($options['sort'])) {
+                $sortField = $options['sort'];
+                $sortDirection = 1; // Default ascending
+                
+                // Check if it's a descending sort (prefixed with -)
+                if (substr($sortField, 0, 1) === '-') {
+                    $sortField = substr($sortField, 1);
+                    $sortDirection = -1; // Descending
+                }
+                
+                // Add the sort configuration to MongoDB options
+                $options['sort'] = [$sortField => $sortDirection];
+            } else {
+                // Default sort by createdAt in descending order (newest first)
+                $options['sort'] = ['createdAt' => -1];
+            }
+            
             $out = $this->collection->find([], $options);
             if (is_array($out)) {
                 return $out;
