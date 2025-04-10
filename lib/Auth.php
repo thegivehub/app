@@ -136,6 +136,12 @@ class Auth {
             $verificationCode = random_int(100000, 999999);
             $verificationExpires = new MongoDB\BSON\UTCDateTime((time() + $this->config['verification_expire']) * 1000);
             
+            // Create user data for logging
+            $userData = [
+                'email' => $data['email'],
+                'verificationCode' => $verificationCode,
+                'verificationExpires' => $verificationExpires
+            ];
 
             $updateData = [
                 'email' => $data['email'],
@@ -497,20 +503,62 @@ class Auth {
         return ['success' => true];
     }
     public function getUserIdFromToken() {
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? '';
-        
-        if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-            throw new Exception('No bearer token found');
-        }
-        
-        $token = $matches[1];
         try {
-            // Verify and decode the JWT token
-            $decoded = JWT::decode($token, new Key($this->config['jwt_secret'], 'HS256'));
-            return $decoded->sub; // Get user ID from token
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? '';
+            
+            if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                throw new Exception('No bearer token found');
+            }
+            
+            $token = $matches[1];
+            try {
+                // Verify and decode the JWT token
+                $decoded = JWT::decode($token, new Key($this->config['jwt_secret'], 'HS256'));
+                
+                // Debug what we're getting from the token
+                error_log("JWT decoded sub: " . (is_object($decoded) ? json_encode($decoded) : $decoded));
+                error_log("JWT decoded sub type: " . gettype($decoded->sub));
+                
+                // Ensure we're returning a string
+                if (is_array($decoded->sub)) {
+                    // If it's an array, try to find the ID
+                    if (isset($decoded->sub['$oid'])) {
+                        return $decoded->sub['$oid'];
+                    } else if (isset($decoded->sub['_id'])) {
+                        return $decoded->sub['_id'];
+                    } else if (isset($decoded->sub['id'])) {
+                        return $decoded->sub['id'];
+                    } else {
+                        error_log("Unexpected JWT sub format: " . json_encode($decoded->sub));
+                        throw new Exception('Invalid user ID format in token');
+                    }
+                } else if (is_object($decoded->sub)) {
+                    // Handle case where sub might be an object
+                    $subObj = $decoded->sub;
+                    error_log("JWT sub is object: " . json_encode($subObj));
+                    
+                    if (isset($subObj->{'$oid'})) {
+                        return $subObj->{'$oid'};
+                    } else if (isset($subObj->_id)) {
+                        return $subObj->_id;
+                    } else if (isset($subObj->id)) {
+                        return $subObj->id;
+                    } else {
+                        error_log("Unexpected JWT sub object format: " . json_encode($subObj));
+                        throw new Exception('Invalid user ID format in token');
+                    }
+                }
+                
+                // If it's already a string, just return it
+                return (string)$decoded->sub;
+            } catch (Exception $e) {
+                error_log("Token decode error: " . $e->getMessage());
+                throw new Exception('Invalid token: ' . $e->getMessage());
+            }
         } catch (Exception $e) {
-            throw new Exception('Invalid token');
+            error_log("Authentication error: " . $e->getMessage());
+            throw new Exception('Authentication error: ' . $e->getMessage());
         }
     }
 

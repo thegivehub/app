@@ -2,6 +2,7 @@
 // document-api.php
 require_once __DIR__ . '/lib/autoload.php';
 require_once __DIR__ . '/lib/Document.php';
+require_once __DIR__ . '/lib/Documents.php';
 
 // Parse the request
 $method = $_SERVER['REQUEST_METHOD'];
@@ -9,6 +10,7 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'upload';
 
 // Initialize document uploader
 $uploader = new Document();
+$documents = new Documents();
 
 // Handle CORS
 header('Access-Control-Allow-Origin: *');
@@ -21,6 +23,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Route the request based on action and method
 switch ($action) {
+    case 'create':
+        if ($method === 'POST') {
+            // Handle document creation without file upload
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data) {
+                sendJson(400, ['error' => 'Invalid JSON data']);
+            }
+            
+            // Use Documents class create method to ensure all required fields are set
+            $result = $documents->create(null, $data);
+            sendJson(
+                $result['success'] ? 200 : 400,
+                $result
+            );
+        } else {
+            sendJson(405, ['error' => 'Method not allowed']);
+        }
+        break;
+        
     case 'upload':
         if ($method === 'POST') {
             // Handle document upload
@@ -127,4 +148,16 @@ switch ($action) {
         
     default:
         sendJson(404, ['error' => 'Action not found']);
+}
+
+/**
+ * Send a JSON response
+ * @param int $statusCode HTTP status code
+ * @param array $data Response data
+ */
+function sendJson($statusCode, $data) {
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
 }

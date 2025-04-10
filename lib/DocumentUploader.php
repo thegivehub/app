@@ -429,6 +429,12 @@ class DocumentUploader {
                 throw new Exception('Invalid document type. Allowed types: ' . implode(', ', $allowedTypes));
             }
 
+            // Check if this is an update to an existing document
+            $documentId = $_POST['documentId'] ?? null;
+            $isUpdate = !empty($documentId);
+            
+            error_log("Document upload: " . ($isUpdate ? "Updating existing document: $documentId" : "Creating new document"));
+
             // Get user details from POST data
             $firstName = $_POST['firstName'] ?? null;
             $lastName = $_POST['lastName'] ?? null;
@@ -441,24 +447,40 @@ class DocumentUploader {
             $documentNumber = $_POST['documentNumber'] ?? null;
             $documentExpiry = $_POST['documentExpiry'] ?? null;
 
-            // Validate required fields
-            $requiredFields = [
-                'firstName' => $firstName,
-                'lastName' => $lastName,
-                'dateOfBirth' => $dateOfBirth,
-                'address' => $address,
-                'city' => $city,
-                'state' => $state,
-                'postalCode' => $postalCode,
-                'country' => $country,
-                'documentNumber' => $documentNumber,
-                'documentExpiry' => $documentExpiry
-            ];
-
-            foreach ($requiredFields as $field => $value) {
-                if (!$value) {
-                    throw new Exception("Missing required field: {$field}");
+            // Only validate personal fields if this is a new document (not an update)
+            if (!$isUpdate) {
+                error_log("New document creation - validating personal information fields");
+                // Validate required fields for new documents
+                $requiredFields = [
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'dateOfBirth' => $dateOfBirth,
+                    'address' => $address,
+                    'city' => $city,
+                    'state' => $state,
+                    'postalCode' => $postalCode,
+                    'country' => $country
+                ];
+                
+                foreach ($requiredFields as $field => $value) {
+                    if (!$value) {
+                        error_log("Missing required field for new document: {$field}");
+                        throw new Exception("Missing required field: {$field}");
+                    }
                 }
+            } else {
+                error_log("Document update - skipping personal information validation");
+            }
+            
+            // Validate document-specific fields regardless of whether it's an update
+            if (!$documentNumber) {
+                error_log("Missing document number");
+                throw new Exception("Missing required field: documentNumber");
+            }
+            
+            if (!$documentExpiry) {
+                error_log("Missing document expiry date");
+                throw new Exception("Missing required field: documentExpiry");
             }
             
             // Validate file
@@ -476,61 +498,108 @@ class DocumentUploader {
             // Generate relative URL path
             $urlPath = '/uploads/documents/' . $filename;
             
-            // Create document record matching schema requirements
-            $document = [
-                'userId' => new MongoDB\BSON\ObjectId($userId),
-                'firstName' => $firstName,
-                'lastName' => $lastName,
-                'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($dateOfBirth) * 1000),
-                'address' => $address,
-                'city' => $city,
-                'state' => $state,
-                'postalCode' => $postalCode,
-                'country' => $country,
-                'documentType' => $type,
-                'documentNumber' => $documentNumber,
-                'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime($documentExpiry) * 1000),
-                'documentImageUrl' => $urlPath,
-                'selfieImageUrl' => null,
-                'similarityScore' => 0,
-                'status' => 'pending',
-                'verificationAttempts' => 0,
-                'createdAt' => new MongoDB\BSON\UTCDateTime(),
-                'updatedAt' => new MongoDB\BSON\UTCDateTime(),
-                'ipAddress' => $_SERVER['REMOTE_ADDR'],
-                'userAgent' => $_SERVER['HTTP_USER_AGENT'],
-                'metadata' => [
-                    'documentAuthenticityScore' => 0,
-                    'documentQualityScore' => 0,
-                    'faceDetectionScore' => 0,
-                    'livenessScore' => 0
-                ]
-            ];
-            
-            // Log document structure before insertion
-            error_log("Attempting to insert document with structure: " . json_encode($document));
-            
-            // Save document metadata to database
+            // Get database collection
             $documentCollection = $this->db->getCollection('documents');
-            $result = $documentCollection->insertOne($document);
             
-            if (!$result['success']) {
-                error_log("Failed to save document metadata. Error: " . ($result['error'] ?? 'Unknown error'));
-                throw new Exception('Failed to save document metadata: ' . ($result['error'] ?? 'Unknown error'));
+            if ($isUpdate) {
+                // First verify the document ID exists and belongs to this user
+                $existingDocument = $documentCollection->findOne([
+                    '_id' => new MongoDB\BSON\ObjectId($documentId),
+                    'userId' => new MongoDB\BSON\ObjectId($userId)
+                ]);
+                
+                if (!$existingDocument) {
+                    error_log("Document not found or doesn't belong to user. ID: $documentId, User: $userId");
+                    throw new Exception('Document not found or does not belong to current user');
+                }
+                
+                error_log("Found existing document, updating with document image and fields");
+                
+                // Update only the document-specific fields
+                $result = $documentCollection->updateOne(
+                    ['_id' => new MongoDB\BSON\ObjectId($documentId)],
+                    [
+                        '$set' => [
+                            'documentType' => $type,
+                            'documentNumber' => $documentNumber,
+                            'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime($documentExpiry) * 1000),
+                            'documentImageUrl' => $urlPath,
+                            'updatedAt' => new MongoDB\BSON\UTCDateTime(),
+                            'status' => 'pending'
+                        ]
+                    ]
+                );
+                
+                if (!$result['success']) {
+                    error_log("Failed to update document metadata. Error: " . ($result['error'] ?? 'Unknown error'));
+                    throw new Exception('Failed to update document metadata: ' . ($result['error'] ?? 'Unknown error'));
+                }
+                
+                return [
+                    'success' => true,
+                    'documentId' => $documentId,
+                    'filename' => $filename,
+                    'type' => $type,
+                    'url' => $urlPath,
+                    'status' => 'pending',
+                    'message' => 'Document updated successfully and pending verification'
+                ];
+            } else {
+                // Create document record matching schema requirements
+                $document = [
+                    'userId' => new MongoDB\BSON\ObjectId($userId),
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($dateOfBirth) * 1000),
+                    'address' => $address,
+                    'city' => $city,
+                    'state' => $state,
+                    'postalCode' => $postalCode,
+                    'country' => $country,
+                    'documentType' => $type,
+                    'documentNumber' => $documentNumber,
+                    'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime($documentExpiry) * 1000),
+                    'documentImageUrl' => $urlPath,
+                    'selfieImageUrl' => null,
+                    'similarityScore' => 0,
+                    'status' => 'pending',
+                    'verificationAttempts' => 0,
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime(),
+                    'ipAddress' => $_SERVER['REMOTE_ADDR'],
+                    'userAgent' => $_SERVER['HTTP_USER_AGENT'],
+                    'metadata' => [
+                        'documentAuthenticityScore' => 0,
+                        'documentQualityScore' => 0,
+                        'faceDetectionScore' => 0,
+                        'livenessScore' => 0
+                    ]
+                ];
+                
+                // Log document structure before insertion
+                error_log("Attempting to insert document with structure: " . json_encode($document));
+                
+                // Save document metadata to database
+                $result = $documentCollection->insertOne($document);
+                
+                if (!$result['success']) {
+                    error_log("Failed to save document metadata. Error: " . ($result['error'] ?? 'Unknown error'));
+                    throw new Exception('Failed to save document metadata: ' . ($result['error'] ?? 'Unknown error'));
+                }
+                
+                // Update user verification status
+                $this->updateUserVerificationStatus($userId, $type, 'pending');
+                
+                return [
+                    'success' => true,
+                    'documentId' => $result['id'],
+                    'filename' => $filename,
+                    'type' => $type,
+                    'url' => $urlPath,
+                    'status' => 'pending',
+                    'message' => 'Document uploaded successfully and pending verification'
+                ];
             }
-            
-            // Update user verification status
-            $this->updateUserVerificationStatus($userId, $type, 'pending');
-            
-            return [
-                'success' => true,
-                'documentId' => $result['id'],
-                'filename' => $filename,
-                'type' => $type,
-                'url' => $urlPath,
-                'status' => 'pending',
-                'message' => 'Document uploaded successfully and pending verification'
-            ];
             
         } catch (Exception $e) {
             error_log('Document upload error in uploadDocument: ' . $e->getMessage());

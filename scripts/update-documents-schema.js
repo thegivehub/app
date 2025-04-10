@@ -1,5 +1,11 @@
-// Documents Collection Schema
-const documentsSchema = {
+// MongoDB Schema Migration Script
+// This script updates the documents collection schema 
+// to relax validation requirements for multi-step form submission
+
+print("Starting documents collection schema migration...");
+
+// The updated schema with relaxed validation
+const updatedDocumentsSchema = {
   // MongoDB will create _id automatically
   bsonType: "object",
   required: [
@@ -154,104 +160,74 @@ const documentsSchema = {
   }
 };
 
-// Create indexes
-db.documents.createIndex({ "userId": 1 });
-db.documents.createIndex({ "status": 1 });
-db.documents.createIndex({ "createdAt": 1 });
-db.documents.createIndex({ "documentType": 1 });
-db.documents.createIndex({ "documentNumber": 1 });
-
-// Sample document for testing
-const sampleDocument = {
-  userId: ObjectId("507f1f77bcf86cd799439011"),
-  firstName: "John",
-  lastName: "Doe",
-  dateOfBirth: new Date("1990-01-15"),
-  address: "123 Main Street",
-  city: "Boston",
-  state: "MA",
-  postalCode: "02108",
-  country: "US",
-  documentType: "passport",
-  documentNumber: "P123456789",
-  documentExpiry: new Date("2028-01-15"),
-  documentImageUrl: null,
-  selfieImageUrl: null,
-  similarityScore: null,
-  status: "pending",
-  verificationAttempts: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ipAddress: "192.168.1.1",
-  userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124",
-  metadata: {
-    documentAuthenticityScore: null,
-    documentQualityScore: null,
-    faceDetectionScore: null,
-    livenessScore: null
-  }
-};
-
-// Insert sample document
-db.documents.insertOne(sampleDocument);
-
-// Migration script to update existing collection
-print("Starting documents collection migration...");
-
-// 1. Update schema validation
-db.runCommand({
+// 1. Update schema validation on the documents collection
+try {
+  const result = db.runCommand({
     collMod: "documents",
-    validator: { $jsonSchema: documentsSchema },
-    validationLevel: "moderate",
-    validationAction: "error"
+    validator: { $jsonSchema: updatedDocumentsSchema },
+    validationLevel: "moderate", // This allows existing docs that don't meet validation criteria
+    validationAction: "warn"     // Warn rather than reject invalid documents
+  });
+  
+  if (result.ok) {
+    print("Successfully updated the documents collection schema");
+  } else {
+    print("Failed to update schema validation: " + result.errmsg);
+  }
+} catch (e) {
+  print("Error updating schema validation: " + e.message);
+}
+
+// 2. Update existing documents to handle cases where documentType might be missing
+try {
+  const updateResult = db.documents.updateMany(
+    { documentType: { $exists: false } },
+    { $set: { documentType: "pending" } }
+  );
+  
+  print(`Updated ${updateResult.modifiedCount} documents with missing documentType field`);
+} catch (e) {
+  print("Error updating existing documents: " + e.message);
+}
+
+// 3. Verify the migration
+const totalDocs = db.documents.count();
+print(`Total document count: ${totalDocs}`);
+
+// Test validate a few documents to see if they pass validation
+const sampleDocs = db.documents.find().limit(5).toArray();
+let validCount = 0;
+
+sampleDocs.forEach((doc, index) => {
+  try {
+    const validation = db.runCommand({
+      validate: "documents",
+      documents: [doc]
+    });
+    
+    if (validation.valid) {
+      validCount++;
+    } else {
+      print(`Document ${index + 1} failed validation: ${JSON.stringify(validation.errors)}`);
+    }
+  } catch (e) {
+    print(`Error validating document ${index + 1}: ${e.message}`);
+  }
 });
 
-// 2. Update existing documents to ensure they match new schema
-db.documents.updateMany(
-    {}, // Match all documents
-    [
-        {
-            $set: {
-                // Ensure optional fields exist with null values if not present
-                documentImageUrl: { $ifNull: ["$documentImageUrl", null] },
-                selfieImageUrl: { $ifNull: ["$selfieImageUrl", null] },
-                similarityScore: { $ifNull: ["$similarityScore", null] },
-                documentNumber: { $ifNull: ["$documentNumber", null] },
-                documentExpiry: { $ifNull: ["$documentExpiry", null] },
-                verificationAttempts: { $ifNull: ["$verificationAttempts", 0] },
-                ipAddress: { $ifNull: ["$ipAddress", null] },
-                userAgent: { $ifNull: ["$userAgent", null] },
-                metadata: {
-                    $ifNull: [
-                        "$metadata",
-                        {
-                            documentAuthenticityScore: null,
-                            documentQualityScore: null,
-                            faceDetectionScore: null,
-                            livenessScore: null
-                        }
-                    ]
-                }
-            }
-        }
-    ]
-);
+print(`Validation test: ${validCount} out of ${sampleDocs.length} sample documents are valid`);
 
-print("Migration completed successfully!");
+// Create a backup of the original schema in a separate collection for reference
+try {
+  db.createCollection("documents_schema_backup");
+  db.documents_schema_backup.insertOne({
+    schemaVersion: "original",
+    timestamp: new Date(),
+    schema: db.getCollectionInfos({ name: "documents" })[0].options.validator
+  });
+  print("Created backup of original schema in documents_schema_backup collection");
+} catch (e) {
+  print("Error creating schema backup: " + e.message);
+}
 
-// Verify the migration
-const totalDocs = db.documents.count();
-const validDocs = db.documents.find({}).toArray().filter(doc => {
-    try {
-        db.runCommand({
-            validate: "documents",
-            documents: [doc]
-        });
-        return true;
-    } catch (e) {
-        print(`Document ${doc._id} failed validation: ${e.message}`);
-        return false;
-    }
-}).length;
-
-print(`Validation results: ${validDocs} out of ${totalDocs} documents are valid`); 
+print("Schema migration completed!"); 

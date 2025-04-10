@@ -525,4 +525,97 @@ class Document {
             ];
         }
     }
+
+    /**
+     * Create a document with personal information (without file upload)
+     * 
+     * @param array $data Document data including personal information
+     * @return array Response with creation status and document ID
+     */
+    public function createDocument($data) {
+        try {
+            // Get user ID from token
+            $userId = $this->auth->getUserIdFromToken();
+            if (!$userId) {
+                throw new Exception('Authentication required');
+            }
+            
+            // Ensure required personal information fields are present
+            $requiredPersonalFields = [
+                'firstName', 'lastName', 'dateOfBirth', 'address', 
+                'city', 'state', 'postalCode', 'country'
+            ];
+            
+            foreach ($requiredPersonalFields as $field) {
+                if (!isset($data[$field]) || empty($data[$field])) {
+                    throw new Exception("Required field '$field' is missing or empty");
+                }
+            }
+            
+            // Ensure all required fields have values by creating a complete document object
+            $now = new MongoDB\BSON\UTCDateTime();
+            
+            // Create document record with ALL required schema fields
+            $document = [
+                // Required fields according to schema
+                'userId' => new MongoDB\BSON\ObjectId($userId),
+                'firstName' => $data['firstName'],
+                'lastName' => $data['lastName'],
+                'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($data['dateOfBirth']) * 1000),
+                'address' => $data['address'],
+                'city' => $data['city'],
+                'state' => $data['state'],
+                'postalCode' => $data['postalCode'],
+                'country' => $data['country'],
+                'status' => $data['status'] ?? 'pending',
+                'createdAt' => $now,
+                'updatedAt' => $now,
+                
+                // Optional fields with default values
+                'documentType' => $data['documentType'] ?? 'pending',
+                'documentNumber' => $data['documentNumber'] ?? '',
+                'documentExpiry' => isset($data['documentExpiry']) ? new MongoDB\BSON\UTCDateTime(strtotime($data['documentExpiry']) * 1000) : null,
+                'documentImageUrl' => null,
+                'selfieImageUrl' => null,
+                'similarityScore' => null,
+                'verificationAttempts' => 0,
+                'ipAddress' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+                'metadata' => [
+                    'documentAuthenticityScore' => null,
+                    'documentQualityScore' => null,
+                    'faceDetectionScore' => null,
+                    'livenessScore' => null
+                ]
+            ];
+            
+            // Log what we're trying to insert
+            error_log('Creating document with data: ' . json_encode($document));
+            
+            // Save document metadata to database
+            $documentCollection = $this->db->getCollection('documents');
+            $result = $documentCollection->insertOne($document);
+            
+            if (!$result || !isset($result['success']) || !$result['success']) {
+                error_log('Insert operation failed with result: ' . json_encode($result));
+                throw new Exception('Failed to create document record');
+            }
+            
+            error_log('Document created successfully with ID: ' . $result['id']);
+            
+            return [
+                'success' => true,
+                'documentId' => $result['id'],
+                'message' => 'Document created successfully'
+            ];
+            
+        } catch (Exception $e) {
+            error_log('Document creation error: ' . $e->getMessage());
+            error_log('Exception trace: ' . $e->getTraceAsString());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }

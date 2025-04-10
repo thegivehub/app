@@ -37,8 +37,137 @@ class MongoCollection {
         return $document;
     }
 
+    /**
+     * Automatically converts PHP types to MongoDB BSON types
+     * Handles:
+     * - ObjectId conversion for fields ending with 'Id' or named '_id'
+     * - Date conversion for fields ending with 'At', 'Date', or matching date patterns
+     * - Automatically adds createdAt and updatedAt timestamps 
+     * 
+     * @param array $document The document to prepare
+     * @param bool $isUpdate Whether this is for an update operation
+     * @return array The prepared document
+     */
+    private function prepareDocument($document, $isUpdate = false) {
+        // Skip if not an array
+        if (!is_array($document)) {
+            return $document;
+        }
+        
+        $now = new MongoDB\BSON\UTCDateTime(time() * 1000);
+        
+        // Add timestamps for new documents or updates
+        if (!$isUpdate && !isset($document['createdAt'])) {
+            $document['createdAt'] = $now;
+        }
+        if (!isset($document['updatedAt'])) {
+            $document['updatedAt'] = $now;
+        }
+        
+        // Process each field
+        foreach ($document as $key => $value) {
+            // Skip null values
+            if ($value === null) {
+                continue;
+            }
+            
+            // Recursively handle nested arrays
+            if (is_array($value)) {
+                $document[$key] = $this->prepareDocument($value, $isUpdate);
+                continue;
+            }
+            
+            // Handle ObjectIds (fields ending with 'Id' or named '_id', 'userId', etc.)
+            if ((substr($key, -2) === 'Id' || $key === '_id' || $key === 'id') && 
+                is_string($value) && preg_match('/^[a-f0-9]{24}$/i', $value)) {
+                try {
+                    $document[$key] = new MongoDB\BSON\ObjectId($value);
+                } catch (Exception $e) {
+                    // If conversion fails, keep the original value
+                    error_log("Failed to convert {$key} to ObjectId: " . $e->getMessage());
+                }
+                continue;
+            }
+            
+            // Handle dates (fields ending with 'At', 'Date', or matching date pattern)
+            $isDateField = substr($key, -2) === 'At' || 
+                          substr($key, -4) === 'Date' ||
+                          substr($key, -5) === 'Since' ||
+                          substr($key, -8) === 'DateTime';
+                          
+            if ($isDateField && is_string($value) && !empty($value)) {
+                try {
+                    // Try to parse the date string
+                    $timestamp = strtotime($value);
+                    if ($timestamp !== false) {
+                        $document[$key] = new MongoDB\BSON\UTCDateTime($timestamp * 1000);
+                    }
+                } catch (Exception $e) {
+                    // If conversion fails, keep the original value
+                    error_log("Failed to convert {$key} to UTCDateTime: " . $e->getMessage());
+                }
+            }
+            
+            // Handle numeric types (verificationAttempts, etc.)
+            if (is_numeric($value) && (
+                $key === 'verificationAttempts' ||
+                substr($key, -5) === 'Count' ||
+                substr($key, -3) === 'Qty' ||
+                substr($key, -6) === 'Amount'
+            )) {
+                // Use regular int/float instead of BSON types to avoid autoloader issues
+                $document[$key] = is_float($value) ? (float)$value : (int)$value;
+            }
+        }
+        
+        return $document;
+    }
+
+    /**
+     * Prepare update operations by applying conversion to $set values
+     */
+    private function prepareUpdate($update) {
+        if (!is_array($update)) {
+            return $update;
+        }
+        
+        // Check if the update already contains operators
+        $hasOperators = false;
+        foreach ($update as $key => $value) {
+            if (strpos($key, '$') === 0) {
+                $hasOperators = true;
+                break;
+            }
+        }
+        
+        // If no operators, wrap in $set and prepare document
+        if (!$hasOperators) {
+            $update = ['$set' => $this->prepareDocument($update, true)];
+        } else {
+            // Handle operators that contain documents ($set, $setOnInsert, etc.)
+            if (isset($update['$set'])) {
+                $update['$set'] = $this->prepareDocument($update['$set'], true);
+            }
+            if (isset($update['$setOnInsert'])) {
+                $update['$setOnInsert'] = $this->prepareDocument($update['$setOnInsert'], false);
+            }
+            // Add automatic updatedAt to $set if not present
+            if (!isset($update['$set']['updatedAt'])) {
+                if (!isset($update['$set'])) {
+                    $update['$set'] = [];
+                }
+                $update['$set']['updatedAt'] = new MongoDB\BSON\UTCDateTime(time() * 1000);
+            }
+        }
+        
+        return $update;
+    }
+
     public function insertOne($document) {
         try {
+            // Apply automatic type conversion
+            $document = $this->prepareDocument($document);
+            
             $result = $this->collection->insertOne($document);
             return [
                 'success' => true,
@@ -56,7 +185,13 @@ class MongoCollection {
 
     public function insertMany($documents) {
         try {
-            $result = $this->collection->insertMany($documents);
+            // Apply automatic type conversion to each document
+            $preparedDocuments = [];
+            foreach ($documents as $document) {
+                $preparedDocuments[] = $this->prepareDocument($document);
+            }
+            
+            $result = $this->collection->insertMany($preparedDocuments);
             return [
                 'success' => true,
                 'insertedCount' => $result->getInsertedCount(),
@@ -112,23 +247,13 @@ class MongoCollection {
 
     public function updateOne($filter, $update, $options = []) {
         try {
+            // Apply automatic type conversion to filter
             if (isset($filter['_id']) && is_string($filter['_id'])) {
                 $filter['_id'] = new MongoDB\BSON\ObjectId($filter['_id']);
             }
             
-            // Check if the update already contains operators
-            $hasOperators = false;
-            foreach ($update as $key => $value) {
-                if (strpos($key, '$') === 0) {
-                    $hasOperators = true;
-                    break;
-                }
-            }
-            
-            // If no operators are present, wrap in $set
-            if (!$hasOperators) {
-                $update = ['$set' => $update];
-            }
+            // Process the update operation
+            $update = $this->prepareUpdate($update);
             
             $result = $this->collection->updateOne($filter, $update, $options);
             return [
@@ -148,14 +273,13 @@ class MongoCollection {
 
     public function updateMany($filter, $update, $options = []) {
         try {
+            // Apply automatic type conversion to filter
             if (isset($filter['_id']) && is_string($filter['_id'])) {
                 $filter['_id'] = new MongoDB\BSON\ObjectId($filter['_id']);
             }
 
-            // Handle update operators
-            if (!isset($update['$set']) && !isset($update['$unset']) && !isset($update['$inc'])) {
-                $update = ['$set' => $update];
-            }
+            // Process the update operation
+            $update = $this->prepareUpdate($update);
 
             $result = $this->collection->updateMany($filter, $update, $options);
             return [
@@ -174,23 +298,13 @@ class MongoCollection {
 
     public function findOneAndUpdate($filter, $update, $options = []) {
         try {
+            // Apply automatic type conversion to filter
             if (isset($filter['_id']) && is_string($filter['_id'])) {
                 $filter['_id'] = new MongoDB\BSON\ObjectId($filter['_id']);
             }
             
-            // Check if update already contains operators
-            $hasOperators = false;
-            foreach ($update as $key => $value) {
-                if (strpos($key, '$') === 0) {
-                    $hasOperators = true;
-                    break;
-                }
-            }
-            
-            // If no operators are present, wrap in $set
-            if (!$hasOperators) {
-                $update = ['$set' => $update];
-            }
+            // Process the update operation
+            $update = $this->prepareUpdate($update);
 
             // Default options
             $defaultOptions = [

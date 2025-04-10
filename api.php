@@ -50,6 +50,15 @@ function logMessage($message, array $context = [], $level = 'info') {
 
 // Autoloader function to load the required class file based on the endpoint
 spl_autoload_register(function ($className) {
+    // Add debugging to see what class names are being requested
+    error_log("Autoloader trying to load class: " . $className);
+    
+    // Check if this is a MongoDB class - skip it
+    if (strpos($className, 'MongoDB\\') === 0) {
+        error_log("Skipping MongoDB class in autoloader: " . $className);
+        return;
+    }
+    
     $filePath = __DIR__ . "/lib/$className.php";
     if (file_exists($filePath)) {
         require_once $filePath;
@@ -84,6 +93,10 @@ if (isset($_SERVER['PATH_INFO'])) {
     $actions = preg_split("/\//", $_SERVER['PATH_INFO']);
     array_shift($actions);
     $endpoint = ucfirst(array_shift($actions));
+    
+    // Add debugging for endpoint detection
+    error_log("API Endpoint: " . $endpoint);
+    error_log("Path Info: " . $_SERVER['PATH_INFO']);
 }
 
 $id = $_GET['id'] ?? null;
@@ -95,6 +108,11 @@ header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
 // Instantiate the required class dynamically
+if ($endpoint === 'Document') {
+    // Map singular 'Document' to use our 'Documents' class
+    $endpoint = 'Documents';
+    error_log("Mapping Document endpoint to Documents class");
+}
 $instance = new $endpoint();
 
 // Verify that the endpoint class exists

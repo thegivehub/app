@@ -642,8 +642,9 @@
               try {
                 // Disable button while processing
                 $('#nextToDocument').disabled = true;
+                $('#nextToDocument').textContent = 'Processing...';
                 
-                // Send personal information to server
+                // Collect personal information
                 const personalInfo = {
                   firstName: $('#firstName').value,
                   lastName: $('#lastName').value,
@@ -652,14 +653,31 @@
                   city: $('#city').value,
                   state: $('#state').value,
                   postalCode: $('#postalCode').value,
-                  country: $('#country').value
+                  country: $('#country').value,
+                  status: 'pending'
                 };
+                
+                console.log('Submitting personal info:', personalInfo);
                 
                 // Upload personal info and get document ID
                 const result = await app.uploadPersonalInfo(personalInfo);
                 if (result.documentId) {
                   app.data.documentId = result.documentId;
                   console.log('Personal info saved, document ID:', app.data.documentId);
+                  
+                  // Show success message (optional)
+                  const statusMsg = document.createElement('div');
+                  statusMsg.className = 'success-message';
+                  statusMsg.textContent = 'Personal information saved successfully!';
+                  statusMsg.style.marginBottom = '15px';
+                  $('.step-content[data-step="1"]').appendChild(statusMsg);
+                  
+                  // Set a timeout to remove the message
+                  setTimeout(() => {
+                    if (statusMsg.parentNode) {
+                      statusMsg.parentNode.removeChild(statusMsg);
+                    }
+                  }, 3000);
                 } else {
                   throw new Error('Failed to get document ID from server');
                 }
@@ -677,6 +695,7 @@
                 alert(error.message || 'Failed to save personal information');
               } finally {
                 $('#nextToDocument').disabled = false;
+                $('#nextToDocument').textContent = 'Continue';
               }
             });
             
@@ -1133,14 +1152,55 @@
           async uploadPersonalInfo(personalData) {
             try {
               // Store personal data in the application state for later use
-              // We'll need to send it with the document upload
               Object.assign(this.data, personalData);
               
-              // Return a success response without calling the API yet
-              // We'll send this data with the document upload
+              // Format the date correctly for MongoDB
+              const formattedData = {
+                ...personalData,
+                status: "pending"
+              };
+
+              console.log('Sending document data:', formattedData);
+
+              // Send the data to the server
+              const response = await fetch(this.config.apiBase + '/document/create', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                },
+                body: JSON.stringify(formattedData)
+              });
+
+              // Log the raw response for debugging
+              const responseText = await response.text();
+              console.log('Server response text:', responseText);
+              
+              // Parse the response as JSON
+              let result;
+              try {
+                result = JSON.parse(responseText);
+              } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error(`Invalid server response: ${responseText}`);
+              }
+
+              if (!result.success) {
+                throw new Error(result.error || 'Failed to save personal information');
+              }
+
+              // Store document ID for next steps
+              const documentId = result.documentId;
+              if (!documentId) {
+                throw new Error('No document ID returned from server');
+              }
+
+              console.log('Personal info saved, document ID:', documentId);
+
+              // Return object with documentId directly as required by nextToDocument handler
               return {
                 success: true,
-                message: 'Personal information saved for document upload'
+                documentId: documentId
               };
             } catch (error) {
               console.error('Error processing personal information:', error);
@@ -1158,15 +1218,13 @@
             formData.append('type', 'document');
             formData.append('documentType', documentInfo.documentType);
             
-            // Add personal information from earlier step
-            if (this.data.firstName) formData.append('firstName', this.data.firstName);
-            if (this.data.lastName) formData.append('lastName', this.data.lastName);
-            if (this.data.dateOfBirth) formData.append('dateOfBirth', this.data.dateOfBirth);
-            if (this.data.address) formData.append('address', this.data.address);
-            if (this.data.city) formData.append('city', this.data.city);
-            if (this.data.state) formData.append('state', this.data.state);
-            if (this.data.postalCode) formData.append('postalCode', this.data.postalCode);
-            if (this.data.country) formData.append('country', this.data.country);
+            // Add document ID from previous step 
+            if (this.data.documentId) {
+              formData.append('documentId', this.data.documentId);
+              console.log('Including document ID in upload:', this.data.documentId);
+            } else {
+              console.error('No document ID available for document upload');
+            }
             
             // Add document metadata
             if (documentInfo.documentNumber) formData.append('documentNumber', documentInfo.documentNumber);
@@ -1180,7 +1238,7 @@
                 console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name + ' (' + pair[1].size + ' bytes)' : pair[1]));
               }
               
-              const response = await fetch(this.config.apiBase + '/documents/upload', {
+              const response = await fetch(this.config.apiBase + '/document/upload', {
                 method: 'POST',
                 headers: {
                   'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
@@ -1188,13 +1246,25 @@
                 body: formData
               });
 
-              const result = await response.json();
+              // Get the full response text for debugging
+              const responseText = await response.text();
+              console.log('Document upload response:', responseText);
+              
+              // Try to parse as JSON
+              let result;
+              try {
+                result = JSON.parse(responseText);
+              } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error(`Invalid server response: ${responseText}`);
+              }
+
               if (!result.success) {
                 throw new Error(result.error || 'Failed to upload document');
               }
 
-              // Store document ID for selfie upload
-              if (result.documentId) {
+              // Store document ID for selfie upload if not already set
+              if (result.documentId && !this.data.documentId) {
                 this.data.documentId = result.documentId;
                 console.log('Document uploaded, ID:', this.data.documentId);
               }
@@ -1207,13 +1277,10 @@
           },
 
           async uploadSelfie(file, documentId) {
-            // Validate if selfie is required for this document type
-            const documentType = $('#documentType').value;
-            const requiresSelfie = ['passport', 'national_id'].includes(documentType);
-
-            if (!requiresSelfie) {
-              console.log('Selfie not required for document type:', documentType);
-              return { success: true, message: 'Selfie not required for this document type' };
+            // Use document ID from parameter or app data
+            const docId = documentId || this.data.documentId;
+            if (!docId) {
+              throw new Error('Document ID is required to upload selfie');
             }
 
             const formData = new FormData();
@@ -1230,22 +1297,17 @@
             // Set type to selfie for backend
             formData.append('type', 'selfie');
             
-            // Use document ID from app data or parameter
-            const docId = documentId || this.data.documentId;
-            if (!docId) {
-              throw new Error('Document ID is required to upload selfie');
-            }
-            
+            // Add the document ID 
             formData.append('documentId', docId);
 
             try {
-              // Log FormData (for debugging)
+              // Log FormData for debugging
               console.log('FormData entries:');
               for (let pair of formData.entries()) {
                 console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name + ' (' + pair[1].size + ' bytes)' : pair[1]));
               }
               
-              const response = await fetch(this.config.apiBase + '/documents/upload', {
+              const response = await fetch(this.config.apiBase + '/document/upload', {
                 method: 'POST',
                 headers: {
                   'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
@@ -1253,13 +1315,24 @@
                 body: formData
               });
               
-              const result = await response.json();
-              console.log('Upload selfie result:', result);
+              // Get full response text for debugging
+              const responseText = await response.text();
+              console.log('Selfie upload response:', responseText);
+              
+              // Try to parse the response as JSON
+              let result;
+              try {
+                result = JSON.parse(responseText);
+              } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error(`Invalid server response: ${responseText}`);
+              }
               
               if (!result.success) {
                 throw new Error(result.error || 'Failed to upload selfie');
               }
 
+              console.log('Selfie upload successful:', result);
               return result;
             } catch (error) {
               console.error('Error uploading selfie:', error);
@@ -1273,10 +1346,12 @@
             }
             
             try {
+              console.log('Completing verification for document ID:', documentId);
+              
               // The verification process should be triggered automatically when both document and selfie
               // are uploaded, so we just need to update the document status to mark it as reviewed
               
-              const response = await fetch(this.config.apiBase + '/documents/verify', {
+              const response = await fetch(this.config.apiBase + '/document/verify', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -1288,11 +1363,24 @@
                 })
               });
 
-              const result = await response.json();
+              // Get full response text for debugging
+              const responseText = await response.text();
+              console.log('Verification completion response:', responseText);
+              
+              // Try to parse response as JSON
+              let result;
+              try {
+                result = JSON.parse(responseText);
+              } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error(`Invalid server response: ${responseText}`);
+              }
+
               if (!result.success) {
                 throw new Error(result.error || 'Failed to complete verification');
               }
 
+              console.log('Verification completed successfully:', result);
               return result;
             } catch (error) {
               console.error('Error completing verification:', error);
