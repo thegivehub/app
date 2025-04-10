@@ -273,6 +273,91 @@
             color: var(--gray-600);
             margin-top: 0.25rem;
         }
+
+        .document-details-container {
+            padding: 1rem;
+        }
+
+        .section-title {
+            font-weight: 500;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 0.875rem;
+            color: var(--gray-800);
+        }
+
+        .document-images-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .document-image-box {
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-label {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            background-color: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .image-container {
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            background-color: var(--gray-50);
+        }
+
+        .verification-image {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--gray-600);
+        }
+
+        .loading-spinner i {
+            margin-right: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -405,6 +490,144 @@
         </div>
     </div>
 
+    <!-- Modal for Document Details -->
+    <div class="modal" id="details-modal">
+        <div class="modal-dialog" style="max-width: 800px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Identity Document Details</h5>
+                    <button type="button" class="close" id="close-details-modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="document-details-container">
+                        <div class="loading-spinner" id="details-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading document details...
+                        </div>
+                        
+                        <div id="document-details-content" style="display: none;">
+                            <!-- Personal Information -->
+                            <h6 class="section-title">Personal Information</h6>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Full Name</div>
+                                    <div class="detail-value" id="detail-name"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value" id="detail-email"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Date of Birth</div>
+                                    <div class="detail-value" id="detail-dob"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Address</div>
+                                    <div class="detail-value" id="detail-address"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">City/State</div>
+                                    <div class="detail-value" id="detail-city-state"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Country</div>
+                                    <div class="detail-value" id="detail-country"></div>
+                                </div>
+                            </div>
+
+                            <!-- Document Information -->
+                            <h6 class="section-title">Document Information</h6>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Document Type</div>
+                                    <div class="detail-value" id="detail-doc-type"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Document Number</div>
+                                    <div class="detail-value" id="detail-doc-number"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Expiry Date</div>
+                                    <div class="detail-value" id="detail-doc-expiry"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value" id="detail-doc-status"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Created</div>
+                                    <div class="detail-value" id="detail-doc-created"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Last Updated</div>
+                                    <div class="detail-value" id="detail-doc-updated"></div>
+                                </div>
+                            </div>
+
+                            <!-- Document Images -->
+                            <h6 class="section-title">Document Images</h6>
+                            <div class="document-images-container">
+                                <div class="document-image-box">
+                                    <div class="image-label">ID Document</div>
+                                    <div class="image-container" id="detail-id-image-container">
+                                        <img id="detail-id-image" class="verification-image" src="" alt="ID Document">
+                                    </div>
+                                </div>
+                                <div class="document-image-box">
+                                    <div class="image-label">Selfie</div>
+                                    <div class="image-container" id="detail-selfie-image-container">
+                                        <img id="detail-selfie-image" class="verification-image" src="" alt="Selfie">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Verification Scores -->
+                            <h6 class="section-title">Verification Scores</h6>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Similarity Score</div>
+                                    <div class="detail-value" id="detail-similarity-score"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Document Quality</div>
+                                    <div class="detail-value" id="detail-doc-quality"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Face Detection</div>
+                                    <div class="detail-value" id="detail-face-detection"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Liveness Score</div>
+                                    <div class="detail-value" id="detail-liveness"></div>
+                                </div>
+                            </div>
+
+                            <!-- Admin Override -->
+                            <div id="admin-override-section" style="display: none;">
+                                <h6 class="section-title">Administrative Override</h6>
+                                <div class="details-grid">
+                                    <div class="detail-item">
+                                        <div class="detail-label">Override Date</div>
+                                        <div class="detail-value" id="detail-override-date"></div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Override Reason</div>
+                                        <div class="detail-value" id="detail-override-reason"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="close-details-btn">Close</button>
+                    <button type="button" class="btn btn-primary" id="override-from-details-btn">Manual Override</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- KYC Admin JavaScript -->
     <script>
         // Initialization when the document is loaded
@@ -432,6 +655,14 @@
             const saveOverrideBtn = document.getElementById('save-override');
             const cancelOverrideBtn = document.getElementById('cancel-override');
             const closeModalBtn = document.getElementById('close-modal');
+            
+            // Details modal elements
+            const detailsModal = document.getElementById('details-modal');
+            const closeDetailsModalBtn = document.getElementById('close-details-modal');
+            const closeDetailsBtn = document.getElementById('close-details-btn');
+            const overrideFromDetailsBtn = document.getElementById('override-from-details-btn');
+            const detailsLoading = document.getElementById('details-loading');
+            const documentDetailsContent = document.getElementById('document-details-content');
 
             // Initialize
             loadVerificationData();
@@ -442,6 +673,12 @@
             saveOverrideBtn.addEventListener('click', saveOverride);
             cancelOverrideBtn.addEventListener('click', closeOverrideModal);
             closeModalBtn.addEventListener('click', closeOverrideModal);
+            closeDetailsModalBtn.addEventListener('click', closeDetailsModal);
+            closeDetailsBtn.addEventListener('click', closeDetailsModal);
+            overrideFromDetailsBtn.addEventListener('click', openOverrideFromDetails);
+
+            // Current document being viewed in details
+            let currentDocumentDetails = null;
 
             // Get current filters
             function getFilters() {
@@ -462,7 +699,7 @@
             async function loadVerificationData() {
                 try {
                     const filters = getFilters();
-                    let url = '/api.php/kyc/report';
+                    let url = '/api.php/admin/kyc/report';
                     
                     // Add filters to URL if present
                     const params = [];
@@ -552,7 +789,7 @@
                                     <button class="btn btn-sm btn-outline view-details" data-id="${v.id}">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-primary override-btn" data-id="${v.id}" data-user="${v.userName}" data-email="${v.email}">
+                                    <button class="btn btn-sm btn-primary override-btn" data-id="${v.id}" data-user="${v.userId}" data-username="${v.userName}" data-email="${v.email}">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </div>
@@ -567,8 +804,8 @@
                 document.querySelectorAll('.override-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         openOverrideModal(
-                            this.getAttribute('data-id'),
                             this.getAttribute('data-user'),
+                            this.getAttribute('data-username'),
                             this.getAttribute('data-email')
                         );
                     });
@@ -595,6 +832,27 @@
             function closeOverrideModal() {
                 overrideModal.classList.remove('show');
             }
+            
+            // Open override modal from details view
+            function openOverrideFromDetails() {
+                if (!currentDocumentDetails) return;
+                
+                // Close details modal
+                closeDetailsModal();
+                
+                // Open override modal with the current document's user info
+                openOverrideModal(
+                    currentDocumentDetails.userId,
+                    currentDocumentDetails.userName,
+                    currentDocumentDetails.email
+                );
+            }
+            
+            // Close the details modal
+            function closeDetailsModal() {
+                detailsModal.classList.remove('show');
+                currentDocumentDetails = null;
+            }
 
             // Save manual override
             async function saveOverride() {
@@ -616,7 +874,7 @@
                     }
                     
                     // Make API request
-                    const response = await fetch('/api.php/kyc/override', {
+                    const response = await fetch('/api.php/admin/kyc/override', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${adminToken}`,
@@ -654,10 +912,141 @@
             }
 
             // View verification details
-            function viewVerificationDetails(id) {
-                // This would typically open a details modal or navigate to a details page
-                // For now, we'll just show an alert
-                alert(`View verification details for ID: ${id} (Not implemented in this demo)`);
+            async function viewVerificationDetails(documentId) {
+                try {
+                    // Show loading
+                    detailsModal.classList.add('show');
+                    detailsLoading.style.display = 'flex';
+                    documentDetailsContent.style.display = 'none';
+                    
+                    // Get admin token from parent window
+                    const adminToken = window.parent.localStorage.getItem('adminToken');
+                    
+                    if (!adminToken) {
+                        throw new Error('Authentication token missing');
+                    }
+                    
+                    // Make API request
+                    const response = await fetch(`/api.php/admin/kyc/details?id=${documentId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load document details');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to load document details');
+                    }
+                    
+                    // Store current document details
+                    currentDocumentDetails = result.document;
+                    
+                    // Update UI with document details
+                    updateDocumentDetailsUI(result.document, result.auditLogs);
+                    
+                    // Show content
+                    detailsLoading.style.display = 'none';
+                    documentDetailsContent.style.display = 'block';
+                } catch (error) {
+                    console.error('Error loading document details:', error);
+                    alert(`Error: ${error.message}`);
+                    closeDetailsModal();
+                }
+            }
+            
+            // Update UI with document details
+            function updateDocumentDetailsUI(document, auditLogs) {
+                // Personal information
+                document.getElementById('detail-name').textContent = document.userName;
+                document.getElementById('detail-email').textContent = document.email || 'N/A';
+                document.getElementById('detail-dob').textContent = formatDate(document.dateOfBirth);
+                document.getElementById('detail-address').textContent = document.address;
+                document.getElementById('detail-city-state').textContent = `${document.city}, ${document.state} ${document.postalCode}`;
+                document.getElementById('detail-country').textContent = document.country;
+                
+                // Document information
+                document.getElementById('detail-doc-type').textContent = formatDocumentType(document.documentType);
+                document.getElementById('detail-doc-number').textContent = document.documentNumber || 'N/A';
+                document.getElementById('detail-doc-expiry').textContent = document.documentExpiry ? formatDate(document.documentExpiry) : 'N/A';
+                
+                // Set status with badge
+                const statusElement = document.getElementById('detail-doc-status');
+                statusElement.innerHTML = `<span class="status-badge status-${document.status.toLowerCase()}">${document.status}</span>`;
+                
+                document.getElementById('detail-doc-created').textContent = formatDate(document.createdAt);
+                document.getElementById('detail-doc-updated').textContent = formatDate(document.updatedAt);
+                
+                // Document images
+                const idImage = document.getElementById('detail-id-image');
+                const selfieImage = document.getElementById('detail-selfie-image');
+                const idImageContainer = document.getElementById('detail-id-image-container');
+                const selfieImageContainer = document.getElementById('detail-selfie-image-container');
+                
+                if (document.documentImageUrl) {
+                    idImage.src = document.documentImageUrl;
+                    idImage.style.display = 'block';
+                    idImageContainer.innerHTML = `<img id="detail-id-image" class="verification-image" src="${document.documentImageUrl}" alt="ID Document">`;
+                } else {
+                    idImageContainer.innerHTML = '<div class="no-image">No document image available</div>';
+                }
+                
+                if (document.selfieImageUrl) {
+                    selfieImage.src = document.selfieImageUrl;
+                    selfieImage.style.display = 'block';
+                    selfieImageContainer.innerHTML = `<img id="detail-selfie-image" class="verification-image" src="${document.selfieImageUrl}" alt="Selfie">`;
+                } else {
+                    selfieImageContainer.innerHTML = '<div class="no-image">No selfie image available</div>';
+                }
+                
+                // Verification scores
+                document.getElementById('detail-similarity-score').textContent = formatScore(document.similarityScore);
+                
+                if (document.metadata) {
+                    document.getElementById('detail-doc-quality').textContent = formatScore(document.metadata.documentQualityScore);
+                    document.getElementById('detail-face-detection').textContent = formatScore(document.metadata.faceDetectionScore);
+                    document.getElementById('detail-liveness').textContent = formatScore(document.metadata.livenessScore);
+                } else {
+                    document.getElementById('detail-doc-quality').textContent = 'N/A';
+                    document.getElementById('detail-face-detection').textContent = 'N/A';
+                    document.getElementById('detail-liveness').textContent = 'N/A';
+                }
+                
+                // Admin override
+                const adminOverrideSection = document.getElementById('admin-override-section');
+                
+                if (document.adminOverride) {
+                    document.getElementById('detail-override-date').textContent = formatDate(document.adminOverrideTime);
+                    document.getElementById('detail-override-reason').textContent = document.adminOverrideReason || 'No reason provided';
+                    adminOverrideSection.style.display = 'block';
+                } else {
+                    adminOverrideSection.style.display = 'none';
+                }
+            }
+            
+            // Format document type for display
+            function formatDocumentType(type) {
+                if (!type) return 'Unknown';
+                
+                // Convert snake_case to Title Case
+                return type.split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+            }
+            
+            // Format score for display
+            function formatScore(score) {
+                if (score === null || score === undefined) return 'N/A';
+                
+                // Convert to percentage
+                const percentage = (score * 100).toFixed(1);
+                return `${percentage}%`;
             }
         });
     </script>

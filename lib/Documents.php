@@ -119,15 +119,55 @@ class Documents extends Collection {
      */
     public function verify($param = null, $data = null) {
         try {
+            // Log incoming parameters to help with debugging
+            error_log("verify method called with param: " . (is_array($param) ? json_encode($param) : $param));
+            error_log("verify data: " . ($data ? json_encode($data) : 'null'));
+            
+            // If $param is null or empty but $data contains documentId, use that instead
+            if ((!$param || empty($param)) && $data && isset($data['documentId'])) {
+                $param = $data['documentId'];
+                error_log("Using documentId from data: " . (is_array($param) ? json_encode($param) : $param));
+            }
+            
             $userId = $this->auth->getUserIdFromToken();
             if (!$userId) {
                 throw new Exception('Authentication required');
+            }
+            
+            // Handle case where userId might be an array (from decoded JWT)
+            if (is_array($userId)) {
+                error_log("userId is an array in verify method: " . json_encode($userId));
+                if (isset($userId['$oid'])) {
+                    $userId = $userId['$oid'];
+                } else if (isset($userId['_id'])) {
+                    $userId = $userId['_id'];
+                } else if (isset($userId['id'])) {
+                    $userId = $userId['id'];
+                } else {
+                    // If it's some other array format, log it and throw exception
+                    error_log("Unexpected userId format in verify: " . json_encode($userId));
+                    throw new Exception('Invalid user ID format: Received array');
+                }
+            }
+            
+            // Verify that userId is a string before creating ObjectId
+            if (!is_string($userId)) {
+                error_log("getUserIdFromToken returned non-string value in verify: " . json_encode($userId));
+                throw new Exception('Invalid user ID format: Not a string');
+            }
+            
+            // Validate the userId format - should be 24-digit hex string
+            if (!preg_match('/^[a-f0-9]{24}$/i', $userId)) {
+                error_log("Invalid userId format in verify: $userId");
+                throw new Exception('Invalid user ID format: Not a valid MongoDB ObjectId');
             }
 
             // For simple marking as reviewed, handle POST data
             if ($data && isset($data['documentId']) && isset($data['reviewed'])) {
                 $documentId = $data['documentId'];
                 $reviewed = $data['reviewed'];
+                
+                error_log("Processing document verification for ID: $documentId, reviewed: " . ($reviewed ? 'true' : 'false'));
                 
                 // Get document record
                 $document = $this->collection->findOne([
@@ -152,8 +192,10 @@ class Documents extends Collection {
                     ]
                 );
                 
-                if (!$result->getModifiedCount()) {
+                if (is_object($result) && !$result->getModifiedCount()) {
                     throw new Exception('Failed to update verification status');
+                } else if (is_array($result) && isset($result['success']) && !$result['success']) {
+                    throw new Exception('Failed to update verification status: ' . ($result['error'] ?? 'Unknown error'));
                 }
                 
                 return [
@@ -167,6 +209,37 @@ class Documents extends Collection {
             if (!$param) {
                 throw new Exception('Document ID is required');
             }
+            
+            // Handle case where document ID ($param) might be an array
+            if (is_array($param)) {
+                error_log("Document ID param is an array: " . json_encode($param));
+                
+                if (isset($param['documentId'])) {
+                    $param = $param['documentId'];
+                } else if (isset($param['$oid'])) {
+                    $param = $param['$oid'];
+                } else if (isset($param['_id'])) {
+                    $param = $param['_id'];
+                } else if (isset($param['id'])) {
+                    $param = $param['id'];
+                } else {
+                    error_log("Unexpected document ID format: " . json_encode($param));
+                    throw new Exception('Invalid document ID format: Received array without documentId');
+                }
+            }
+            
+            // Ensure param is a string and has valid format
+            if (!is_string($param)) {
+                error_log("Document ID is not a string: " . json_encode($param));
+                throw new Exception('Invalid document ID format: Not a string');
+            }
+            
+            if (!preg_match('/^[a-f0-9]{24}$/i', $param)) {
+                error_log("Invalid document ID format: $param");
+                throw new Exception('Invalid document ID format: Not a valid MongoDB ObjectId');
+            }
+            
+            error_log("Verified document ID: $param");
 
             // Get document record
             $document = $this->collection->findOne([
@@ -185,21 +258,28 @@ class Documents extends Collection {
             // Initialize AWS Rekognition client if available
             try {
                 if (class_exists('FaceVerifier')) {
+                    error_log("FaceVerifier class is available, attempting face verification");
                     $faceVerifier = new FaceVerifier();
                     
                     // Get file paths
                     $documentPath = __DIR__ . '/..' . $document['documentImageUrl'];
                     $selfiePath = __DIR__ . '/..' . $document['selfieImageUrl'];
                     
+                    error_log("Document path: $documentPath");
+                    error_log("Selfie path: $selfiePath");
+                    
                     // Verify files exist
                     if (!file_exists($documentPath)) {
+                        error_log("Document image file not found at path: $documentPath");
                         throw new Exception('Document image file not found');
                     }
                     if (!file_exists($selfiePath)) {
+                        error_log("Selfie image file not found at path: $selfiePath");
                         throw new Exception('Selfie image file not found');
                     }
                     
                     // Call the face verification process
+                    error_log("Calling face verification with document ID: $param");
                     $faceResult = $faceVerifier->verifySelfie([
                         'tmp_name' => $selfiePath,
                         'name' => basename($selfiePath)
@@ -207,38 +287,52 @@ class Documents extends Collection {
                     
                     return $faceResult;
                 } else {
+                    error_log("FaceVerifier class not available, falling back to manual review");
                     // Fall back to manually setting the verification status
-                    $result = $this->collection->updateOne(
-                        ['_id' => new MongoDB\BSON\ObjectId($param)],
-                        [
-                            '$set' => [
-                                'status' => 'pending_review',
-                                'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                    try {
+                        $result = $this->collection->updateOne(
+                            ['_id' => new MongoDB\BSON\ObjectId($param)],
+                            [
+                                '$set' => [
+                                    'status' => 'pending_review',
+                                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                                ]
                             ]
-                        ]
-                    );
-                    
-                    return [
-                        'success' => true,
-                        'message' => 'Face verification not available. Document marked for manual review.',
-                        'status' => 'pending_review',
-                        'needs_review' => true
-                    ];
+                        );
+                        
+                        error_log("Document status updated to pending_review");
+                        
+                        return [
+                            'success' => true,
+                            'message' => 'Face verification not available. Document marked for manual review.',
+                            'status' => 'pending_review',
+                            'needs_review' => true
+                        ];
+                    } catch (Exception $updateEx) {
+                        error_log("Error updating document status: " . $updateEx->getMessage());
+                        throw $updateEx;
+                    }
                 }
             } catch (Exception $e) {
                 error_log('Face verification error: ' . $e->getMessage());
                 
                 // Update document status to indicate verification failure
-                $this->collection->updateOne(
-                    ['_id' => new MongoDB\BSON\ObjectId($param)],
-                    [
-                        '$set' => [
-                            'status' => 'pending_review',
-                            'verificationError' => $e->getMessage(),
-                            'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                try {
+                    $this->collection->updateOne(
+                        ['_id' => new MongoDB\BSON\ObjectId($param)],
+                        [
+                            '$set' => [
+                                'status' => 'pending_review',
+                                'verificationError' => $e->getMessage(),
+                                'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                            ]
                         ]
-                    ]
-                );
+                    );
+                    
+                    error_log("Document status updated to pending_review with error");
+                } catch (Exception $updateEx) {
+                    error_log("Failed to update document status after verification error: " . $updateEx->getMessage());
+                }
                 
                 return [
                     'success' => false,
@@ -572,6 +666,263 @@ class Documents extends Collection {
             }
         } catch (Exception $e) {
             error_log("Document creation error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get a report of verification documents for admin dashboard
+     * 
+     * @param string $status Optional filter by status
+     * @param string $startDate Optional filter by start date
+     * @param string $endDate Optional filter by end date
+     * @return array Report with stats and verification records
+     */
+    public function getVerificationReport($status = '', $startDate = null, $endDate = null) {
+        try {
+            // Build query filter
+            $filter = [];
+            
+            // Add status filter if provided
+            if (!empty($status)) {
+                $filter['status'] = strtoupper($status);
+            }
+            
+            // Add date range filter if provided
+            if ($startDate || $endDate) {
+                $filter['createdAt'] = [];
+                
+                if ($startDate) {
+                    $startDateTime = new MongoDB\BSON\UTCDateTime(strtotime($startDate) * 1000);
+                    $filter['createdAt']['$gte'] = $startDateTime;
+                }
+                
+                if ($endDate) {
+                    // Add 1 day to end date to include the entire day
+                    $endDateTime = new MongoDB\BSON\UTCDateTime(strtotime($endDate . ' +1 day') * 1000);
+                    $filter['createdAt']['$lt'] = $endDateTime;
+                }
+            }
+            
+            // Get documents with user information
+            $pipeline = [
+                ['$match' => $filter],
+                [
+                    '$lookup' => [
+                        'from' => 'users',
+                        'localField' => 'userId',
+                        'foreignField' => '_id',
+                        'as' => 'user'
+                    ]
+                ],
+                [
+                    '$project' => [
+                        'id' => ['$toString' => '$_id'],
+                        'userId' => ['$toString' => '$userId'],
+                        'userName' => ['$concat' => ['$firstName', ' ', '$lastName']],
+                        'email' => ['$arrayElemAt' => ['$user.email', 0]],
+                        'status' => '$status',
+                        'documentType' => 1,
+                        'documentNumber' => 1,
+                        'created' => '$createdAt',
+                        'updated' => '$updatedAt'
+                    ]
+                ],
+                ['$sort' => ['updated' => -1]]
+            ];
+            
+            $verifications = $this->collection->aggregate($pipeline);
+            
+            // Get statistics
+            $stats = [
+                'total' => $this->collection->count([]),
+                'approved' => $this->collection->count(['status' => 'APPROVED']),
+                'rejected' => $this->collection->count(['status' => 'REJECTED']),
+                'pending' => $this->collection->count(['status' => 'PENDING']),
+                'error' => $this->collection->count(['status' => 'ERROR']),
+                'expired' => $this->collection->count(['status' => 'EXPIRED'])
+            ];
+            
+            return [
+                'success' => true,
+                'stats' => $stats,
+                'verifications' => $verifications
+            ];
+        } catch (Exception $e) {
+            error_log("Error in getVerificationReport: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Override verification status by administrator
+     * 
+     * @param string $userId User ID
+     * @param string $status New status
+     * @param string $reason Reason for override
+     * @return array Result
+     */
+    public function adminOverrideVerification($userId, $status, $reason) {
+        try {
+            // Validate status
+            $validStatuses = ['APPROVED', 'REJECTED', 'PENDING'];
+            if (!in_array($status, $validStatuses)) {
+                throw new Exception("Invalid status. Must be one of: " . implode(', ', $validStatuses));
+            }
+            
+            // Find the document for this user
+            $document = $this->collection->findOne(['userId' => new MongoDB\BSON\ObjectId($userId)]);
+            
+            if (!$document) {
+                throw new Exception("No verification document found for user ID: $userId");
+            }
+            
+            // Create audit log entry
+            $adminId = null;
+            if (class_exists('AdminAuth')) {
+                $adminAuth = new AdminAuth();
+                $adminId = $adminAuth->getAdminId();
+            }
+            
+            $auditLog = [
+                'action' => 'verification_override',
+                'documentId' => $document['_id'],
+                'userId' => new MongoDB\BSON\ObjectId($userId),
+                'previousStatus' => $document['status'],
+                'newStatus' => $status,
+                'reason' => $reason,
+                'adminId' => $adminId,
+                'timestamp' => new MongoDB\BSON\UTCDateTime()
+            ];
+            
+            // Add audit log to database
+            $auditCollection = $this->db->getCollection('audit_logs');
+            $auditCollection->insertOne($auditLog);
+            
+            // Update document status
+            $result = $this->collection->updateOne(
+                ['userId' => new MongoDB\BSON\ObjectId($userId)],
+                [
+                    '$set' => [
+                        'status' => $status,
+                        'adminOverride' => true,
+                        'adminOverrideReason' => $reason,
+                        'adminOverrideTime' => new MongoDB\BSON\UTCDateTime(),
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                    ]
+                ]
+            );
+            
+            if (!$result['success'] && !$result['modifiedCount']) {
+                throw new Exception("Failed to update document status");
+            }
+            
+            // Update user verification status
+            $userCollection = $this->db->getCollection('users');
+            $userCollection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($userId)],
+                [
+                    '$set' => [
+                        'verification.status' => $status,
+                        'verification.updatedAt' => new MongoDB\BSON\UTCDateTime(),
+                        'verification.adminOverride' => true
+                    ]
+                ]
+            );
+            
+            return [
+                'success' => true,
+                'message' => "Verification status updated to $status",
+                'documentId' => (string)$document['_id']
+            ];
+        } catch (Exception $e) {
+            error_log("Error in adminOverrideVerification: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Get detailed document information for admin review
+     * 
+     * @param string $documentId Document ID
+     * @return array Document details
+     */
+    public function getDocumentDetailsForAdmin($documentId) {
+        try {
+            // Get document with user information
+            $pipeline = [
+                ['$match' => ['_id' => new MongoDB\BSON\ObjectId($documentId)]],
+                [
+                    '$lookup' => [
+                        'from' => 'users',
+                        'localField' => 'userId',
+                        'foreignField' => '_id',
+                        'as' => 'user'
+                    ]
+                ],
+                [
+                    '$project' => [
+                        'id' => ['$toString' => '$_id'],
+                        'userId' => ['$toString' => '$userId'],
+                        'userName' => ['$concat' => ['$firstName', ' ', '$lastName']],
+                        'email' => ['$arrayElemAt' => ['$user.email', 0]],
+                        'firstName' => 1,
+                        'lastName' => 1,
+                        'dateOfBirth' => 1,
+                        'address' => 1,
+                        'city' => 1,
+                        'state' => 1,
+                        'postalCode' => 1,
+                        'country' => 1,
+                        'documentType' => 1,
+                        'documentNumber' => 1,
+                        'documentExpiry' => 1,
+                        'documentImageUrl' => 1,
+                        'selfieImageUrl' => 1,
+                        'status' => 1,
+                        'similarityScore' => 1,
+                        'metadata' => 1,
+                        'adminOverride' => 1,
+                        'adminOverrideReason' => 1,
+                        'adminOverrideTime' => 1,
+                        'createdAt' => 1,
+                        'updatedAt' => 1,
+                        'verificationAttempts' => 1,
+                        'ipAddress' => 1,
+                        'userAgent' => 1
+                    ]
+                ]
+            ];
+            
+            $document = $this->collection->aggregate($pipeline)[0] ?? null;
+            
+            if (!$document) {
+                throw new Exception("Document not found");
+            }
+            
+            // Get audit logs for this document
+            $auditCollection = $this->db->getCollection('audit_logs');
+            $auditLogs = $auditCollection->find(
+                ['documentId' => new MongoDB\BSON\ObjectId($documentId)],
+                ['sort' => ['timestamp' => -1]]
+            );
+            
+            return [
+                'success' => true,
+                'document' => $document,
+                'auditLogs' => $auditLogs
+            ];
+        } catch (Exception $e) {
+            error_log("Error in getDocumentDetailsForAdmin: " . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()
