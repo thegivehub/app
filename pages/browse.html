@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 let imageUrl = '/images/placeholder-campaign.jpg'; // Default placeholder
                 
                 if (campaign.images && campaign.images.length > 0) {
-                    imageUrl = campaign.images[0].url || campaign.images[0];
+                    imageUrl = campaign.images[0].url || campaign.images[0].image;
                 } else if (campaign.image) {
                     imageUrl = campaign.image;
                 } else if (campaign.media && campaign.media.images && campaign.media.images.length > 0) {
