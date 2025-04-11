@@ -580,7 +580,8 @@
                 .then(data => {
                     if (data.success) {
                         alert('Campaign deleted successfully');
-                        history.go(-1);
+                        // history.go(-1);
+                        location.href = '/pages/my-campaigns.html';
                     } else {
                         alert('Error deleting campaign');
                     }
