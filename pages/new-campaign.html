@@ -604,12 +604,21 @@
     });
   });
   function getLatLong(txt) {
-      const owmAPI = `https://api.openweathermap.org/geo/1.0/direct?limit=1&q=${txt}&appid=${owmAPIKey}`;
+      // Remove any special characters and spaces
+      const strippedString = txt.replace(/[^a-zA-Z0-9, ]/g, '').replace(/\s+/g, ' ').trim();
+      // Check if the string is empty after stripping
+      if (strippedString.length === 0) {
+          console.error('Invalid location string:', txt);
+          return Promise.reject(new Error('Invalid location string'));
+      }
+      // Use OpenWeatherMap API to get coordinates
+      const owmAPI = `https://api.openweathermap.org/geo/1.0/direct?limit=1&appid=${owmAPIKey}&q=${strippedString}`;
       console.log('Fetching coordinates for:', txt);
       console.log('OWM API URL:', owmAPI);
       return fetch(owmAPI)
           .then(response => response.json())
           .then(data => {
+            console.log(data);
               if (data.length > 0) {
                   return {
                       lat: data[0].lat,
