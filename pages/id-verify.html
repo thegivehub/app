@@ -115,6 +115,125 @@
       .step-divider.completed {
         background: #28a745;
       }
+
+      /* Verification Report Styles */
+      .verification-report {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin: 2rem 0;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .verification-report h4 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+      }
+
+      .report-section {
+        margin-bottom: 2rem;
+      }
+
+      .report-section h5 {
+        color: #4A90E2;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+
+      .report-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .report-item {
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
+
+      .report-item .label {
+        display: block;
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+      }
+
+      .report-item .value {
+        font-weight: 500;
+        color: #343a40;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        background: #ffc107;
+        color: #212529;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .status-badge.approved {
+        background: #28a745;
+        color: white;
+      }
+
+      .status-badge.rejected {
+        background: #dc3545;
+        color: white;
+      }
+
+      .status-badge.pending {
+        background: #ffc107;
+        color: #212529;
+      }
+
+      .report-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+
+      .report-image-container {
+        text-align: center;
+      }
+
+      .report-image-container h5 {
+        margin-bottom: 0.75rem;
+      }
+
+      .report-image {
+        height: 200px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+      }
+
+      .report-note {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-left: 4px solid #4A90E2;
+        border-radius: 4px;
+      }
+
+      .report-note p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #495057;
+      }
     </style>
   </head>
   <body>
@@ -492,6 +611,80 @@
                   <p class="review-time">
                     This process typically takes 1-2 business days.
                   </p>
+                </div>
+                
+                <div class="verification-report" id="verification-report">
+                  <h4>Verification Report</h4>
+                  <div class="report-section">
+                    <h5>Personal Information</h5>
+                    <div class="report-grid">
+                      <div class="report-item">
+                        <span class="label">Name:</span>
+                        <span class="value" id="report-name"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Date of Birth:</span>
+                        <span class="value" id="report-dob"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Address:</span>
+                        <span class="value" id="report-address"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Location:</span>
+                        <span class="value" id="report-location"></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="report-section">
+                    <h5>Document Information</h5>
+                    <div class="report-grid">
+                      <div class="report-item">
+                        <span class="label">Document Type:</span>
+                        <span class="value" id="report-doc-type"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Document Number:</span>
+                        <span class="value" id="report-doc-number"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Expiry Date:</span>
+                        <span class="value" id="report-doc-expiry"></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="report-section">
+                    <h5>Verification Status</h5>
+                    <div class="report-grid">
+                      <div class="report-item">
+                        <span class="label">Status:</span>
+                        <span class="value status-badge" id="report-status">Submitted</span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Submission Date:</span>
+                        <span class="value" id="report-date"></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="report-images">
+                    <div class="report-image-container">
+                      <h5>ID Document</h5>
+                      <div class="report-image" id="report-doc-image"></div>
+                    </div>
+                    <div class="report-image-container">
+                      <h5>Selfie</h5>
+                      <div class="report-image" id="report-selfie-image"></div>
+                    </div>
+                  </div>
+                  
+                  <div class="report-note">
+                    <p>
+                      <strong>Note:</strong> Your verification information is secure and encrypted. It will only be used for the purpose of identity verification and will be handled according to our privacy policy.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1341,50 +1534,166 @@
           },
           
           async completeVerification(documentId) {
-            if (!documentId) {
-              throw new Error('Document ID is required to complete verification');
-            }
-            
             try {
+              if (!documentId) {
+                throw new Error('Document ID is required to complete verification');
+              }
+              
               console.log('Completing verification for document ID:', documentId);
               
-              // The verification process should be triggered automatically when both document and selfie
-              // are uploaded, so we just need to update the document status to mark it as reviewed
-              
-              const response = await fetch(this.config.apiBase + '/document/verify', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
-                },
-                body: JSON.stringify({
-                  documentId: documentId,
-                  reviewed: true
-                })
-              });
-
-              // Get full response text for debugging
-              const responseText = await response.text();
-              console.log('Verification completion response:', responseText);
-              
-              // Try to parse response as JSON
-              let result;
+              // First try the reviewed parameter approach
               try {
-                result = JSON.parse(responseText);
-              } catch (e) {
-                console.error('Failed to parse response as JSON:', e);
-                throw new Error(`Invalid server response: ${responseText}`);
-              }
+                const response = await fetch(this.config.apiBase + '/document/verify', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                  },
+                  body: JSON.stringify({
+                    documentId: documentId,
+                    reviewed: true
+                  })
+                });
 
-              if (!result.success) {
-                throw new Error(result.error || 'Failed to complete verification');
-              }
+                // Get full response text for debugging
+                const responseText = await response.text();
+                console.log('Verification completion response:', responseText);
+                
+                // Try to parse response as JSON
+                let result;
+                try {
+                  result = JSON.parse(responseText);
+                } catch (e) {
+                  console.error('Failed to parse response as JSON:', e);
+                  throw new Error(`Invalid server response: ${responseText}`);
+                }
 
-              console.log('Verification completed successfully:', result);
-              return result;
+                if (!result.success) {
+                  throw new Error(result.error || 'Failed to complete verification');
+                }
+
+                console.log('Verification completed successfully:', result);
+                
+                // Populate the verification report with user's data
+                this.populateVerificationReport(documentId);
+                
+                return result;
+              } catch (error) {
+                console.error('First verification attempt failed:', error);
+                
+                // If the first approach fails, try the direct verification approach
+                console.log('Trying direct verification approach');
+                
+                const response = await fetch(this.config.apiBase + '/document/verify/' + documentId, {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                  }
+                });
+                
+                const responseText = await response.text();
+                console.log('Direct verification response:', responseText);
+                
+                let result;
+                try {
+                  result = JSON.parse(responseText);
+                } catch (e) {
+                  console.error('Failed to parse direct verification response as JSON:', e);
+                  throw new Error(`Invalid server response: ${responseText}`);
+                }
+                
+                if (!result.success) {
+                  throw new Error(result.error || 'Failed to complete verification');
+                }
+                
+                // Populate the verification report with user's data
+                this.populateVerificationReport(documentId);
+                
+                return result;
+              }
             } catch (error) {
               console.error('Error completing verification:', error);
               throw error;
+            }
+          },
+          
+          // New function to populate the verification report
+          populateVerificationReport(documentId) {
+            try {
+              // Get the values from the form elements
+              const firstName = $('#firstName').value;
+              const lastName = $('#lastName').value;
+              const dateOfBirth = $('#dateOfBirth').value;
+              const address = $('#address').value;
+              const city = $('#city').value;
+              const state = $('#state').value;
+              const postalCode = $('#postalCode').value;
+              const country = $('#country').value;
+              const documentType = $('#documentType').value;
+              const documentNumber = $('#documentNumber').value;
+              const documentExpiry = $('#documentExpiry').value;
+              
+              // Format the date of birth nicely
+              const dob = new Date(dateOfBirth);
+              const formattedDob = dob.toLocaleDateString('en-US', {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+              });
+              
+              // Format document type to be more readable
+              const documentTypeMap = {
+                'passport': 'Passport',
+                'drivers_license': 'Driver\'s License',
+                'national_id': 'National ID Card',
+                'residence_permit': 'Residence Permit'
+              };
+              
+              const formattedDocType = documentTypeMap[documentType] || documentType;
+              
+              // Format document expiry date
+              const expiry = new Date(documentExpiry);
+              const formattedExpiry = expiry.toLocaleDateString('en-US', {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+              });
+              
+              // Format submission date (current date)
+              const now = new Date();
+              const formattedSubmissionDate = now.toLocaleDateString('en-US', {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              // Populate the report fields
+              $('#report-name').textContent = `${firstName} ${lastName}`;
+              $('#report-dob').textContent = formattedDob;
+              $('#report-address').textContent = address;
+              $('#report-location').textContent = `${city}, ${state} ${postalCode}, ${country}`;
+              
+              $('#report-doc-type').textContent = formattedDocType;
+              $('#report-doc-number').textContent = documentNumber;
+              $('#report-doc-expiry').textContent = formattedExpiry;
+              
+              $('#report-status').textContent = 'Submitted';
+              $('#report-status').classList.add('pending');
+              $('#report-date').textContent = formattedSubmissionDate;
+              
+              // Get the document and selfie image previews
+              const docImgSrc = $('#idDocumentPreview img').src;
+              const selfieImgSrc = $('#selfiePreview img').src;
+              
+              // Set the background images for the report
+              $('#report-doc-image').style.backgroundImage = `url(${docImgSrc})`;
+              $('#report-selfie-image').style.backgroundImage = `url(${selfieImgSrc})`;
+              
+              console.log('Verification report populated successfully');
+            } catch (error) {
+              console.error('Error populating verification report:', error);
             }
           },
         };
