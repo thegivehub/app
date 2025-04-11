@@ -3,9 +3,9 @@ require_once __DIR__ . '/db.php';
 
 class Collection {
     private $collection;
-
+    public $db;
     public function __construct() {
-        $db = new Database();
+        $db = $this->db = new Database();
         $collection = strtolower(get_class($this));
         
         if (!preg_match("/s$/", $collection)) {
@@ -23,7 +23,7 @@ class Collection {
     }
 
     public function get($id = null, $options = []) {
-        if ($id && !is_null($id)) {
+        if ($id !== null) {
             return $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
         } else {
             // Default limit to 20 records if not specified
