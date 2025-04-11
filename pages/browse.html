@@ -261,11 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     imageUrl = campaign.image;
                 }
                 
-                // Handle relative vs absolute URLs
-                if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
-                    //imageUrl = '/images/' + imageUrl;
-                }
-                
                 image.src = imageUrl;
                 image.alt = campaign.title || "Campaign image";
                 image.onerror = function() {
