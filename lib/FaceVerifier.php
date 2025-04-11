@@ -128,9 +128,6 @@ class FaceVerifier {
                 throw new Exception('Invalid user ID format: Not a valid MongoDB ObjectId');
             }
             
-            // Validate selfie file
-            $this->validateSelfieFile($selfieFile);
-            
             // Get ID document
             $documentCollection = $this->db->getCollection('documents');
             $document = $documentCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($documentId)]);
@@ -162,6 +159,15 @@ class FaceVerifier {
             if (!$docType || !in_array($docType, $validIdTypes)) {
                 throw new Exception("Document is not a valid ID type for face verification. Type: $docType");
             }
+            
+            // If selfie file info is incomplete, add documentId to help find it
+            if ((!isset($selfieFile['tmp_name']) || !file_exists($selfieFile['tmp_name'])) && !isset($selfieFile['documentId'])) {
+                $selfieFile['documentId'] = $documentId;
+                error_log("Adding documentId to selfie file info to help locate file: " . $documentId);
+            }
+            
+            // Validate selfie file
+            $this->validateSelfieFile($selfieFile);
             
             // Generate unique filename for selfie
             $selfieFilename = $this->generateSelfieFilename($userId);
@@ -421,37 +427,85 @@ class FaceVerifier {
      * Validate selfie file
      */
     private function validateSelfieFile($file) {
-        // Check if file exists and was uploaded successfully
-        if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-            throw new Exception('No selfie file uploaded or upload failed');
+        // First check if a direct file upload was provided
+        if (isset($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
+            // Check file size
+            if ($file['size'] > $this->config['max_size']) {
+                throw new Exception('Selfie file size exceeds maximum allowed (' . ($this->config['max_size'] / 1024 / 1024) . 'MB)');
+            }
+            
+            // Check file type
+            $allowedTypes = ['image/jpeg', 'image/png'];
+            if (!in_array($file['type'], $allowedTypes)) {
+                throw new Exception('Selfie file type not allowed. Allowed types: ' . implode(', ', $allowedTypes));
+            }
+            
+            // Verify file is actually an image
+            $imageInfo = getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                throw new Exception('Invalid image file');
+            }
+            
+            // Check minimum dimensions
+            if ($imageInfo[0] < 300 || $imageInfo[1] < 300) {
+                throw new Exception('Selfie image dimensions too small - minimum 300x300 pixels required');
+            }
+            
+            // Check if image contains a face
+            $this->detectFace($file['tmp_name']);
+            
+            return true;
         }
         
-        // Check file size
-        if ($file['size'] > $this->config['max_size']) {
-            throw new Exception('Selfie file size exceeds maximum allowed (' . ($this->config['max_size'] / 1024 / 1024) . 'MB)');
+        // If not a direct upload, check if it's a path to an existing file
+        if (isset($file['tmp_name']) && file_exists($file['tmp_name'])) {
+            // Do the same validations for a file path
+            // Check file size
+            if (filesize($file['tmp_name']) > $this->config['max_size']) {
+                throw new Exception('Selfie file size exceeds maximum allowed (' . ($this->config['max_size'] / 1024 / 1024) . 'MB)');
+            }
+            
+            // Verify file is actually an image
+            $imageInfo = getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                throw new Exception('Invalid image file');
+            }
+            
+            // Check minimum dimensions
+            if ($imageInfo[0] < 300 || $imageInfo[1] < 300) {
+                throw new Exception('Selfie image dimensions too small - minimum 300x300 pixels required');
+            }
+            
+            // Check if image contains a face
+            $this->detectFace($file['tmp_name']);
+            
+            return true;
         }
         
-        // Check file type
-        $allowedTypes = ['image/jpeg', 'image/png'];
-        if (!in_array($file['type'], $allowedTypes)) {
-            throw new Exception('Selfie file type not allowed. Allowed types: ' . implode(', ', $allowedTypes));
+        // If we have a document ID, try to find the selfie file using that
+        if (isset($file['documentId'])) {
+            $documentId = $file['documentId'];
+            $potentialPaths = [
+                $this->config['selfie_dir'] . "selfie_" . $documentId . ".png",
+                $this->config['upload_dir'] . "selfie_" . $documentId . ".png",
+                $this->config['upload_dir'] . "selfie_" . $documentId . ".jpg",
+                __DIR__ . '/../uploads/selfies/selfie_' . $documentId . '.png',
+                __DIR__ . '/../uploads/selfies/selfie_' . $documentId . '.jpg'
+            ];
+            
+            foreach ($potentialPaths as $path) {
+                if (file_exists($path)) {
+                    error_log("Found selfie file using document ID at path: " . $path);
+                    $file['tmp_name'] = $path;
+                    return $this->validateSelfieFile($file);
+                }
+            }
+            
+            error_log("Could not find selfie file for document ID: " . $documentId);
         }
         
-        // Verify file is actually an image
-        $imageInfo = getimagesize($file['tmp_name']);
-        if ($imageInfo === false) {
-            throw new Exception('Invalid image file');
-        }
-        
-        // Check minimum dimensions
-        if ($imageInfo[0] < 300 || $imageInfo[1] < 300) {
-            throw new Exception('Selfie image dimensions too small - minimum 300x300 pixels required');
-        }
-        
-        // Check if image contains a face
-        $this->detectFace($file['tmp_name']);
-        
-        return true;
+        // If we get here, no valid file was found
+        throw new Exception('No selfie file uploaded or upload failed');
     }
     
     /**

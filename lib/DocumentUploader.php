@@ -486,18 +486,6 @@ class DocumentUploader {
             // Validate file
             $this->validateFile($file);
             
-            // Generate unique filename
-            $filename = $this->generateUniqueFilename($file, $userId, 'document');
-            
-            // Save file
-            $filePath = $this->config['document_dir'] . $filename;
-            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
-                throw new Exception('Failed to save uploaded file');
-            }
-            
-            // Generate relative URL path
-            $urlPath = '/uploads/documents/' . $filename;
-            
             // Get database collection
             $documentCollection = $this->db->getCollection('documents');
             
@@ -545,46 +533,61 @@ class DocumentUploader {
                     'message' => 'Document updated successfully and pending verification'
                 ];
             } else {
-                // Create document record matching schema requirements
-                $document = [
-                    'userId' => new MongoDB\BSON\ObjectId($userId),
-                    'firstName' => $firstName,
-                    'lastName' => $lastName,
-                    'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($dateOfBirth) * 1000),
-                    'address' => $address,
-                    'city' => $city,
-                    'state' => $state,
-                    'postalCode' => $postalCode,
-                    'country' => $country,
-                    'documentType' => $type,
-                    'documentNumber' => $documentNumber,
-                    'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime($documentExpiry) * 1000),
-                    'documentImageUrl' => $urlPath,
-                    'selfieImageUrl' => null,
-                    'similarityScore' => 0,
-                    'status' => 'pending',
-                    'verificationAttempts' => 0,
-                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
-                    'updatedAt' => new MongoDB\BSON\UTCDateTime(),
-                    'ipAddress' => $_SERVER['REMOTE_ADDR'],
-                    'userAgent' => $_SERVER['HTTP_USER_AGENT'],
-                    'metadata' => [
-                        'documentAuthenticityScore' => 0,
-                        'documentQualityScore' => 0,
-                        'faceDetectionScore' => 0,
-                        'livenessScore' => 0
+                // Create document record if none exists
+                if (!$documentId) {
+                    // Create document record
+                    $document = [
+                        'userId' => new MongoDB\BSON\ObjectId($userId),
+                        'documentType' => $type,
+                        'status' => 'pending',
+                        'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                    ];
+                    
+                    $result = $documentCollection->insertOne($document);
+                    
+                    if (!$result['success']) {
+                        throw new Exception('Failed to create document record');
+                    }
+                    
+                    $documentId = $result['id'];
+                    
+                    if (!$documentId) {
+                        throw new Exception('Failed to get document ID from inserted record');
+                    }
+                }
+
+                // Generate simple filename based on document ID
+                $filename = "document_" . $documentId . ".png";
+                $filePath = $this->config['document_dir'] . $filename;
+                
+                // If file already exists, remove it before saving the new one
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                    error_log("Removed existing document file: " . $filePath);
+                }
+
+                // Save file
+                if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                    throw new Exception('Failed to save document file');
+                }
+                
+                // Generate relative URL path
+                $urlPath = '/uploads/documents/' . $filename;
+                
+                // Update document with new image URL
+                $result = $documentCollection->updateOne(
+                    ['_id' => new MongoDB\BSON\ObjectId($documentId)],
+                    [
+                        '$set' => [
+                            'documentImageUrl' => $urlPath,
+                            'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                        ]
                     ]
-                ];
-                
-                // Log document structure before insertion
-                error_log("Attempting to insert document with structure: " . json_encode($document));
-                
-                // Save document metadata to database
-                $result = $documentCollection->insertOne($document);
+                );
                 
                 if (!$result['success']) {
-                    error_log("Failed to save document metadata. Error: " . ($result['error'] ?? 'Unknown error'));
-                    throw new Exception('Failed to save document metadata: ' . ($result['error'] ?? 'Unknown error'));
+                    throw new Exception('Failed to update document with new image URL');
                 }
                 
                 // Update user verification status
@@ -592,7 +595,7 @@ class DocumentUploader {
                 
                 return [
                     'success' => true,
-                    'documentId' => $result['id'],
+                    'documentId' => $documentId,
                     'filename' => $filename,
                     'type' => $type,
                     'url' => $urlPath,
@@ -810,8 +813,14 @@ class DocumentUploader {
             $this->validateFile($file, $allowedTypes);
 
             // Generate unique filename
-            $filename = $this->generateUniqueFilename($file, $userId, 'selfie');
+            $filename = "selfie_" . $documentId . ".png";
             $filePath = $this->config['selfie_dir'] . $filename;
+
+            // If file already exists, remove it before saving the new one
+            if (file_exists($filePath)) {
+                unlink($filePath);
+                error_log("Removed existing selfie file: " . $filePath);
+            }
 
             // Save file
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {

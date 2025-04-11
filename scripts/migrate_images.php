@@ -222,6 +222,77 @@ function processBase64Image($base64Image, $resourceType, $resourceId = null) {
     return migrateBase64Image($base64Image, $resourceType, $resourceId);
 }
 
+// Helper function to process image arrays
+function processImageArray($images, $campaignId) {
+    global $stats;
+    $processedImages = [];
+    
+    if (!is_array($images)) {
+        return $processedImages;
+    }
+    
+    foreach ($images as $item) {
+        $processedItem = [];
+        
+        // Case 1: Simple string URL
+        if (is_string($item)) {
+            if (strpos($item, 'data:image/') === 0) {
+                // Convert base64 to file
+                $result = processBase64Image($item, 'campaign', $campaignId);
+                if ($result['success']) {
+                    $processedItem['url'] = $result['url'];
+                    $stats['gallery_images_migrated']++;
+                } else {
+                    $stats['errors'][] = "Failed to migrate gallery image for campaign {$campaignId}";
+                    continue;
+                }
+            } else {
+                // Keep existing URL
+                $processedItem['url'] = $item;
+            }
+        }
+        // Case 2: Object with image/url and metadata
+        else if (is_array($item)) {
+            // Copy any existing metadata
+            foreach ($item as $key => $value) {
+                if ($key !== 'image' && $key !== 'url') {
+                    $processedItem[$key] = $value;
+                }
+            }
+            
+            // Handle base64 image if present
+            if (isset($item['image']) && is_string($item['image']) && 
+                strpos($item['image'], 'data:image/') === 0) {
+                $result = processBase64Image($item['image'], 'campaign', $campaignId);
+                if ($result['success']) {
+                    $processedItem['url'] = $result['url'];
+                    $stats['gallery_images_migrated']++;
+                } else {
+                    $stats['errors'][] = "Failed to migrate gallery image for campaign {$campaignId}";
+                    continue;
+                }
+            }
+            // Keep existing URL if present
+            else if (isset($item['url'])) {
+                $processedItem['url'] = $item['url'];
+            }
+            // Keep existing image if it's not base64
+            else if (isset($item['image']) && !strpos($item['image'], 'data:image/') === 0) {
+                $processedItem['url'] = $item['image'];
+            }
+        }
+        
+        // Add timestamp if not present
+        if (!isset($processedItem['uploadedAt'])) {
+            $processedItem['uploadedAt'] = new MongoDB\BSON\UTCDateTime();
+        }
+        
+        $processedImages[] = $processedItem;
+    }
+    
+    return $processedImages;
+}
+
 echo "Starting campaign image migration...\n";
 
 // Process campaign main images
@@ -229,7 +300,10 @@ $campaignCollection = $db->getCollection('campaigns');
 $campaigns = $campaignCollection->find([
     '$or' => [
         ['image' => ['$regex' => '^data:image/']],
-        ['coverImage' => ['$regex' => '^data:image/']]
+        ['coverImage' => ['$regex' => '^data:image/']],
+        ['media' => ['$exists' => true]],
+        ['images' => ['$exists' => true]],
+        ['gallery' => ['$exists' => true]]
     ]
 ]);
 
@@ -277,55 +351,69 @@ foreach ($campaigns as $campaign) {
         }
     }
     
-    // Process gallery images
-    if (isset($campaign['gallery']) && is_array($campaign['gallery'])) {
-        $updatedGallery = [];
-        
-        foreach ($campaign['gallery'] as $galleryItem) {
-            // If gallery item contains base64 image
-            if (isset($galleryItem['image']) && is_string($galleryItem['image']) && 
-                strpos($galleryItem['image'], 'data:image/') === 0) {
-                
-                $result = processBase64Image($galleryItem['image'], 'campaign', $campaignId);
-                
-                if ($result['success']) {
-                    // Create new gallery item with URL instead of base64
-                    $updatedGalleryItem = [
-                        'url' => $result['url'],
-                        'caption' => $galleryItem['caption'] ?? '',
-                        'uploadedAt' => $galleryItem['uploadedAt'] ?? new MongoDB\BSON\UTCDateTime()
-                    ];
-                    $updatedGallery[] = $updatedGalleryItem;
-                    $stats['gallery_images_migrated']++;
-                    $updated = true;
-                    echo "  Migrated gallery image to: {$result['url']}\n";
+    // Process all possible image arrays
+    $imageArrayFields = ['gallery', 'media', 'images'];
+    foreach ($imageArrayFields as $field) {
+        if (isset($campaign[$field]) && is_array($campaign[$field])) {
+            $processedImages = processImageArray($campaign[$field], $campaignId);
+            if (!empty($processedImages)) {
+                // Always store in images field for standardization
+                if (isset($updateData['images']) && is_array($updateData['images'])) {
+                    $updateData['images'] = array_merge($updateData['images'], $processedImages);
                 } else {
-                    // Keep original if migration failed
-                    $updatedGallery[] = $galleryItem;
-                    $stats['errors'][] = "Failed to migrate gallery image for campaign {$campaignId}: " . $result['error'];
-                    echo "  Error migrating gallery image: {$result['error']}\n";
+                    $updateData['images'] = $processedImages;
                 }
-            } else {
-                // Keep existing item if not a base64 image
-                $updatedGallery[] = $galleryItem;
+                // Null out the old field if it's different from 'images'
+                if ($field !== 'images') {
+                    $updateData[$field] = null;
+                }
+                $updated = true;
+                echo "  Migrated {$field} array to images\n";
             }
-        }
-        
-        if (count($updatedGallery) > 0) {
-            $updateData['gallery'] = $updatedGallery;
         }
     }
     
     // Update the campaign if changes were made
     if ($updated) {
-        $result = $campaignCollection->updateOne(
-            ['_id' => new MongoDB\BSON\ObjectId($campaignId)],
-            ['$set' => $updateData]
-        );
-        
-        if (!$result['success']) {
-            $stats['errors'][] = "Failed to update campaign {$campaignId} in database";
-            echo "  Error updating campaign in database\n";
+        try {
+            // Prepare update operations
+            $updateOps = ['$set' => $updateData];
+            
+            // Add $unset operation only if there are fields to unset
+            $fieldsToUnset = array_diff(['gallery', 'media'], array_keys($updateData));
+            if (!empty($fieldsToUnset)) {
+                $unsetFields = array_fill_keys($fieldsToUnset, '');
+                $updateOps['$unset'] = $unsetFields;
+            }
+
+            if ($debug) {
+                echo "  Debug - Update operations for campaign {$campaignId}:\n";
+                echo "  " . json_encode($updateOps, JSON_PRETTY_PRINT) . "\n";
+            }
+
+            $result = $campaignCollection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($campaignId)],
+                $updateOps
+            );
+            
+            // Check if update was successful using modifiedCount
+            if ($result instanceof MongoDB\UpdateResult) {
+                if ($result->getModifiedCount() > 0) {
+                    echo "  Successfully updated campaign {$campaignId}\n";
+                } else {
+                    $stats['errors'][] = "Warning: No changes made to campaign {$campaignId} - document might not exist or no changes were necessary";
+                    echo "  Warning: No changes made to campaign {$campaignId}\n";
+                }
+            } else {
+                $stats['errors'][] = "Failed to update campaign {$campaignId} - unexpected result type: " . gettype($result);
+                echo "  Error: Unexpected result type when updating campaign {$campaignId}\n";
+            }
+        } catch (MongoDB\Driver\Exception\Exception $e) {
+            $stats['errors'][] = "MongoDB error updating campaign {$campaignId}: " . $e->getMessage();
+            echo "  Error: MongoDB exception when updating campaign {$campaignId}: " . $e->getMessage() . "\n";
+        } catch (Exception $e) {
+            $stats['errors'][] = "Error updating campaign {$campaignId}: " . $e->getMessage();
+            echo "  Error: General exception when updating campaign {$campaignId}: " . $e->getMessage() . "\n";
         }
     }
 }
