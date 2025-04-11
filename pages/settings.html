@@ -1475,9 +1475,9 @@
                 personalInfo: {
                   firstName: $('#first_name').value,
                   lastName: $('#last_name').value,
-                  phone: $('#phone').value,
-                  email: $('#email').value,
-                  location: $('#location').value,
+                  phone: $('#phone')?.value,
+                  email: $('#email')?.value,
+                  location: $('#location')?.value,
                 },
                 email: $('#email').value,
                 profile: {
@@ -1487,7 +1487,10 @@
                     : $('#avatarImg').src.split('/').pop(), // Extract filename
                 },
               };
-
+            
+              if ($("#location")) {
+                  formData.personalInfo.localtion = $("#location").value;
+              }
               console.log('Saving profile:', formData);
               await app.settingsManager.updateProfile(formData);
               this.showSuccess('Profile updated successfully');
