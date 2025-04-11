@@ -85,39 +85,11 @@
             text-align: right;
             width: 100%;
         }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-            gap: 10px;
-        }
-        .pagination button {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            color: #333;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        .pagination button:hover:not(:disabled) {
-            background-color: #f0f0f0;
-        }
-        .pagination button:disabled {
-            background-color: #f0f0f0;
-            color: #999;
-            cursor: not-allowed;
-        }
-        .pagination .current-page {
-            padding: 8px 12px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
         .loading {
             display: none;
             margin: 20px 0;
+            text-align: center;
+            width: 100%;
         }
         .loading.active {
             display: block;
@@ -127,18 +99,24 @@
             text-align: center;
             margin: 20px 0;
         }
+        .end-message {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+            display: none;
+        }
+        .end-message.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
 
 <h1>Browse Campaigns</h1>
-<div class="loading">Loading campaigns...</div>
 <div class="campaign-grid" id="campaign-grid"></div>
-<div class="pagination" id="pagination">
-    <button id="prev-page" disabled>Previous</button>
-    <span class="current-page">Page <span id="current-page-num">1</span></span>
-    <button id="next-page">Next</button>
-</div>
+<div class="loading" id="loading-indicator">Loading campaigns...</div>
+<div class="end-message" id="end-message">You've reached the end of available campaigns.</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -147,27 +125,34 @@ document.addEventListener("DOMContentLoaded", () => {
         currentPage: 1,
         itemsPerPage: 8,
         totalItems: 0,
-        isLoading: false
+        isLoading: false,
+        hasMoreItems: true,
+        loadDistanceThreshold: 300
     };
 
     // DOM elements
-    const campaignGrid = document.getElementById('campaign-grid');
-    const loadingElement = document.querySelector('.loading');
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-    const currentPageNum = document.getElementById('current-page-num');
+    const campaignGrid = document.getElementById("campaign-grid");
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const endMessage = document.getElementById("end-message");
 
     // Show/hide loading state
     const setLoading = (loading) => {
         state.isLoading = loading;
-        loadingElement.classList.toggle('active', loading);
-        prevPageBtn.disabled = loading || state.currentPage === 1;
-        nextPageBtn.disabled = loading;
+        loadingIndicator.classList.toggle("active", loading);
+    };
+
+    // Show end message when no more campaigns
+    const setEndReached = () => {
+        state.hasMoreItems = false;
+        endMessage.classList.add("active");
     };
 
     // Fetch campaigns for the current page
     const fetchCampaigns = async () => {
         try {
+            // Don't fetch if already loading or no more items
+            if (state.isLoading || !state.hasMoreItems) return;
+            
             setLoading(true);
             
             // Check if app.api is available for authenticated requests
@@ -183,10 +168,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Get the campaigns array (handle both array and object responses)
                 const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
                 
-                renderCampaigns(campaigns);
+                if (campaigns.length === 0) {
+                    setEndReached();
+                } else {
+                    appendCampaigns(campaigns);
+                    // Check if we've reached the end based on total
+                    if (state.totalItems && (state.currentPage * state.itemsPerPage) >= state.totalItems) {
+                        setEndReached();
+                    }
+                    state.currentPage++;
+                }
             } else {
                 // Fallback to direct fetch with Authorization header
-                const token = localStorage.getItem('accessToken');
+                const token = localStorage.getItem("accessToken");
                 
                 const fetchOptions = {
                     method: "GET",
@@ -216,36 +210,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Get the campaigns array (handle both array and object responses)
                 const campaigns = Array.isArray(data) ? data : (data.campaigns || []);
                 
-                renderCampaigns(campaigns);
+                if (campaigns.length === 0) {
+                    setEndReached();
+                } else {
+                    appendCampaigns(campaigns);
+                    // Check if we've reached the end based on total
+                    if (state.totalItems && (state.currentPage * state.itemsPerPage) >= state.totalItems) {
+                        setEndReached();
+                    }
+                    state.currentPage++;
+                }
             }
         } catch (error) {
             console.error("Error fetching campaigns:", error);
-            campaignGrid.innerHTML = '<p class="error-message">Failed to load campaigns. Please try again later.</p>';
+            if (state.currentPage === 1) {
+                campaignGrid.innerHTML = '<p class="error-message">Failed to load campaigns. Please try again later.</p>';
+            }
         } finally {
             setLoading(false);
         }
     };
     
-    // Render campaign cards
-    const renderCampaigns = (campaigns) => {
-        // Clear existing campaigns
-        campaignGrid.innerHTML = '';
-        
+    // Append new campaigns to the grid
+    const appendCampaigns = (campaigns) => {
         campaigns.forEach(campaign => {
             try {
                 // Create card element
-                const card = document.createElement('div');
-                card.classList.add('campaign-card');
+                const card = document.createElement("div");
+                card.classList.add("campaign-card");
 
                 // Campaign image
-                const imageContainer = document.createElement('div');
-                imageContainer.classList.add('campaign-image-container');
+                const imageContainer = document.createElement("div");
+                imageContainer.classList.add("campaign-image-container");
                 
-                const image = document.createElement('img');
-                image.classList.add('campaign-image');
+                const image = document.createElement("img");
+                image.classList.add("campaign-image");
                 
                 // Check for image in different possible locations in the data structure
-                let imageUrl = '/images/placeholder-campaign.jpg'; // Default placeholder
+                let imageUrl = "/images/placeholder-campaign.jpg"; // Default placeholder
                 
                 if (campaign.images && campaign.images.length > 0) {
                     imageUrl = campaign.images[0].url || campaign.images[0].image;
@@ -264,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 image.src = imageUrl;
                 image.alt = campaign.title || "Campaign image";
                 image.onerror = function() {
-                    this.src = '/images/placeholder-campaign.jpg';
+                    this.src = "/images/placeholder-campaign.jpg";
                     this.onerror = null; // Prevent infinite loop if placeholder also fails
                 };
                 
@@ -272,14 +274,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.appendChild(imageContainer);
 
                 // Campaign title
-                const title = document.createElement('h2');
-                title.classList.add('campaign-title');
+                const title = document.createElement("h2");
+                title.classList.add("campaign-title");
                 title.textContent = campaign.title || "Untitled Campaign";
                 card.appendChild(title);
 
                 // Campaign location
-                const location = document.createElement('p');
-                location.classList.add('campaign-location');
+                const location = document.createElement("p");
+                location.classList.add("campaign-location");
                 
                 // Safely access location properties
                 if (campaign.location && campaign.location.region && campaign.location.country) {
@@ -289,36 +291,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (campaign.location && campaign.location.country) {
                     location.textContent = `Location: ${campaign.location.country}`;
                 } else {
-                    location.textContent = 'Location: Not specified';
+                    location.textContent = "Location: Not specified";
                 }
                 card.appendChild(location);
 
                 // Campaign funding goal
-                const goal = document.createElement('p');
-                goal.classList.add('campaign-goal');
+                const goal = document.createElement("p");
+                goal.classList.add("campaign-goal");
                 
                 // Safely access funding properties
                 if (campaign.funding && campaign.funding.goalAmount !== undefined) {
-                    const currency = campaign.funding.currency || 'USD';
+                    const currency = campaign.funding.currency || "USD";
                     let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.funding.goalAmount);
                     goal.textContent = `Goal: ${amt}`;
                 } else if (campaign.fundingGoal) {
-                    const currency = 'USD';
+                    const currency = "USD";
                     let amt = new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(campaign.fundingGoal);
                     goal.textContent = `Goal: ${amt}`;
                 } else {
-                    goal.textContent = 'Goal: Not specified';
+                    goal.textContent = "Goal: Not specified";
                 }
                 card.appendChild(goal);
 
                 // Campaign progress
-                const progressText = document.createElement('p');
-                progressText.classList.add('campaign-progress');
+                const progressText = document.createElement("p");
+                progressText.classList.add("campaign-progress");
                 
                 // Progress bar
-                const progressBar = document.createElement('div');
-                progressBar.classList.add('progress-bar');
-                const progressFill = document.createElement('div');
+                const progressBar = document.createElement("div");
+                progressBar.classList.add("progress-bar");
+                const progressFill = document.createElement("div");
                 
                 // Safely calculate progress
                 if (campaign.funding && 
@@ -328,18 +330,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     const raisedAmount = campaign.funding.raisedAmount;
                     const goalAmount = campaign.funding.goalAmount;
-                    const currency = campaign.funding.currency || 'USD';
+                    const currency = campaign.funding.currency || "USD";
                     const progress = (raisedAmount / goalAmount) * 100;
                     
                     progressText.textContent = `Progress: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(raisedAmount)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(goalAmount)}`;
                     progressFill.style.width = `${Math.min(progress, 100)}%`; // Cap at 100%
                 } else if (campaign.funding && campaign.funding.raisedAmount !== undefined) {
-                    const currency = campaign.funding.currency || 'USD';
+                    const currency = campaign.funding.currency || "USD";
                     progressText.textContent = `Raised: ${new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0}).format(campaign.funding.raisedAmount)}`;
-                    progressFill.style.width = '0%';
+                    progressFill.style.width = "0%";
                 } else {
-                    progressText.textContent = 'Progress: No donations yet';
-                    progressFill.style.width = '0%';
+                    progressText.textContent = "Progress: No donations yet";
+                    progressFill.style.width = "0%";
                 }
                 
                 card.appendChild(progressText);
@@ -347,10 +349,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.appendChild(progressBar);
 
                 // View more link
-                const viewMore = document.createElement('a');
-                viewMore.classList.add('view-more');
-                viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ''}`;
-                viewMore.textContent = 'View More';
+                const viewMore = document.createElement("a");
+                viewMore.classList.add("view-more");
+                viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ""}`;
+                viewMore.textContent = "View More";
                 card.appendChild(viewMore);
 
                 // Append card to grid
@@ -360,41 +362,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error(`Error rendering campaign:`, campaign, error);
             }
         });
-
-        // Update pagination controls
-        updatePaginationControls();
     };
 
-    // Update pagination controls
-    const updatePaginationControls = () => {
-        currentPageNum.textContent = state.currentPage;
-        prevPageBtn.disabled = state.currentPage === 1;
+    // Check if we need to load more campaigns based on scroll position
+    const checkScrollPosition = () => {
+        if (state.isLoading || !state.hasMoreItems) return;
         
-        // If we have total items, we can determine if there are more pages
-        if (state.totalItems) {
-            const totalPages = Math.ceil(state.totalItems / state.itemsPerPage);
-            nextPageBtn.disabled = state.currentPage >= totalPages;
-        } else {
-            // If we don't have total items, enable next if we got a full page of items
-            const currentItems = campaignGrid.children.length;
-            nextPageBtn.disabled = currentItems < state.itemsPerPage;
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        // Load more when user scrolls near the bottom
+        if (documentHeight - (scrollY + windowHeight) < state.loadDistanceThreshold) {
+            fetchCampaigns();
         }
     };
 
-    // Event listeners for pagination
-    prevPageBtn.addEventListener('click', () => {
-        if (state.currentPage > 1 && !state.isLoading) {
-            state.currentPage--;
-            fetchCampaigns();
-        }
-    });
+    // Add scroll event listener
+    window.addEventListener("scroll", checkScrollPosition);
 
-    nextPageBtn.addEventListener('click', () => {
-        if (!state.isLoading) {
-            state.currentPage++;
-            fetchCampaigns();
-        }
-    });
+    // Debounce function to limit how often the scroll check triggers
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    // Use debounced version of scroll check
+    const debouncedCheckScroll = debounce(checkScrollPosition, 100);
+    window.addEventListener("scroll", debouncedCheckScroll);
 
     // Initial load
     fetchCampaigns();
