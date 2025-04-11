@@ -255,11 +255,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     imageUrl = campaign.media.images[0].url || campaign.media.images[0];
                 } else if (campaign.featuredImage) {
                     imageUrl = campaign.featuredImage;
+                } else if (campaign.images && campaign.images.image) {
+                    imageUrl = campaign.images.image;
+                } else if (campaign.image) {
+                    imageUrl = campaign.image;
                 }
                 
                 // Handle relative vs absolute URLs
                 if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
-                    imageUrl = '/images/' + imageUrl;
+                    //imageUrl = '/images/' + imageUrl;
                 }
                 
                 image.src = imageUrl;
