@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Administration - TheGiveHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Lexend", -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .stat-card.approved {
+            border-left: 4px solid var(--success);
+        }
+
+        .stat-card.rejected {
+            border-left: 4px solid var(--danger);
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .verifications-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .verifications-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .verifications-table th,
+        .verifications-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .verifications-table th {
+            background: var(--gray-50);
+            font-weight: 500;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--gray-600);
+        }
+
+        .loading::after {
+            content: "";
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .page-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .page-button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verification Administration</h1>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <h3>Pending Review</h3>
+                <div class="value" id="pending-count">0</div>
+            </div>
+            <div class="stat-card approved">
+                <h3>Approved</h3>
+                <div class="value" id="approved-count">0</div>
+            </div>
+            <div class="stat-card rejected">
+                <h3>Rejected</h3>
+                <div class="value" id="rejected-count">0</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="status-filter">Status</label>
+                    <select id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date-from">From Date</label>
+                    <input type="date" id="date-from">
+                </div>
+                <div class="filter-group">
+                    <label for="date-to">To Date</label>
+                    <input type="date" id="date-to">
+                </div>
+                <div class="filter-group">
+                    <label for="search">Search</label>
+                    <input type="text" id="search" placeholder="Search by name or email">
+                </div>
+            </div>
+            <button class="btn btn-primary" id="apply-filters">Apply Filters</button>
+        </div>
+
+        <!-- Verifications Table -->
+        <div class="verifications-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Submission Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="verifications-list">
+                    <tr>
+                        <td colspan="5" class="loading">Loading verifications...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Verification Details Modal -->
+    <div class="modal" id="details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Verification Details</h2>
+                <button class="btn" id="close-details">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="verification-details"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="close-details-footer">Close</button>
+                <button class="btn btn-primary" id="review-verification">Review</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal" id="review-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Review Verification</h2>
+                <button class="btn" id="close-review">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label for="review-decision">Decision</label>
+                    <select id="review-decision" required>
+                        <option value="">Select Decision</option>
+                        <option value="approved">Approve</option>
+                        <option value="rejected">Reject</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="margin-top: 1rem;">
+                    <label for="review-notes">Notes</label>
+                    <textarea id="review-notes" rows="4" style="width: 100%; padding: 0.5rem;" placeholder="Enter review notes..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancel-review">Cancel</button>
+                <button class="btn btn-primary" id="submit-review">Submit Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VerificationManager {
+            constructor() {
+                this.currentVerification = null;
+                this.currentPage = 1;
+                this.itemsPerPage = 10;
+                this.bindElements();
+                this.bindEvents();
+                this.loadVerifications();
+            }
+
+            bindElements() {
+                // Stats elements
+                this.pendingCount = document.getElementById('pending-count');
+                this.approvedCount = document.getElementById('approved-count');
+                this.rejectedCount = document.getElementById('rejected-count');
+
+                // Filter elements
+                this.statusFilter = document.getElementById('status-filter');
+                this.dateFrom = document.getElementById('date-from');
+                this.dateTo = document.getElementById('date-to');
+                this.searchInput = document.getElementById('search');
+                this.applyFiltersBtn = document.getElementById('apply-filters');
+
+                // Table element
+                this.verificationsTable = document.getElementById('verifications-list');
+                this.pagination = document.getElementById('pagination');
+
+                // Modal elements
+                this.detailsModal = document.getElementById('details-modal');
+                this.reviewModal = document.getElementById('review-modal');
+                this.verificationDetails = document.getElementById('verification-details');
+                this.reviewDecision = document.getElementById('review-decision');
+                this.reviewNotes = document.getElementById('review-notes');
+            }
+
+            bindEvents() {
+                // Filter events
+                this.applyFiltersBtn.addEventListener('click', () => this.loadVerifications());
+
+                // Modal events
+                document.getElementById('close-details').addEventListener('click', () => this.closeDetailsModal());
+                document.getElementById('close-details-footer').addEventListener('click', () => this.closeDetailsModal());
+                document.getElementById('review-verification').addEventListener('click', () => this.openReviewModal());
+                document.getElementById('close-review').addEventListener('click', () => this.closeReviewModal());
+                document.getElementById('cancel-review').addEventListener('click', () => this.closeReviewModal());
+                document.getElementById('submit-review').addEventListener('click', () => this.submitReview());
+            }
+
+            async loadVerifications() {
+                try {
+                    this.verificationsTable.innerHTML = '<tr><td colspan="5" class="loading">Loading verifications...</td></tr>';
+
+                    const filters = {
+                        status: this.statusFilter.value,
+                        dateFrom: this.dateFrom.value,
+                        dateTo: this.dateTo.value,
+                        search: this.searchInput.value,
+                        page: this.currentPage,
+                        limit: this.itemsPerPage
+                    };
+
+                    const params = new URLSearchParams();
+                    Object.entries(filters).forEach(([key, value]) => {
+                        if (value) params.append(key, value);
+                    });
+
+                    // First, get the verifications
+                    const response = await fetch(`/api/verification?${params.toString()}`, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load verifications');
+
+                    const data = await response.json();
+
+                    // Now get the stats separately
+                    const statsResponse = await fetch('/api/verification/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        }
+                    });
+
+                    if (statsResponse.ok) {
+                        const statsData = await statsResponse.json();
+                        this.updateStats(statsData);
+                    }
+
+                    this.renderVerifications(data.verifications || []);
+                    this.renderPagination(data.total || 0);
+                } catch (error) {
+                    console.error('Error loading verifications:', error);
+                    this.verificationsTable.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="error">
+                                Failed to load verifications. Please try again.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            updateStats(stats) {
+                // Default all stats to 0 if not provided
+                const defaultStats = {
+                    pending: 0,
+                    approved: 0,
+                    rejected: 0,
+                    ...stats
+                };
+
+                this.pendingCount.textContent = defaultStats.pending;
+                this.approvedCount.textContent = defaultStats.approved;
+                this.rejectedCount.textContent = defaultStats.rejected;
+            }
+
+            renderVerifications(verifications) {
+                if (!verifications.length) {
+                    this.verificationsTable.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center;">No verifications found</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                this.verificationsTable.innerHTML = verifications.map(v => `
+                    <tr>
+                        <td>${v.userName || 'Unknown'}</td>
+                        <td>${v.userEmail || 'Unknown'}</td>
+                        <td>${new Date(v.timestamp).toLocaleDateString()}</td>
+                        <td>
+                            <span class="status-badge ${v.status.toLowerCase()}">
+                                ${v.status}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" onclick="verificationManager.viewDetails('${v._id}')">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderPagination(total) {
+                const totalPages = Math.ceil(total / this.itemsPerPage);
+                if (totalPages <= 1) {
+                    this.pagination.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `
+                        <button class="page-button ${i === this.currentPage ? 'active' : ''}"
+                                onclick="verificationManager.changePage(${i})">
+                            ${i}
+                        </button>
+                    `;
+                }
+                this.pagination.innerHTML = html;
+            }
+
+            async viewDetails(id) {
+                try {
+                    this.detailsModal.classList.add('show');
+                    this.verificationDetails.innerHTML = '<div class="loading">Loading details...</div>';
+
+                    const response = await fetch(`/api/verification/${id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load verification details');
+
+                    const verification = await response.json();
+                    this.currentVerification = verification;
+                    this.renderVerificationDetails(verification);
+                } catch (error) {
+                    console.error('Error loading verification details:', error);
+                    this.verificationDetails.innerHTML = `
+                        <div class="error">Failed to load verification details. Please try again.</div>
+                    `;
+                }
+            }
+
+            renderVerificationDetails(verification) {
+                this.verificationDetails.innerHTML = `
+                    <div class="verification-details">
+                        <h3>User Information</h3>
+                        <p><strong>Name:</strong> ${verification.userName || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${verification.userEmail || 'N/A'}</p>
+                        <p><strong>Submitted:</strong> ${new Date(verification.timestamp).toLocaleString()}</p>
+                        
+                        <h3 style="margin-top: 1.5rem;">Verification Status</h3>
+                        <p><strong>Status:</strong> <span class="status-badge ${verification.status.toLowerCase()}">${verification.status}</span></p>
+                        
+                        <h3 style="margin-top: 1.5rem;">Documents</h3>
+                        <div style="margin-top: 1rem;">
+                            <img src="${verification.documentImage}" alt="ID Document" style="max-width: 100%; margin-bottom: 1rem;">
+                            <img src="${verification.selfieImage}" alt="Selfie" style="max-width: 100%;">
+                        </div>
+                    </div>
+                `;
+            }
+
+            openReviewModal() {
+                if (!this.currentVerification) return;
+                this.reviewModal.classList.add('show');
+                this.closeDetailsModal();
+            }
+
+            closeReviewModal() {
+                this.reviewModal.classList.remove('show');
+                this.reviewDecision.value = '';
+                this.reviewNotes.value = '';
+            }
+
+            closeDetailsModal() {
+                this.detailsModal.classList.remove('show');
+            }
+
+            async submitReview() {
+                try {
+                    const decision = this.reviewDecision.value;
+                    const notes = this.reviewNotes.value;
+
+                    if (!decision || !notes) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    const response = await fetch(`/api/verification/${this.currentVerification._id}/review`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
+                        body: JSON.stringify({ decision, notes })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to submit review');
+
+                    this.closeReviewModal();
+                    this.loadVerifications();
+                } catch (error) {
+                    console.error('Error submitting review:', error);
+                    alert('Failed to submit review. Please try again.');
+                }
+            }
+
+            changePage(page) {
+                this.currentPage = page;
+                this.loadVerifications();
+            }
+        }
+
+        // Initialize the verification manager
+        const verificationManager = new VerificationManager();
+    </script>
+</body>
+</html> 
