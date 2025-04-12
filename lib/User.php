@@ -1,11 +1,15 @@
 <?php
 require_once __DIR__ . '/Auth.php';
-require_once __DIR__ . '/Model.php';
+require_once __DIR__ . '/Collection.php';
 require_once __DIR__ . '/DocumentUploader.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-class User extends Model {
+/**
+ * User Collection
+ * Handles user-related database operations
+ */
+class User extends Collection {
     protected $auth;
     protected $documentUploader;
 
@@ -298,5 +302,5 @@ class User extends Model {
             ];
         }
     }
-    }
+}
 
