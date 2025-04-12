@@ -503,6 +503,24 @@ class DocumentUploader {
                 
                 error_log("Found existing document, updating with document image and fields");
                 
+                // Generate simple filename based on document ID
+                $filename = "document_" . $documentId . ".png";
+                $filePath = $this->config['document_dir'] . $filename;
+                
+                // If file already exists, remove it before saving the new one
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                    error_log("Removed existing document file: " . $filePath);
+                }
+
+                // Save file
+                if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                    throw new Exception('Failed to save document file');
+                }
+                
+                // Generate relative URL path
+                $urlPath = '/uploads/documents/' . $filename;
+                
                 // Update only the document-specific fields
                 $result = $documentCollection->updateOne(
                     ['_id' => new MongoDB\BSON\ObjectId($documentId)],

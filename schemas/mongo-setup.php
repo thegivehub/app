@@ -51,7 +51,8 @@ try {
     // Create collections
     $collections = [
         'users', 'campaigns', 'donations', 'donors', 
-        'impactmetrics', 'updates', 'notifications', 'preferences'
+        'impactmetrics', 'updates', 'notifications', 'preferences',
+        'verifications'
     ];
     
     foreach ($collections as $collection) {
@@ -82,6 +83,13 @@ try {
     $db->donations->createIndex(['campaign_id' => 1]);
     $db->donations->createIndex(['user_id' => 1]);
     echo "Created indexes for donations collection.\n";
+    
+    // Verifications collection indexes
+    $db->verifications->createIndex(['user_id' => 1]);
+    $db->verifications->createIndex(['status' => 1]);
+    $db->verifications->createIndex(['timestamp' => -1]);
+    $db->verifications->createIndex(['reviewedAt' => -1]);
+    echo "Created indexes for verifications collection.\n";
     
     // Test insert
     $testDoc = ['name' => 'test', 'timestamp' => new MongoDB\BSON\UTCDateTime()];

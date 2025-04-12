@@ -669,6 +669,24 @@
                     </div>
                   </div>
                   
+                  <div class="report-section">
+                    <h5>Face Comparison Results</h5>
+                    <div class="report-grid">
+                      <div class="report-item">
+                        <span class="label">Face Match Score:</span>
+                        <span class="value" id="report-face-match"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Confidence Score:</span>
+                        <span class="value" id="report-confidence"></span>
+                      </div>
+                      <div class="report-item">
+                        <span class="label">Liveness Score:</span>
+                        <span class="value" id="report-liveness"></span>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div class="report-images">
                     <div class="report-image-container">
                       <h5>ID Document</h5>
@@ -1690,6 +1708,27 @@
               // Set the background images for the report
               $('#report-doc-image').style.backgroundImage = `url(${docImgSrc})`;
               $('#report-selfie-image').style.backgroundImage = `url(${selfieImgSrc})`;
+              
+              // Add face comparison results if available
+              if (result.verificationResult) {
+                const faceMatch = result.verificationResult.similarity 
+                  ? `${Math.round(result.verificationResult.similarity * 100)}%` 
+                  : 'N/A';
+                const confidence = result.verificationResult.confidence 
+                  ? `${Math.round(result.verificationResult.confidence * 100)}%` 
+                  : 'N/A';
+                const liveness = result.verificationResult.liveness 
+                  ? `${Math.round(result.verificationResult.liveness * 100)}%` 
+                  : 'N/A';
+                
+                $('#report-face-match').textContent = faceMatch;
+                $('#report-confidence').textContent = confidence;
+                $('#report-liveness').textContent = liveness;
+              } else {
+                $('#report-face-match').textContent = 'N/A';
+                $('#report-confidence').textContent = 'N/A';
+                $('#report-liveness').textContent = 'N/A';
+              }
               
               console.log('Verification report populated successfully');
             } catch (error) {
