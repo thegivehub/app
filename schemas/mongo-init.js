@@ -9,6 +9,7 @@ db.createCollection('impactmetrics');
 db.createCollection('updates');
 db.createCollection('notifications');
 db.createCollection('preferences');
+db.createCollection('verifications');
 
 // Create indexes
 db.users.createIndex({ "email": 1 }, { unique: true });
@@ -29,6 +30,12 @@ db.donors.createIndex({ "email": 1 }, { unique: true });
 db.donors.createIndex({ "status": 1 });
 db.donors.createIndex({ "donationType": 1 });
 db.donors.createIndex({ "lastDonation": -1 });
+
+// Verification indexes
+db.verifications.createIndex({ "user_id": 1 });
+db.verifications.createIndex({ "status": 1 });
+db.verifications.createIndex({ "timestamp": -1 });
+db.verifications.createIndex({ "reviewedAt": -1 });
 
 // Create admin user if needed
 // db.users.insertOne({

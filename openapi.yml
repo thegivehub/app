@@ -1,7 +1,24 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: The Give Hub API
-  description: API for The Give Hub crowdfunding platform connecting donors with remote projects
+  description: |
+    API for The Give Hub crowdfunding platform connecting donors with remote projects.
+    
+    # API Versions
+    - **v1 (Current)**: Modern RESTful API using newapi.php
+    - **Legacy**: Original API implementation using api.php
+    
+    # Routing
+    ## V1 API
+    - URL Pattern: `/api/{resource}/{method}/{id}`
+    - Automatic CRUD operations
+    - Dynamic resource routing
+    - RESTful conventions
+    
+    ## Legacy API
+    - URL Pattern: `/api.php/{endpoint}/{action}/{params}`
+    - Special case handling for Document and KYC endpoints
+    - Custom routing per endpoint
   version: 1.0.0
   contact:
     name: The Give Hub Support
@@ -10,9 +27,13 @@ info:
 
 servers:
   - url: https://api.thegivehub.com/v1
-    description: Production server
+    description: Production V1 API server
+  - url: https://api.thegivehub.com/legacy
+    description: Legacy API server (api.php)
   - url: https://staging-api.thegivehub.com/v1
-    description: Staging server
+    description: Staging V1 API server
+  - url: https://staging-api.thegivehub.com/legacy
+    description: Staging Legacy API server
 
 components:
   securitySchemes:
@@ -209,7 +230,200 @@ components:
           type: string
           format: date-time
 
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        details:
+          type: object
+
+    DocumentVerification:
+      type: object
+      required:
+        - documentId
+        - type
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [id, passport, license, proof_of_address]
+        status:
+          type: string
+          enum: [pending, verified, rejected]
+        verifiedBy:
+          type: string
+          format: uuid
+        verifiedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    KYCVerification:
+      type: object
+      required:
+        - userId
+        - status
+      properties:
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, in_progress, verified, rejected]
+        level:
+          type: string
+          enum: [basic, advanced]
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentVerification'
+        verificationId:
+          type: string
+        provider:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
 paths:
+  # V1 API Endpoints
+  /v1/{resource}:
+    parameters:
+      - name: resource
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The resource name (e.g. campaigns, users, donations)
+    get:
+      summary: List resources
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of resources
+    post:
+      summary: Create new resource
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Resource created successfully
+
+  /v1/{resource}/{id}:
+    parameters:
+      - name: resource
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get resource by ID
+      responses:
+        '200':
+          description: Resource details
+    put:
+      summary: Update resource
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Resource updated successfully
+    delete:
+      summary: Delete resource
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Resource deleted successfully
+
+  # Legacy API Endpoints
+  /legacy/document/verify:
+    post:
+      summary: Verify document (Legacy)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documentId
+              properties:
+                documentId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Document verification initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVerification'
+
+  /legacy/kyc/initiate:
+    post:
+      summary: Initiate KYC verification (Legacy)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: KYC verification initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KYCVerification'
+
+  /legacy/kyc/status:
+    get:
+      summary: Get KYC verification status (Legacy)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: KYC verification status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KYCVerification'
+
+  /legacy/kyc/webhook:
+    post:
+      summary: KYC provider webhook (Legacy)
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Webhook processed successfully
+
+  # Existing paths...
   /campaigns:
     get:
       summary: List campaigns
@@ -233,12 +447,6 @@ paths:
       responses:
         '200':
           description: List of campaigns
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Campaign'
     post:
       summary: Create a new campaign
       security:
@@ -376,3 +584,22 @@ paths:
 
 security:
   - ApiKeyAuth: []
+  - BearerAuth: []
+
+tags:
+  - name: V1 API
+    description: Modern RESTful API endpoints
+  - name: Legacy API
+    description: Original API endpoints with special case handling
+  - name: Campaigns
+    description: Campaign management endpoints
+  - name: Donations
+    description: Donation processing endpoints
+  - name: Users
+    description: User management endpoints
+  - name: KYC
+    description: Know Your Customer verification endpoints
+  - name: Documents
+    description: Document management and verification endpoints
+  - name: Impact
+    description: Impact metrics and reporting endpoints

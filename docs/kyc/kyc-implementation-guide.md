@@ -11,7 +11,7 @@ The following files have been created or modified for the Jumio integration:
 - **jumio-config.php**: Configuration settings for the Jumio integration
 - **KycManager.js**: Frontend JavaScript module for managing KYC processes
 - **kyc-verification.html**: User-facing verification page
-- **kyc-admin.html**: Admin interface for managing verifications
+- **verification-admin.html**: Admin interface for managing verifications
 - **api.php**: Updated to include KYC-related routes
 
 ## 2. Environment Setup
