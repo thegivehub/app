@@ -245,6 +245,18 @@ if (isset($pathParts) && $pathParts[0] === 'admin') {
             $adminKycController = new AdminKycController();
             $adminKycController->handleRequest();
             exit;
+        } else if ($pathParts[1] === 'verifications') {
+            $verificationController = new Verification();
+            
+            // Check if this is a stats request
+            if (isset($pathParts[2]) && $pathParts[2] === 'stats') {
+                header('Content-Type: application/json');
+                echo json_encode($verificationController->stats());
+                exit;
+            }
+            
+            // Default list endpoint
+            $verificationController->list();
         }
     }
     

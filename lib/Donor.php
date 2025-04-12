@@ -1,8 +1,12 @@
 <?php
 // lib/Donor.php
-require_once 'Model.php';
+require_once __DIR__ . '/Collection.php';
 
-class Donor extends Model {
+/**
+ * Donor Collection
+ * Handles donor-related database operations
+ */
+class Donor extends Collection {
     protected $collection;
 
     public function __construct() {

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Model.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Collection.php';
 
 use ZuluCrypto\StellarSdk\Keypair;
 use ZuluCrypto\StellarSdk\Server;
@@ -13,7 +14,11 @@ use ZuluCrypto\StellarSdk\Network;
 use ZuluCrypto\StellarSdk\Memo\MemoText;
 use ZuluCrypto\StellarSdk\Asset\AssetTypeNative;
 
-class TransactionProcessor extends Model {
+/**
+ * TransactionProcessor Collection
+ * Handles transaction processing and management
+ */
+class TransactionProcessor extends Collection {
     private $stellarSdk;
     private $horizonUrl;
     private $network;

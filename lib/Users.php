@@ -1,17 +1,18 @@
 <?php
-require_once __DIR__ . '/Model.php';
+require_once __DIR__ . '/Collection.php';
 
-class Users extends Model {
+/**
+ * Users Collection
+ * Handles user-related database operations
+ */
+class Users extends Collection {
     public function me() {
-        $userId = $this->getUserIdFromToken(); // We'll implement this
+        $userId = $this->getUserIdFromToken();
         if (!$userId) return null;
-        
-        return $this->collection->findOne([
-            '_id' => new MongoDB\BSON\ObjectId($userId)
-        ]);
+        return $this->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
     }
 
-    private function getUserIdFromToken() {
+    protected function getUserIdFromToken() {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
         

@@ -1,7 +1,11 @@
 <?php
-require_once 'Model.php';
+require_once __DIR__ . '/Collection.php';
 
-class Volunteer extends Model {
+/**
+ * Volunteer Collection
+ * Handles volunteer-related database operations
+ */
+class Volunteer extends Collection {
     public function __construct() {
         parent::__construct();
         $this->collection = $this->db->getCollection('volunteers');
