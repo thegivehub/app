@@ -76,6 +76,196 @@
                             </div>
                         </div>
 
+                        <div id="verification-form" class="verification-section" style="display: none;">
+                            <div class="step-indicators">
+                                <div class="step-indicator active" data-step="1">Personal Info</div>
+                                <div class="step-divider"></div>
+                                <div class="step-indicator" data-step="2">ID Document</div>
+                                <div class="step-divider"></div>
+                                <div class="step-indicator" data-step="3">Selfie</div>
+                                <div class="step-divider"></div>
+                                <div class="step-indicator" data-step="4">Review</div>
+                            </div>
+
+                            <div class="step-content active" data-step="1">
+                                <h3>Personal Information</h3>
+                                <form id="personal-info-form">
+                                    <div class="form-group">
+                                        <label for="firstName">First Name</label>
+                                        <input type="text" id="firstName" name="firstName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastName">Last Name</label>
+                                        <input type="text" id="lastName" name="lastName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateOfBirth">Date of Birth</label>
+                                        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="address">Address</label>
+                                        <input type="text" id="address" name="address" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" id="city" name="city" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="state">State/Province</label>
+                                        <input type="text" id="state" name="state" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="postalCode">Postal Code</label>
+                                        <input type="text" id="postalCode" name="postalCode" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="country">Country</label>
+                                        <input type="text" id="country" name="country" required>
+                                    </div>
+                                    <button type="button" id="nextToDocument" class="btn btn-primary">Continue</button>
+                                </form>
+                            </div>
+
+                            <div class="step-content" data-step="2">
+                                <h3>ID Document Upload</h3>
+                                <form id="document-form">
+                                    <div class="form-group">
+                                        <label for="documentType">Document Type</label>
+                                        <select id="documentType" name="documentType" required>
+                                            <option value="">Select document type</option>
+                                            <option value="passport">Passport</option>
+                                            <option value="drivers_license">Driver's License</option>
+                                            <option value="national_id">National ID Card</option>
+                                            <option value="residence_permit">Residence Permit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="documentNumber">Document Number</label>
+                                        <input type="text" id="documentNumber" name="documentNumber" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="documentExpiry">Expiry Date</label>
+                                        <input type="date" id="documentExpiry" name="documentExpiry" required>
+                                    </div>
+                                    <div class="upload-container">
+                                        <input type="file" id="idDocumentInput" accept="image/*" style="display: none;">
+                                        <button type="button" id="idDocumentUpload" class="btn btn-outline-primary">
+                                            Upload ID Document
+                                        </button>
+                                        <div id="idDocumentPreview" class="preview-container" style="display: none;">
+                                            <img src="" alt="ID Document Preview">
+                                            <button type="button" id="removeIdDocument" class="btn btn-sm btn-danger">Remove</button>
+                                        </div>
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="button" id="backToPersonal" class="btn btn-secondary">Back</button>
+                                        <button type="button" id="nextToSelfie" class="btn btn-primary" disabled>Continue</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="step-content" data-step="3">
+                                <h3>Selfie Verification</h3>
+                                <div id="selfieContainer">
+                                    <div id="videoContainer">
+                                        <video id="selfieVideo" autoplay playsinline></video>
+                                        <button type="button" id="captureSelfie" class="btn btn-primary">Take Photo</button>
+                                    </div>
+                                    <div class="upload-alternative">
+                                        <p>Or upload a photo:</p>
+                                        <input type="file" id="selfieInput" accept="image/*" style="display: none;">
+                                        <button type="button" id="selfieUpload" class="btn btn-outline-primary">
+                                            Upload Selfie
+                                        </button>
+                                    </div>
+                                    <div id="selfiePreview" class="preview-container" style="display: none;">
+                                        <img src="" alt="Selfie Preview">
+                                        <button type="button" id="removeSelfie" class="btn btn-sm btn-danger">Remove</button>
+                                    </div>
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" id="backToDocument" class="btn btn-secondary">Back</button>
+                                    <button type="button" id="nextToReview" class="btn btn-primary" disabled>Continue</button>
+                                </div>
+                            </div>
+
+                            <div class="step-content" data-step="4">
+                                <h3>Review Information</h3>
+                                <div class="review-section">
+                                    <div class="review-item">
+                                        <h4>Personal Information</h4>
+                                        <div id="reviewPersonalInfo"></div>
+                                    </div>
+                                    <div class="review-item">
+                                        <h4>ID Document</h4>
+                                        <div id="reviewDocumentInfo"></div>
+                                        <div id="reviewDocumentPreview" class="preview-container"></div>
+                                    </div>
+                                    <div class="review-item">
+                                        <h4>Selfie</h4>
+                                        <div id="reviewSelfiePreview" class="preview-container"></div>
+                                    </div>
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" id="backToSelfie" class="btn btn-secondary">Back</button>
+                                    <button type="button" id="submitVerification" class="btn btn-primary">Submit Verification</button>
+                                </div>
+                            </div>
+
+                            <div class="step-content" data-step="success">
+                                <div class="success-container">
+                                    <h3>Verification Submitted</h3>
+                                    <p>Your identity verification has been submitted successfully. Our team will review your submission and update you shortly.</p>
+                                    <div class="verification-report">
+                                        <h4>Verification Report</h4>
+                                        <div class="report-section">
+                                            <div class="report-field">
+                                                <label>Name:</label>
+                                                <span id="report-name"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Date of Birth:</label>
+                                                <span id="report-dob"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Address:</label>
+                                                <span id="report-address"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Location:</label>
+                                                <span id="report-location"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Document Type:</label>
+                                                <span id="report-doc-type"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Document Number:</label>
+                                                <span id="report-doc-number"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Document Expiry:</label>
+                                                <span id="report-doc-expiry"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Submission Date:</label>
+                                                <span id="report-date"></span>
+                                            </div>
+                                            <div class="report-field">
+                                                <label>Status:</label>
+                                                <span id="report-status"></span>
+                                            </div>
+                                        </div>
+                                        <div class="report-images">
+                                            <div class="report-image" id="report-doc-image"></div>
+                                            <div class="report-image" id="report-selfie-image"></div>
+                                        </div>
+                                    </div>
+                                    <a href="/dashboard" class="btn btn-primary">Return to Dashboard</a>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="error-container" class="error-section" style="display: none;">
                             <div class="alert alert-danger">
                                 <p id="error-message">An error occurred. Please try again later.</p>
@@ -99,123 +289,7 @@
     <script src="/lib/APIConfig.js"></script>
     <script src="/lib/SettingsManager.js"></script>
     <script src="/lib/KycManager.js"></script>
-    <script>
-        // Verification page JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elements
-            const statusContainer = document.getElementById('verification-status');
-            const pendingSection = document.getElementById('pending-verification');
-            const completeSection = document.getElementById('complete-verification');
-            const failedSection = document.getElementById('failed-verification');
-            const startSection = document.getElementById('start-verification');
-            const errorContainer = document.getElementById('error-container');
-            const errorMessage = document.getElementById('error-message');
-            const failureReason = document.getElementById('failure-reason');
-            const verifyButton = document.getElementById('verify-button');
-            const retryButton = document.getElementById('retry-button');
-
-            // Hide all sections initially
-            function hideAllSections() {
-                pendingSection.style.display = 'none';
-                completeSection.style.display = 'none';
-                failedSection.style.display = 'none';
-                startSection.style.display = 'none';
-                errorContainer.style.display = 'none';
-            }
-
-            // Show error message
-            function showError(message) {
-                hideAllSections();
-                errorMessage.textContent = message || 'An error occurred. Please try again later.';
-                errorContainer.style.display = 'block';
-                statusContainer.style.display = 'none';
-            }
-
-            // Check verification status
-            async function checkVerificationStatus() {
-                try {
-                    statusContainer.style.display = 'block';
-                    hideAllSections();
-
-                    const statusResult = await app.kycManager.getVerificationStatus();
-                    
-                    statusContainer.style.display = 'none';
-                    
-                    if (!statusResult.success) {
-                        showError(statusResult.error);
-                        return;
-                    }
-
-                    // Display appropriate section based on status
-                    if (statusResult.verified) {
-                        completeSection.style.display = 'block';
-                    } else if (statusResult.status === 'INITIATED' || statusResult.status === 'PENDING') {
-                        pendingSection.style.display = 'block';
-                    } else if (statusResult.result === 'REJECTED') {
-                        failedSection.style.display = 'block';
-                        const reason = statusResult.reason || 'Please try again or contact support.';
-                        failureReason.textContent = reason;
-                    } else {
-                        startSection.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Error checking status:', error);
-                    showError(error.message);
-                }
-            }
-
-            // Start verification process
-            async function startVerification() {
-                try {
-                    statusContainer.style.display = 'block';
-                    hideAllSections();
-                    
-                    const result = await app.kycManager.startVerification({
-                        includeUserInfo: true,
-                        autoOpen: true
-                    });
-                    
-                    statusContainer.style.display = 'none';
-                    
-                    if (result.success) {
-                        pendingSection.style.display = 'block';
-                    } else {
-                        showError(result.error);
-                    }
-                } catch (error) {
-                    console.error('Error starting verification:', error);
-                    showError(error.message);
-                }
-            }
-
-            // Handle URL parameters for redirect
-            function handleRedirectParams() {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('status')) {
-                    const redirectResult = app.kycManager.handleRedirect(urlParams);
-                    
-                    if (redirectResult.success) {
-                        pendingSection.style.display = 'block';
-                    } else {
-                        showError(redirectResult.error);
-                    }
-                    
-                    // Clear URL parameters
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    return true;
-                }
-                return false;
-            }
-
-            // Event listeners
-            verifyButton.addEventListener('click', startVerification);
-            retryButton.addEventListener('click', checkVerificationStatus);
-
-            // Initialize
-            if (!handleRedirectParams()) {
-                checkVerificationStatus();
-            }
-        });
-    </script>
+    <script src="/lib/UserManager.js"></script>
+    <script src="/lib/id-verify.js"></script>
 </body>
 </html>

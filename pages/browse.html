@@ -5,111 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campaign Browser</title>
     <script src="/lib/APIConfig.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        h1 {
-            color: #333;
-            margin: 20px;
-        }
-        .campaign-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            width: 90%;
-            max-width: 1200px;
-            margin-bottom: 20px;
-        }
-        .campaign-card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            text-decoration: none;
-            color: inherit;
-            transition: box-shadow 0.2s;
-        }
-        .campaign-card:hover {
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        .campaign-image-container {
-            width: 100%;
-            height: 150px;
-            overflow: hidden;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            background-color: #f0f0f0;
-        }
-        .campaign-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .campaign-title {
-            font-size: 1.2em;
-            margin: 0 0 10px;
-            color: #333;
-        }
-        .campaign-location, .campaign-goal, .campaign-progress {
-            font-size: 0.9em;
-            margin: 5px 0;
-            color: #555;
-        }
-        .progress-bar {
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .progress-bar div {
-            height: 10px;
-            background-color: #4caf50;
-        }
-        .view-more {
-            margin-top: auto;
-            font-size: 0.9em;
-            color: #0066cc;
-            text-align: right;
-            width: 100%;
-        }
-        .loading {
-            display: none;
-            margin: 20px 0;
-            text-align: center;
-            width: 100%;
-        }
-        .loading.active {
-            display: block;
-        }
-        .error-message {
-            color: #dc3545;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .end-message {
-            text-align: center;
-            margin: 20px 0;
-            color: #666;
-            font-style: italic;
-            display: none;
-        }
-        .end-message.active {
-            display: block;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/browse.css">
 </head>
 <body>
 
@@ -123,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // State management
     const state = {
         currentPage: 1,
-        itemsPerPage: 8,
+        itemsPerPage: 12,
         totalItems: 0,
         isLoading: false,
         hasMoreItems: true,

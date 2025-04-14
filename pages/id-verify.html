@@ -1,735 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script type="module" src="../lib/LocationBlock.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Account Settings</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap"
-      rel="stylesheet" />
+    <title>Identity Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/login.css" />
     <link rel="stylesheet" href="/css/settings.css" />
+    <link rel="stylesheet" href="/css/id-verify.css" />
     <style>
-      .form-group {
-        margin-bottom: 1.5rem;
+      /* Additional step content styles */
+      .step-content {
+        display: none;
       }
-
-      .form-group label {
+      .step-content.active {
         display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #333;
-      }
-
-      .form-group input,
-      .form-group select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        transition: border-color 0.2s;
-      }
-
-      .form-group input:focus,
-      .form-group select:focus {
-        border-color: #4A90E2;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
-      }
-
-      .form-row {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .form-row .form-group {
-        flex: 1;
-        margin-bottom: 0;
-      }
-
-      .review-details {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-      }
-
-      .review-details h4 {
-        color: #2c3e50;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #dee2e6;
-      }
-
-      .review-details p {
-        margin: 0.5rem 0;
-        color: #495057;
-      }
-
-      .review-details strong {
-        color: #2c3e50;
-        font-weight: 500;
-      }
-
-      .step-indicator {
-        position: relative;
-        display: flex;
-        align-items: center;
-        padding: 0 1rem;
-      }
-
-      .step-indicator .step-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #e9ecef;
-        color: #495057;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        margin-right: 0.75rem;
-        transition: all 0.3s;
-      }
-
-      .step-indicator.active .step-number {
-        background: #4A90E2;
-        color: white;
-      }
-
-      .step-indicator.completed .step-number {
-        background: #28a745;
-        color: white;
-      }
-
-      .step-divider {
-        flex: 1;
-        height: 2px;
-        background: #e9ecef;
-        margin: 0 1rem;
-      }
-
-      .step-divider.completed {
-        background: #28a745;
-      }
-
-      /* Verification Report Styles */
-      .verification-report {
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        padding: 2rem;
-        margin: 2rem 0;
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      .verification-report h4 {
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        text-align: center;
-        font-size: 1.5rem;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 1rem;
-      }
-
-      .report-section {
-        margin-bottom: 2rem;
-      }
-
-      .report-section h5 {
-        color: #4A90E2;
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-      }
-
-      .report-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1rem;
-      }
-
-      .report-item {
-        padding: 0.75rem;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
-
-      .report-item .label {
-        display: block;
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-bottom: 0.25rem;
-      }
-
-      .report-item .value {
-        font-weight: 500;
-        color: #343a40;
-      }
-
-      .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        background: #ffc107;
-        color: #212529;
-        font-weight: 600;
-        font-size: 0.9rem;
-      }
-
-      .status-badge.approved {
-        background: #28a745;
-        color: white;
-      }
-
-      .status-badge.rejected {
-        background: #dc3545;
-        color: white;
-      }
-
-      .status-badge.pending {
-        background: #ffc107;
-        color: #212529;
-      }
-
-      .report-images {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-      }
-
-      .report-image-container {
-        text-align: center;
-      }
-
-      .report-image-container h5 {
-        margin-bottom: 0.75rem;
-      }
-
-      .report-image {
-        height: 200px;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-      }
-
-      .report-note {
-        margin-top: 2rem;
-        padding: 1rem;
-        background: #f8f9fa;
-        border-left: 4px solid #4A90E2;
-        border-radius: 4px;
-      }
-
-      .report-note p {
-        margin: 0;
-        font-size: 0.9rem;
-        color: #495057;
       }
     </style>
   </head>
   <body>
     <div class="container">
-
-      <div class="settings-content">
-        <div id="saveStatus" class="success-message"></div>
-          <!-- Identity Verification Section -->
-          <div class="settings-section" id="verification">
-            <h2>Identity Verification</h2>
-            <p class="section-description">
-              Verify your identity to gain full access to The Give Hub. This
-              helps us maintain a trusted community and comply with regulations.
-            </p>
-
-            <div class="verification-status-container">
-              <div class="verification-status" id="verificationStatus">
-                <div class="status-icon pending">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 6v6l4 2"></path>
-                  </svg>
-                </div>
-                <div class="status-text">
-                  <h3>Verification Pending</h3>
-                  <p>Please complete the verification process below.</p>
-                </div>
-              </div>
+      <h1>Identity Verification</h1>
+      
+      <div class="alert alert-info">
+        <p>Please complete the identity verification process to gain full access to The Give Hub. This helps us maintain a trusted community and comply with regulations.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2>Personal Information</h2>
+        </div>
+        <div class="card-body">
+          <div class="steps">
+            <div class="step active" data-step="1">
+              <div class="step-number">1</div>
+              <div>Personal Info</div>
             </div>
-
-            <div class="verification-steps" id="verificationSteps">
-              <div class="step-indicator">
-                <div class="step-number">1</div>
-                <span>Personal Information</span>
-              </div>
-              <div class="step-divider"></div>
-              <div class="step-indicator">
-                <div class="step-number">2</div>
-                <span>Upload ID</span>
-              </div>
-              <div class="step-divider"></div>
-              <div class="step-indicator">
-                <div class="step-number">3</div>
-                <span>Take Selfie</span>
-              </div>
-              <div class="step-divider"></div>
-              <div class="step-indicator">
-                <div class="step-number">4</div>
-                <span>Review</span>
-              </div>
+            <div class="step" data-step="2">
+              <div class="step-number">2</div>
+              <div>Upload ID</div>
             </div>
-
-            <div class="verification-step-content" id="verificationStepContent">
-              <!-- Step 1: Personal Information -->
-              <div class="step-content active" data-step="1">
-                <h3>Personal Information</h3>
-                <p>Please provide your personal details exactly as they appear on your ID document.</p>
-
-                <div class="form-group">
-                  <label for="firstName">Legal First Name</label>
-                  <input type="text" id="firstName" required>
-                </div>
-
-                <div class="form-group">
-                  <label for="lastName">Legal Last Name</label>
-                  <input type="text" id="lastName" required>
-                </div>
-
-                <div class="form-group">
-                  <label for="dateOfBirth">Date of Birth</label>
-                  <input type="date" id="dateOfBirth" required>
-                </div>
-
-                <div class="form-group">
-                  <label for="address">Street Address</label>
-                  <input type="text" id="address" required>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="city">City</label>
-                    <input type="text" id="city" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="state">State/Province</label>
-                    <input type="text" id="state" required>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="postalCode">Postal Code</label>
-                    <input type="text" id="postalCode" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="country">Country</label>
-                    <select id="country" required>
-                      <option value="">Select country</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <!-- Add more countries as needed -->
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-buttons">
-                  <button type="button" class="btn btn-primary" id="nextToDocument">
-                    Continue
-                  </button>
-                </div>
+            <div class="step" data-step="3">
+              <div class="step-number">3</div>
+              <div>Take Selfie</div>
+            </div>
+            <div class="step" data-step="4">
+              <div class="step-number">4</div>
+              <div>Review</div>
+            </div>
+          </div>
+          
+          <!-- Step 1: Personal Information -->
+          <div id="step1-content" class="step-content active">
+            <form id="verification-form" action="/api/verifications" method="post">
+              <div class="form-group">
+                <label for="firstName">Legal First Name</label>
+                <input type="text" id="firstName" name="firstName" required>
               </div>
-
-              <!-- Step 2: ID Document Upload -->
-              <div class="step-content" data-step="2">
-                <h3>Upload an identification document</h3>
-                <p>
-                  Please provide a clear photo of your government-issued ID
-                  (passport, driver's license, or ID card).
-                </p>
-
-                <div class="document-type-selection">
-                  <label for="documentType">Document Type</label>
-                  <select id="documentType" required>
-                    <option value="">Select document type</option>
-                    <option value="passport">Passport</option>
-                    <option value="drivers_license">Driver's License</option>
-                    <option value="national_id">Government ID Card</option>
-                    <option value="residence_permit">Residence Permit</option>
-                  </select>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="documentNumber">Document Number</label>
-                    <input type="text" id="documentNumber" required placeholder="Enter the ID number from your document">
-                  </div>
-
-                  <div class="form-group">
-                    <label for="documentExpiry">Document Expiry Date</label>
-                    <input type="date" id="documentExpiry" required>
-                  </div>
-                </div>
-
-                <div class="document-upload-container">
-                  <div class="upload-area" id="idDocumentUpload">
-                    <div class="upload-icon">
-                      <svg
-                        width="48"
-                        height="48"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                      </svg>
-                    </div>
-                    <p>
-                      Drag and drop your ID document here or click to browse
-                    </p>
-                    <input
-                      type="file"
-                      id="idDocumentInput"
-                      name="document"
-                      accept="image/*"
-                      style="display: none" />
-                  </div>
-                  <div
-                    class="document-preview"
-                    id="idDocumentPreview"
-                    style="display: none">
-                    <img src="" alt="ID Document Preview" />
-                    <button
-                      type="button"
-                      class="remove-button"
-                      id="removeIdDocument">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-buttons">
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    id="nextToSelfie"
-                    disabled>
-                    Continue
-                  </button>
-                </div>
+              
+              <div class="form-group">
+                <label for="lastName">Legal Last Name</label>
+                <input type="text" id="lastName" name="lastName" required>
               </div>
-
-              <!-- Step 3: Selfie Capture -->
-              <div class="step-content" data-step="3">
-                <h3>Take a Selfie</h3>
-                <p>
-                  Please take a clear photo of your face. Make sure you're in a
-                  well-lit area and your face is clearly visible.
-                </p>
-
-                <div class="selfie-capture-container">
-                  <div class="video-container" id="videoContainer">
-                    <video id="selfieVideo" autoplay playsinline></video>
-                    <div class="face-outline"></div>
-                    <button
-                      type="button"
-                      class="capture-button"
-                      id="captureSelfie">
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                  </div>
-                  <div
-                    class="selfie-preview"
-                    id="selfiePreview"
-                    style="display: none">
-                    <img src="" alt="Selfie Preview" />
-                    <button
-                      type="button"
-                      class="remove-button"
-                      id="removeSelfie">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="upload-alternative">
-                  <p>Or upload a selfie:</p>
-                  <div class="upload-area small" id="selfieUpload">
-                    <div class="upload-icon small">
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                      </svg>
-                    </div>
-                    <p>Click to upload</p>
-                    <input
-                      type="file"
-                      id="selfieInput"
-                      name="selfie"
-                      accept="image/*"
-                      style="display: none" />
-                  </div>
-                </div>
-
-                <div class="form-buttons">
-                  <button type="button" class="btn" id="backToDocument">
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    id="nextToReview"
-                    disabled>
-                    Continue
-                  </button>
-                </div>
+              
+              <div class="form-group">
+                <label for="dateOfBirth">Date of Birth</label>
+                <input type="date" id="dateOfBirth" name="dateOfBirth" required>
               </div>
-
-              <!-- Step 4: Review and Submit -->
-              <div class="step-content" data-step="4">
-                <h3>Review Information</h3>
-                <p>Please review your information before submitting.</p>
-
-                <div class="review-container">
-                  <div class="review-item">
-                    <h4>ID Document</h4>
-                    <div
-                      class="review-preview"
-                      id="reviewDocumentPreview"></div>
-                    <div class="review-details">
-                      <p>
-                        <strong>Document Type:</strong>
-                        <span id="reviewDocumentType"></span>
-                      </p>
-                    </div>
-                  </div>
-                  <div class="review-item">
-                    <h4>Selfie</h4>
-                    <div class="review-preview" id="reviewSelfiePreview"></div>
-                  </div>
-                </div>
-
-                <div class="verification-disclaimer">
-                  <p>By submitting this information, you confirm that:</p>
-                  <ul>
-                    <li>
-                      The ID document provided is valid and belongs to you
-                    </li>
-                    <li>
-                      The selfie provided is current and shows your face clearly
-                    </li>
-                    <li>
-                      You consent to The Give Hub verifying your identity using
-                      this information
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="form-buttons">
-                  <button type="button" class="btn" id="backToSelfie">
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    id="submitVerification">
-                    Submit Verification
-                  </button>
-                </div>
+              
+              <div class="form-group">
+                <label for="address">Street Address</label>
+                <input type="text" id="address" name="address" required>
               </div>
-
-              <!-- Success State -->
-              <div class="step-content" data-step="success">
-                <div class="success-message">
-                  <svg
-                    class="success-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  <h3>Verification Submitted</h3>
-                  <p>
-                    Your identity verification request has been submitted
-                    successfully. We'll review your information and update your
-                    verification status shortly.
-                  </p>
-                  <p class="review-time">
-                    This process typically takes 1-2 business days.
-                  </p>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="city">City</label>
+                  <input type="text" id="city" name="city" required>
                 </div>
                 
-                <div class="verification-report" id="verification-report">
-                  <h4>Verification Report</h4>
-                  <div class="report-section">
-                    <h5>Personal Information</h5>
-                    <div class="report-grid">
-                      <div class="report-item">
-                        <span class="label">Name:</span>
-                        <span class="value" id="report-name"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Date of Birth:</span>
-                        <span class="value" id="report-dob"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Address:</span>
-                        <span class="value" id="report-address"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Location:</span>
-                        <span class="value" id="report-location"></span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="report-section">
-                    <h5>Document Information</h5>
-                    <div class="report-grid">
-                      <div class="report-item">
-                        <span class="label">Document Type:</span>
-                        <span class="value" id="report-doc-type"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Document Number:</span>
-                        <span class="value" id="report-doc-number"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Expiry Date:</span>
-                        <span class="value" id="report-doc-expiry"></span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="report-section">
-                    <h5>Verification Status</h5>
-                    <div class="report-grid">
-                      <div class="report-item">
-                        <span class="label">Status:</span>
-                        <span class="value status-badge" id="report-status">Submitted</span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Submission Date:</span>
-                        <span class="value" id="report-date"></span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="report-section">
-                    <h5>Face Comparison Results</h5>
-                    <div class="report-grid">
-                      <div class="report-item">
-                        <span class="label">Face Match Score:</span>
-                        <span class="value" id="report-face-match"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Confidence Score:</span>
-                        <span class="value" id="report-confidence"></span>
-                      </div>
-                      <div class="report-item">
-                        <span class="label">Liveness Score:</span>
-                        <span class="value" id="report-liveness"></span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="report-images">
-                    <div class="report-image-container">
-                      <h5>ID Document</h5>
-                      <div class="report-image" id="report-doc-image"></div>
-                    </div>
-                    <div class="report-image-container">
-                      <h5>Selfie</h5>
-                      <div class="report-image" id="report-selfie-image"></div>
-                    </div>
-                  </div>
-                  
-                  <div class="report-note">
-                    <p>
-                      <strong>Note:</strong> Your verification information is secure and encrypted. It will only be used for the purpose of identity verification and will be handled according to our privacy policy.
-                    </p>
-                  </div>
+                <div class="form-group">
+                  <label for="state">State/Province</label>
+                  <input type="text" id="state" name="state" required>
                 </div>
               </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="postalCode">Postal Code</label>
+                  <input type="text" id="postalCode" name="postalCode" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="country">Country</label>
+                  <select id="country" name="country" required>
+                    <option value="">Select country</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                  </select>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">Continue to Next Step</button>
+            </form>
+          </div>
+          
+          <!-- Step 2: Upload ID Document -->
+          <div id="step2-content" class="step-content">
+            <h3>Upload Your ID Document</h3>
+            <p>Please upload a clear photo of your government-issued ID (driver's license, passport, etc.)</p>
+            
+            <div class="file-upload-container" id="id-document-container">
+              <div class="file-upload-icon">📄</div>
+              <p class="file-upload-text">Drag and drop your ID document here</p>
+              <p class="file-upload-help">or click to browse files (JPG, PNG, PDF accepted)</p>
+              <input type="file" id="id-document" name="idDocument" accept="image/*,.pdf" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="documentType">Document Type</label>
+              <select id="documentType" name="documentType" required>
+                <option value="">Select document type</option>
+                <option value="passport">Passport</option>
+                <option value="drivers_license">Driver's License</option>
+                <option value="national_id">National ID Card</option>
+                <option value="residence_permit">Residence Permit</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="documentNumber">Document Number</label>
+              <input type="text" id="documentNumber" name="documentNumber" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="documentExpiry">Document Expiry Date</label>
+              <input type="date" id="documentExpiry" name="documentExpiry" required>
+            </div>
+            
+            <div class="file-preview" id="id-preview" style="display: none;">
+              <img src="#" alt="ID Document Preview" id="id-preview-image">
+            </div>
+            
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" id="back-to-personal" onclick="goToStep(1)">Back</button>
+              <button type="button" class="btn btn-primary" id="id-upload-btn" disabled>Next Step</button>
+            </div>
+          </div>
+          
+          <!-- Step 3: Take Selfie -->
+          <div id="step3-content" class="step-content">
+            <h3>Take a Selfie</h3>
+            <p>Please take a clear photo of yourself holding your ID document</p>
+            
+            <div id="videoContainer" style="text-align: center; margin-bottom: 20px;">
+              <div class="webcam-container">
+                <div class="face-oval"></div>
+                <video id="selfieVideo" autoplay playsinline style="max-width: 100%; height: auto;"></video>
+              </div>
+              <button type="button" class="btn btn-primary" id="captureSelfie">Take Photo</button>
+            </div>
+
+            <div class="upload-alternative" style="text-align: center; margin: 15px 0;">
+              <p>- OR -</p>
+            </div>
+            
+            <div class="file-upload-container" id="selfie-container">
+              <div class="file-upload-icon">📷</div>
+              <p class="file-upload-text">Drag and drop your selfie photo here</p>
+              <p class="file-upload-help">or click to browse files (JPG, PNG accepted)</p>
+              <input type="file" id="selfie" name="selfie" accept="image/*" required>
+            </div>
+            
+            <div class="file-preview" id="selfie-preview" style="display: none;">
+              <img src="#" alt="Selfie Preview" id="selfie-preview-image">
+            </div>
+            
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" id="back-to-document" onclick="goToStep(2)">Back</button>
+              <button type="button" class="btn btn-primary" id="selfie-upload-btn" disabled>Next Step</button>
+            </div>
+          </div>
+          
+          <!-- Step 4: Review -->
+          <div id="step4-content" class="step-content">
+            <h3>Review Your Information</h3>
+            <p>Please review your information before submitting</p>
+            <div class="review-details">
+              <p><strong>Name:</strong> <span id="review-name"></span></p>
+              <p><strong>Date of Birth:</strong> <span id="review-dob"></span></p>
+              <p><strong>Address:</strong> <span id="review-address"></span></p>
+              
+              <h4>Document Information</h4>
+              <p><strong>Document Type:</strong> <span id="review-doc-type"></span></p>
+              <p><strong>Document Number:</strong> <span id="review-doc-number"></span></p>
+              <p><strong>Expiry Date:</strong> <span id="review-doc-expiry"></span></p>
+            </div>
+
+            <h4>Your Uploaded Documents</h4>
+            <div class="review-documents">
+              <div class="document-preview">
+                <h5>ID Document</h5>
+                <div class="document-image" id="review-id-preview">
+                  <img src="#" alt="ID Document" id="review-id-image">
+                </div>
+              </div>
+              <div class="document-preview">
+                <h5>Selfie Photo</h5>
+                <div class="document-image" id="review-selfie-preview">
+                  <img src="#" alt="Selfie" id="review-selfie-image">
+                </div>
+              </div>
+            </div>
+            
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" id="back-to-selfie" onclick="goToStep(3)">Back</button>
+              <button type="button" class="btn btn-primary" id="submitVerification" onclick="submitVerification()">Send Verification</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div
-      id="kyc-verification-reminder"
-      class="verification-reminder"
-      style="display: none">
-      <div class="alert alert-warning">
-        <h4>Identity Verification Required</h4>
-        <p>
-          To protect our community and comply with regulations, we need to
-          verify your identity.
-        </p>
-        <p>This is a simple process that takes only a few minutes.</p>
-        <button id="start-verification-btn" class="btn btn-primary">
-          Start Verification
-        </button>
-      </div>
-    </div>
-
+    
     <script src="/lib/id-verify.js"></script>
-    <script src="/lib/APIConfig.js"></script>
-    <script src="/lib/UserManager.js"></script>
-    <script src="/lib/SettingsManager.js"></script>
   </body>
 </html>

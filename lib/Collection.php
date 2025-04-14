@@ -75,15 +75,23 @@ abstract class Collection {
      * Create a new document
      * 
      * @param array $data Document data
-     * @return array Result with inserted ID and status
+     * @return MongoDB\InsertOneResult|array MongoDB result object or error array
      */
     public function create($data) {
         try {
-            // Add timestamps
-            $data['createdAt'] = new MongoDB\BSON\UTCDateTime();
-            $data['updatedAt'] = new MongoDB\BSON\UTCDateTime();
+            // Add timestamps if not already present
+            if (!isset($data['createdAt'])) {
+                $data['createdAt'] = new MongoDB\BSON\UTCDateTime();
+            }
+            if (!isset($data['updatedAt'])) {
+                $data['updatedAt'] = new MongoDB\BSON\UTCDateTime();
+            }
             
-            return $this->collection->insertOne($data);
+            // Insert document and return MongoDB\InsertOneResult object
+            $result = $this->collection->insertOne($data);
+            
+            // Return the result without checking getInsertedCount to avoid potential errors
+            return $result;
         } catch (Exception $e) {
             error_log("Create error in {$this->collectionName}: " . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];

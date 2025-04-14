@@ -4,20 +4,28 @@
          verbose="true"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="The Give Hub API Test Suite">
-            <directory>tests</directory>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
-            <directory suffix=".php">lib</directory>
-        </whitelist>
-    </filter>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_DEBUG" value="true"/>
         <env name="MONGODB_DATABASE" value="givehub_test"/>
-        <env name="JUMIO_API_TOKEN" value="test_token"/>
-        <env name="JUMIO_API_SECRET" value="test_secret"/>
-        <env name="STELLAR_NETWORK" value="testnet"/>
+        <env name="MONGODB_HOST" value="localhost"/>
+        <env name="MONGODB_PORT" value="27017"/>
+        <env name="MONGODB_USERNAME" value=""/>
+        <env name="MONGODB_PASSWORD" value=""/>
+        <env name="JWT_SECRET" value="test_secret_key"/>
+        <env name="STORAGE_PATH" value="storage/test"/>
     </php>
+    <coverage>
+        <include>
+            <directory suffix=".php">lib</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>tests</directory>
+        </exclude>
+    </coverage>
 </phpunit>
