@@ -455,7 +455,7 @@ class Verification extends Collection {
                 'email' => $formData['email'] ?? '',
                 
                 // Document info fields
-                'documentType' => 'passport', // Default value
+                'documentType' => 'drivers_license', // Default value
                 'documentNumber' => 'Unknown', // Default value
                 'documentExpiry' => new MongoDB\BSON\UTCDateTime(strtotime('+5 years')),
                 'documentImageUrl' => null,

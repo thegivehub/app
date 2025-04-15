@@ -391,7 +391,7 @@ if (isset($pathParts) && $pathParts[0] === 'verifications') {
     error_log("Verification ID: " . ($verificationId ?? 'none') . ", Action: " . ($action ?? 'none'));
     
     // Handle submit action specifically
-    if ($verificationId && $action === 'submit' && $method === 'POST') {
+    if ($verificationId && $method === 'POST') {
         error_log("Processing verification submission for ID: " . $verificationId);
         
         // Here we'll implement a simple submission handler
@@ -407,6 +407,8 @@ if (isset($pathParts) && $pathParts[0] === 'verifications') {
                 $update = [
                     '$set' => [
                         'status' => 'SUBMITTED',
+                        'documentImageUrl' => "/uploads/document/{$verificationId}_{$verification['documentType']}.jpg",
+                        'selfieImageUrl' => "/uploads/selfie/{$verificationId}_selfie.png",
                         'submittedAt' => new MongoDB\BSON\UTCDateTime(),
                         'updatedAt' => new MongoDB\BSON\UTCDateTime()
                     ],
@@ -439,25 +441,19 @@ if (isset($pathParts) && $pathParts[0] === 'verifications') {
 
             try {
                 $doctype = "drivers_license";
-                if ( isset($verification['documents']['drivers_license'])) $doctype = 'drivers_license';
                 if ( isset($verification['documents']['id_card'])) $doctype = 'id_card';
                 if ( isset($verification['documents']['passport'])) $doctype = 'passport';
+                if ( isset($verification['documents']['drivers_license'])) $doctype = 'drivers_license';
                 
                 // Attempt to trigger face verification if we have both document and selfie
-                if ($verification && 
-                    isset($verification['documents']) && 
-                    
-                    isset($verification['documents']['selfie'])) {
-                    
-                    error_log("Both document and selfie found, attempting to trigger face verification");
-                    
+                if ($verificationId) {
                     // Get the documents
                     $documentsCollection = new Documents();
                     $primaryId = $verification['documents'][$doctype];
                     
                     // Call the verification API
-                    error_log("Calling face verification for document ID: $primaryId");
-                    $verifyResult = $documentsCollection->verify($primaryId);
+                    error_log("Calling face verification for verificationId: $verificationId");
+                    $verifyResult = $documentsCollection->verify($verificationId, $verification);
                     error_log("Face verification result: " . json_encode($verifyResult));
                     
                     // Update verification with face comparison results if available

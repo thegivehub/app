@@ -66,7 +66,10 @@ public function upload($file = null, $type = "document") {
 
         // Get verification ID from POST data
         $verificationId = $_POST['verificationId'] ?? $_POST['documentId'] ?? null;
-        
+        if (!$verificationId) {
+            $parts = explode($_SERVER['PATH_INFO'], '/');
+            $verificationId = $parts[count($parts) - 1];
+        }
         if (!$verificationId) {
             error_log("No verification ID found - creating a new verification record");
             
@@ -222,14 +225,14 @@ public function upload($file = null, $type = "document") {
             'error' => $e->getMessage()
         ];
     }
-}
 
+}
     /**
      * Verify identity documents by comparing selfie with ID document using AWS Rekognition
      * @param string $verificationId Verification ID
      * @return array Verification result
      */
-    public function verify($verificationId) {
+    public function verify($verificationId, $verification=null) {
         try {
             // Get user ID from token
             $userId = $this->auth->getUserIdFromToken();
@@ -237,28 +240,30 @@ public function upload($file = null, $type = "document") {
                 throw new Exception('Authentication required');
             }
 
+            if (!$verification) {
             // Get verification record
             $verification = $this->collection->findOne([
                 '_id' => new MongoDB\BSON\ObjectId($verificationId),
                 'userId' => new MongoDB\BSON\ObjectId($userId)
             ]);
+            }
 
             if (!$verification) {
                 throw new Exception('Verification record not found');
             }
-
+            error_log("verification record: ".json_encode($verification));
             // Construct file paths
             //$documentPath = __DIR__ . '/../uploads/documents/document/'. $verificationId . '.jpg';
-            $dpath = __DIR__."/../uploads/document";
-            error_log("Globbing for {$dpath}/{$verificationId}*");
-            $docs = glob($dpath . "/{$verificationId}*");
-            error_log("Documents found for $verificationId: ".json_encode($docs));
-
-            $documentPath = $docs[0];
+            $dpath = glob(__DIR__ . '/../uploads/document/' . $verificationId . '*');
+            $documentPath = $dpath[0]; 
+            // $documentPath = __DIR__ . '/..'. $verification['documentImageUrl'];
+            $spath = glob(__DIR__ . '/../uploads/selfie/' . $verificationId . '*');
+            $selfiePath = $spath[0]; // || __DIR__ . '/../uploads/selfie/' . $verificationId . '_selfie.png';
             
-            //$selfiePath = __DIR__ . '/../uploads/documents/selfie/selfie-' . $verificationId . '.jpg';
-            $selfies = glob(__DIR__ . "/../uploads/selfie/{$verificationId}*");
-            $selfiePath = $selfies[0];
+            error_log("documentPath: ".$documentPath);
+            error_log("selfiePath: ".$selfiePath);
+
+            //$selfiePath = __DIR__ . '/..'. $verification['selfieImageUrl'];
 
             // Check if files exist, try PNG if JPG not found
             if (!file_exists($documentPath)) {
@@ -277,17 +282,21 @@ public function upload($file = null, $type = "document") {
             }
 
             error_log("Verifying faces between document: $documentPath and selfie: $selfiePath");
-
-            // Initialize AWS Rekognition client
-            if (!class_exists('FaceVerifier')) {
-                throw new Exception('Face verification service not available');
+            // Execute the face comparison script and capture its output
+            $command = sprintf('php %s/test-face-compare-json.php "%s" "%s"', __DIR__, $selfiePath, $documentPath);
+            error_log("Command: $command");
+            $output = shell_exec($command);
+            
+            if (!$output) {
+                throw new Exception('Face comparison script failed to execute');
             }
 
-            $faceVerifier = new FaceVerifier();
+            $verificationResult = json_decode($output, true);
             
-            // Call face verification
-            $verificationResult = $faceVerifier->compareFaces($selfiePath, $documentPath);
-            
+            if (!$verificationResult || !isset($verificationResult['success'])) {
+                throw new Exception('Invalid response from face comparison script');
+            }
+
             if (!$verificationResult['success']) {
                 throw new Exception($verificationResult['error'] ?? 'Face verification failed');
             }
@@ -301,6 +310,8 @@ public function upload($file = null, $type = "document") {
                     'similarity' => $verificationResult['similarity'],
                     'confidence' => $verificationResult['matchConfidence'],
                     'isMatch' => $verificationResult['isMatch'],
+                    'matchLevel' => $verificationResult['matchLevel'],
+                    'details' => $verificationResult['details'],
                     'needsReview' => !$verificationResult['isMatch']
                 ],
                 'verifiedAt' => new MongoDB\BSON\UTCDateTime(),
@@ -488,7 +499,6 @@ public function upload($file = null, $type = "document") {
                 // Create the document with all required fields from the schema
                 $document = [
                     'userId' => new MongoDB\BSON\ObjectId($userId),
-                    'verificationId' => new MongoDB\BSON\ObjectId($verificationId),
                     'firstName' => $data['firstName'],
                     'lastName' => $data['lastName'],
                     'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($data['dateOfBirth']) * 1000),

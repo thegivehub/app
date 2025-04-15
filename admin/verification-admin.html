@@ -588,8 +588,18 @@
                         
                         <h3 style="margin-top: 1.5rem;">Documents</h3>
                         <div style="margin-top: 1rem;">
-                            <img src="${verification.documentImage}" alt="ID Document" style="max-width: 100%; margin-bottom: 1rem;">
-                            <img src="${verification.selfieImage}" alt="Selfie" style="max-width: 100%;">
+                            <img src="/uploads/document/${verification._id}_drivers_license.jpg" alt="ID Document" style="max-width: 100%; margin-bottom: 1rem;">
+                            <img src="/uploads/selfie/${verification._id}_selfie.png" alt="Selfie" style="max-width: 100%;">
+                            <div style="margin-top: 1rem;">
+                                <button class="btn btn-primary" id="compare-faces-btn" onclick="verificationManager.compareFaces()">
+                                    Compare Faces with Rekognition
+                                </button>
+                                <div id="face-comparison-result" style="margin-top: 1rem; display: none;">
+                                    <div class="comparison-status"></div>
+                                    <div class="comparison-details"></div>
+                                    <div class="comparison-recommendations" style="margin-top: 1rem; color: var(--gray-600);"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -643,6 +653,90 @@
             changePage(page) {
                 this.currentPage = page;
                 this.loadVerifications();
+            }
+
+            async compareFaces() {
+                try {
+                    const compareBtn = document.getElementById('compare-faces-btn');
+                    const resultDiv = document.getElementById('face-comparison-result');
+                    const statusDiv = resultDiv.querySelector('.comparison-status');
+                    const detailsDiv = resultDiv.querySelector('.comparison-details');
+                    const recommendationsDiv = resultDiv.querySelector('.comparison-recommendations');
+
+                    // Disable button and show loading state
+                    compareBtn.disabled = true;
+                    compareBtn.textContent = 'Comparing faces...';
+                    resultDiv.style.display = 'block';
+                    statusDiv.innerHTML = '<div class="loading">Processing comparison...</div>';
+                    detailsDiv.textContent = '';
+                    recommendationsDiv.textContent = '';
+
+                    // Call the verification endpoint
+                    const response = await fetch(`/api/verifications/${this.currentVerification._id}/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to compare faces');
+                    }
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.error || 'Face comparison failed');
+                    }
+
+                    const verificationResult = result.verification;
+                    const similarity = verificationResult.similarity || 0;
+                    let verificationStatus;
+
+                    if (similarity >= 80.0) {
+                        verificationStatus = 'STRONG MATCH';
+                        statusDiv.innerHTML = '<div class="status-badge approved">Strong Face Match</div>';
+                    } else if (similarity >= 70.0) {
+                        verificationStatus = 'POSSIBLE MATCH';
+                        statusDiv.innerHTML = '<div class="status-badge warning">Possible Face Match</div>';
+                    } else {
+                        verificationStatus = 'WEAK MATCH';
+                        statusDiv.innerHTML = '<div class="status-badge rejected">Weak Face Match</div>';
+                    }
+
+                    detailsDiv.innerHTML = `
+                        <div style="margin-top: 1rem;">
+                            <p><strong>Verification Status:</strong> ${verificationStatus}</p>
+                            <p><strong>Similarity Score:</strong> ${similarity.toFixed(2)}%</p>
+                            ${verificationResult.matchConfidence ? 
+                                `<p><strong>Match Confidence:</strong> ${(verificationResult.matchConfidence * 100).toFixed(2)}%</p>` : ''}
+                        </div>
+                    `;
+
+                    if (similarity < 70.0) {
+                        recommendationsDiv.innerHTML = `
+                            <h4 style="margin-bottom: 0.5rem;">Recommendations:</h4>
+                            <ul style="margin: 0; padding-left: 1.5rem;">
+                                <li>Ensure both images have clear, well-lit faces</li>
+                                <li>Try using different images with better quality</li>
+                                <li>Make sure the person in both images is the same</li>
+                            </ul>
+                        `;
+                    }
+
+                } catch (error) {
+                    console.error('Error comparing faces:', error);
+                    const resultDiv = document.getElementById('face-comparison-result');
+                    resultDiv.querySelector('.comparison-status').innerHTML = `
+                        <div class="status-badge rejected">Error: ${error.message}</div>
+                    `;
+                } finally {
+                    // Reset button state
+                    const compareBtn = document.getElementById('compare-faces-btn');
+                    compareBtn.disabled = false;
+                    compareBtn.textContent = 'Compare Faces with Rekognition';
+                }
             }
         }
 
