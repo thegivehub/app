@@ -262,11 +262,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Check if we need to load more campaigns based on scroll position
     const checkScrollPosition = () => {
+        console.log("Checking scroll position...");
+        // Don't fetch if already loading or no more items
+        console.log(`Loading: ${state.isLoading}, Has more items: ${state.hasMoreItems}`);
+        console.log(`Current page: ${state.currentPage}, Items per page: ${state.itemsPerPage}`);
         if (state.isLoading || !state.hasMoreItems) return;
         
         const scrollY = window.scrollY;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
+
+        console.log(`Scroll Y: ${scrollY}, Window Height: ${windowHeight}, Document Height: ${documentHeight}`);
         
         // Load more when user scrolls near the bottom
         if (documentHeight - (scrollY + windowHeight) < state.loadDistanceThreshold) {
@@ -275,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Add scroll event listener
-    window.addEventListener("scroll", checkScrollPosition);
+    document.addEventListener("scroll", checkScrollPosition);
 
     // Debounce function to limit how often the scroll check triggers
     function debounce(func, wait) {
@@ -290,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Use debounced version of scroll check
     const debouncedCheckScroll = debounce(checkScrollPosition, 100);
-    window.addEventListener("scroll", debouncedCheckScroll);
+    document.addEventListener("scroll", debouncedCheckScroll);
 
     // Initial load
     fetchCampaigns();
