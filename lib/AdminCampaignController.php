@@ -204,7 +204,7 @@ class AdminCampaignController {
             if ($method === 'GET') {
                 // Get pagination parameters
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 30;
                 
                 // List campaigns with pagination
                 $result = $this->getCampaigns($status, $page, $limit);
