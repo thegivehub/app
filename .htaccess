@@ -18,4 +18,5 @@
     
     # Route verification API endpoints to verification-api.php
     #RewriteRule ^api/verification/(.*)$ verification-api.php/$1 [QSA,L]
+    RewriteRule ^registration\.html$ /register.html [L,R=301]
 </IfModule>

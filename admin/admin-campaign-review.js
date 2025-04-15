@@ -17,6 +17,12 @@ const AdminCampaignReview = {
             active: 0,
             rejected: 0,
             total: 0
+        },
+        pagination: {
+            page: 1,
+            pageSize: 12,
+            hasMore: true,
+            loading: false
         }
     },
 
@@ -36,17 +42,20 @@ const AdminCampaignReview = {
         // Filter by status
         document.getElementById('status-filter').addEventListener('change', (e) => {
             this.state.filter = e.target.value;
+            this.resetPagination();
             this.renderCampaigns();
         });
 
         // Search campaigns
         document.getElementById('search-input').addEventListener('input', (e) => {
             this.state.searchQuery = e.target.value.toLowerCase();
+            this.resetPagination();
             this.renderCampaigns();
         });
 
         // Refresh campaigns
         document.getElementById('refresh-btn').addEventListener('click', () => {
+            this.resetPagination();
             this.loadCampaigns();
         });
 
@@ -60,6 +69,42 @@ const AdminCampaignReview = {
             e.preventDefault();
             this.submitReview();
         });
+
+        // Infinite scroll event listener
+        window.addEventListener('scroll', this.handleScroll.bind(this));
+    },
+    
+    // Reset pagination state
+    resetPagination() {
+        this.state.pagination = {
+            page: 1,
+            pageSize: 12,
+            hasMore: true,
+            loading: false
+        };
+    },
+
+    // Handle scroll event for infinite scrolling
+    handleScroll() {
+        // Check if we're in the campaign list view
+        if (document.getElementById('campaign-list').style.display === 'none') {
+            return;
+        }
+        
+        // Check if we're already loading or don't have more data
+        if (this.state.pagination.loading || !this.state.pagination.hasMore) {
+            return;
+        }
+        
+        // Calculate scroll position
+        const scrollHeight = document.documentElement.scrollHeight;
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        const clientHeight = document.documentElement.clientHeight;
+        
+        // If we're near the bottom (200px threshold), load more
+        if (scrollTop + clientHeight >= scrollHeight - 200) {
+            this.loadMoreCampaigns();
+        }
     },
 
     // Show loading indicator
@@ -89,13 +134,21 @@ const AdminCampaignReview = {
         }, 3000);
     },
 
-    // Load campaigns from API
+    // Load campaigns from API (first page)
     async loadCampaigns() {
         try {
             this.showLoading(true);
             
+            // Reset campaigns array
+            this.state.campaigns = [];
+            
+            // Build URL with pagination parameters
+            const url = new URL(this.config.apiBase, window.location.origin);
+            url.searchParams.append('page', this.state.pagination.page);
+            url.searchParams.append('pageSize', this.state.pagination.pageSize);
+            
             // Include authorization header with admin token
-            const response = await fetch(this.config.apiBase, {
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -105,10 +158,14 @@ const AdminCampaignReview = {
                 throw new Error(`Failed to load campaigns: ${response.statusText}`);
             }
             
-            const campaigns = await response.json();
+            const data = await response.json();
+            const campaigns = Array.isArray(data.campaigns) ? data.campaigns : data;
             
             // Update state
             this.state.campaigns = campaigns;
+            
+            // Update pagination state
+            this.state.pagination.hasMore = campaigns.length >= this.state.pagination.pageSize;
             
             // Calculate statistics
             this.calculateStats();
@@ -122,6 +179,77 @@ const AdminCampaignReview = {
             console.error('Error loading campaigns:', error);
             this.showNotification(error.message, 'error');
             this.showLoading(false);
+        }
+    },
+    
+    // Load more campaigns (next page)
+    async loadMoreCampaigns() {
+        // Mark as loading to prevent multiple requests
+        this.state.pagination.loading = true;
+        
+        try {
+            // Increment page number
+            this.state.pagination.page++;
+            
+            // Show loading indicator in the grid
+            const campaignGrid = document.getElementById('campaign-grid');
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'infinite-scroll-loading';
+            loadingIndicator.style.gridColumn = '1 / -1';
+            loadingIndicator.style.textAlign = 'center';
+            loadingIndicator.style.padding = '1.5rem';
+            loadingIndicator.innerHTML = '<div class="spinner" style="border-top-color: var(--primary)"></div>';
+            campaignGrid.appendChild(loadingIndicator);
+            
+            // Build URL with pagination parameters
+            const url = new URL(this.config.apiBase, window.location.origin);
+            url.searchParams.append('page', this.state.pagination.page);
+            url.searchParams.append('pageSize', this.state.pagination.pageSize);
+            
+            // Include authorization header with admin token
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+                
+            if (!response.ok) {
+                throw new Error(`Failed to load more campaigns: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            const newCampaigns = Array.isArray(data.campaigns) ? data.campaigns : data;
+            
+            // Remove loading indicator
+            const loadingElement = document.getElementById('infinite-scroll-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+            
+            // Update state with new campaigns
+            this.state.campaigns = [...this.state.campaigns, ...newCampaigns];
+            
+            // Update pagination state
+            this.state.pagination.hasMore = newCampaigns.length >= this.state.pagination.pageSize;
+            
+            // Recalculate statistics
+            this.calculateStats();
+            
+            // Render all campaigns
+            this.renderCampaigns();
+            this.renderStats();
+        } catch (error) {
+            console.error('Error loading more campaigns:', error);
+            this.showNotification(error.message, 'error');
+            
+            // Remove loading indicator
+            const loadingElement = document.getElementById('infinite-scroll-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        } finally {
+            // Reset loading state
+            this.state.pagination.loading = false;
         }
     },
 
@@ -156,7 +284,17 @@ const AdminCampaignReview = {
     // Render campaigns based on current filter and search
     renderCampaigns() {
         const campaignGrid = document.getElementById('campaign-grid');
-        campaignGrid.innerHTML = '';
+        
+        // Clear grid only for initial load (page 1), preserve when loading more
+        if (this.state.pagination.page === 1) {
+            campaignGrid.innerHTML = '';
+        } else {
+            // Preserve existing content, but remove any loading indicators
+            const loadingElement = document.getElementById('infinite-scroll-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
         
         // Apply filters
         let filteredCampaigns = [...this.state.campaigns];
@@ -176,7 +314,21 @@ const AdminCampaignReview = {
             );
         }
         
-        // Render campaign cards
+        // Prevent duplicate rendering of campaigns that are already in the DOM
+        const existingCampaignIds = new Set();
+        document.querySelectorAll('.campaign-card').forEach(card => {
+            const campaignId = card.getAttribute('data-campaign-id');
+            if (campaignId) {
+                existingCampaignIds.add(campaignId);
+            }
+        });
+        
+        // Filter out campaigns that are already rendered
+        const newCampaigns = filteredCampaigns.filter(campaign => 
+            !existingCampaignIds.has(campaign._id)
+        );
+        
+        // If there are no campaigns to show (filtered or new)
         if (filteredCampaigns.length === 0) {
             campaignGrid.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
@@ -186,22 +338,39 @@ const AdminCampaignReview = {
             return;
         }
         
-        // Sort campaigns by creation date (newest first)
-        filteredCampaigns.sort((a, b) => {
+        // Sort new campaigns by creation date (newest first)
+        newCampaigns.sort((a, b) => {
             const dateA = new Date(a.createdAt || 0);
             const dateB = new Date(b.createdAt || 0);
             return dateB - dateA;
         });
         
-        filteredCampaigns.forEach(campaign => {
+        // Add new campaign cards to the grid
+        newCampaigns.forEach(campaign => {
             campaignGrid.appendChild(this.createCampaignCard(campaign));
         });
+        
+        // Show a message when there are no more campaigns to load
+        if (!this.state.pagination.hasMore && this.state.pagination.page > 1) {
+            const endMessage = document.createElement('div');
+            endMessage.style.gridColumn = '1 / -1';
+            endMessage.style.textAlign = 'center';
+            endMessage.style.padding = '1.5rem';
+            endMessage.style.color = 'var(--gray-600)';
+            endMessage.textContent = 'All campaigns loaded';
+            campaignGrid.appendChild(endMessage);
+        }
     },
 
     // Create campaign card element
     createCampaignCard(campaign) {
         const card = document.createElement('div');
         card.className = 'campaign-card';
+        
+        // Add campaign ID as data attribute for tracking
+        if (campaign._id) {
+            card.setAttribute('data-campaign-id', campaign._id);
+        }
         
         // Determine badge class based on status
         let badgeClass = 'pending';
@@ -228,8 +397,11 @@ const AdminCampaignReview = {
             ? campaign.images[0] 
             : '/img/placeholder.jpg';
         
+        console.log("imageUrl", imageUrl);
+        let imgurl = (imageUrl && imageUrl.url) ? imageUrl.url : imageUrl;
+
         card.innerHTML = `
-            <div class="campaign-image" style="background-image: url('${imageUrl}')">
+            <div class="campaign-image" style="background-image: url('${imgurl}')">
                 <div class="campaign-badge ${badgeClass}">
                     ${statusText}
                 </div>
@@ -296,7 +468,7 @@ const AdminCampaignReview = {
         // Set banner image
         const bannerEl = document.getElementById('campaign-banner');
         if (campaign.images && campaign.images.length > 0) {
-            bannerEl.style.backgroundImage = `url('${campaign.images[0]}')`;
+            bannerEl.style.backgroundImage = `url('${campaign.images[0].url}')`;
         } else {
             bannerEl.style.backgroundImage = `url('/img/placeholder.jpg')`;
         }

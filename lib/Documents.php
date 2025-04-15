@@ -40,7 +40,7 @@ class Documents extends Collection {
         
         // Now initialize uploader with the collection
         $this->uploader = new DocumentUploader($this->auth, $this->collection);
-        $this->uploadDir = __DIR__ . '/../uploads/documents/';
+        $this->uploadDir = __DIR__ . '/../uploads/';
         
         // Ensure upload directory exists
         if (!is_dir($this->uploadDir)) {
@@ -48,299 +48,281 @@ class Documents extends Collection {
         }
     }
 
-    /**
-     * Upload a document or selfie
-     * @param array $file File data from $_FILES
-     * @param string $type Document type ("document" or "selfie")
-     * @return array Response with upload status
-     */
-    public function upload($file = null, $type = "document") {
-        try {
-            if (!$this->auth->isAuthenticated()) {
-                throw new Exception("Authentication required");
-            }
-
-            // Determine upload type and get document subtype from POST data
-            $documentType = isset($_POST['documentType']) ? $_POST['documentType'] : 'id_card';
-            
-            if (isset($_FILES['document'])) {
-                $type = "document";
-                $uploadedFile = $_FILES['document'];
-            } else if (isset($_FILES['selfie'])) {
-                $type = "selfie";
-                $uploadedFile = $_FILES['selfie'];
-            } else {
-                throw new Exception("No file uploaded");
-            }
-            
-            if (!isset($uploadedFile) || !$uploadedFile || $uploadedFile['error'] !== UPLOAD_ERR_OK) {
-                throw new Exception("No file uploaded or upload failed");
-            }
-
-            // Debug logging to understand what's being received
-            error_log("Documents upload - Type: " . $type);
-            error_log("File details: " . json_encode([
-                'name' => $uploadedFile['name'],
-                'type' => $uploadedFile['type'],
-                'size' => $uploadedFile['size']
-            ]));
-            error_log("POST data: " . json_encode($_POST));
-
-            if ($type === "document") {
-                // Pass the specific document type (id_card, passport, etc.)
-                error_log("Uploading document of type: " . $documentType);
-                return $this->uploader->uploadDocument($uploadedFile, $documentType);
-            } else if ($type === "selfie") {
-                // Check if we have a document ID
-                $documentId = $_POST['documentId'] ?? null;
-                if (!$documentId) {
-                    throw new Exception("Document ID is required for selfie upload");
-                }
-                
-                error_log("Uploading selfie for document ID: " . $documentId);
-                return $this->uploader->handleSelfieUpload($uploadedFile, $documentId);
-            }
-
-            throw new Exception("Invalid upload type");
-        } catch (Exception $e) {
-            error_log("Document upload error in Documents class: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
+/**
+ * Upload a document or selfie
+ * @param array $file File data from $_FILES
+ * @param string $type Document type ("document" or "selfie")
+ * @return array Response with upload status
+ */
+public function upload($file = null, $type = "document") {
+    try {
+        // Check authentication
+        if (!$this->auth->isAuthenticated()) {
+            throw new Exception("Authentication required");
         }
+
+        // Get user ID
+        $userId = $this->auth->getUserIdFromToken();
+
+        // Get verification ID from POST data
+        $verificationId = $_POST['verificationId'] ?? $_POST['documentId'] ?? null;
+        
+        if (!$verificationId) {
+            error_log("No verification ID found - creating a new verification record");
+            
+            // Create personal info from POST data
+            $personalInfo = [
+                'firstName' => $_POST['firstName'] ?? 'First',
+                'lastName' => $_POST['lastName'] ?? 'Last',
+                'dateOfBirth' => $_POST['dateOfBirth'] ?? '1970-01-01',
+                'address' => $_POST['address'] ?? '123 Main St',
+                'city' => $_POST['city'] ?? 'City',
+                'state' => $_POST['state'] ?? 'State',
+                'postalCode' => $_POST['postalCode'] ?? '12345',
+                'country' => $_POST['country'] ?? 'US'
+            ];
+
+            // Create a new verification
+            $verification = new Verification();
+            $createResult = $verification->create($personalInfo);
+            
+            error_log("Created new verification: ".json_encode($createResult));
+
+            if ($createResult['success']) {
+                $verificationId = $createResult['verificationId'];
+            } else {
+                throw new Exception("Failed to create verification record");
+            }
+        }
+
+        // Determine document type and file
+        $documentType = $_POST['documentType'] ?? 'selfie';
+        
+        if (isset($_FILES['document'])) {
+            error_log("Documents::upload type 'document'");
+            $type = "document";
+            $uploadedFile = $_FILES['document'];
+        } else if (isset($_FILES['selfie'])) {
+            error_log("Documents::upload type 'selfie'");
+            $type = "selfie";
+            $uploadedFile = $_FILES['selfie'];
+        } else {
+            throw new Exception("No file uploaded");
+        }
+
+        // Check if file was uploaded successfully
+        if (!isset($uploadedFile) || $uploadedFile['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("No file uploaded or upload failed");
+        }
+
+        // Get file extension
+        $fileInfo = pathinfo($uploadedFile['name']);
+        $extension = strtolower($fileInfo['extension']);
+
+        error_log("File info: ".json_encode($fileInfo));
+
+        // Validate file type
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'gif', 'svg', 'avif', 'webp'];
+        if (!in_array($extension, $allowedExtensions)) {
+            throw new Exception("Invalid file type. Allowed types: " . implode(', ', $allowedExtensions));
+        }
+
+        // Create upload directory if it doesn't exist
+        $uploadDir = $this->uploadDir . $type . '/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+        error_log("Upload directory: $uploadDir");
+
+        // Generate unique filename based on verification ID
+        $filename = $verificationId . '_' . ($type === 'selfie' ? 'selfie' : $documentType) . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+
+        error_log("Filename: $filepath");
+
+        // Move uploaded file to destination
+        move_uploaded_file($uploadedFile['tmp_name'], $filepath);
+        error_log("Moved file to $filepath");
+
+        // Create document record
+        $documentData = [
+            'userId' => new MongoDB\BSON\ObjectId($userId),
+            'type' => $type === 'selfie' ? 'SELFIE' : 'ID_DOCUMENT',
+            'subType' => $documentType,
+            'filePath' => $filepath,
+            'fileName' => $filename,
+            'fileType' => $uploadedFile['type'],
+            'createdAt' => new MongoDB\BSON\UTCDateTime(),
+            'updatedAt' => new MongoDB\BSON\UTCDateTime(),
+            'meta' => [
+                'documentType' => $documentType,
+                'documentNumber' => $_POST['documentNumber'] ?? null,
+                'documentExpiry' => isset($_POST['documentExpiry']) ? new MongoDB\BSON\UTCDateTime(strtotime($_POST['documentExpiry']) * 1000) : null,
+                'originalName' => $uploadedFile['name'],
+                'mimeType' => $uploadedFile['type'],
+                'size' => $uploadedFile['size'],
+                'uploadedBy' => $userId,
+                'uploadedAt' => new MongoDB\BSON\UTCDateTime()
+            ]
+        ];
+        
+        error_log("documentData: ". json_encode($documentData));
+
+        // Insert document into documents collection
+        $documentsCollection = $this->db->getCollection('documents');
+        $insertResult = $documentsCollection->insertOne($documentData);
+
+        if (!$insertResult) {
+            throw new Exception("Failed to create document record");
+        }
+        error_log("insertResult: ".json_encode($insertResult));
+        
+
+        $documentId = $insertResult['id'];
+
+        error_log("New document ID: $documentId");
+
+        // Update verification with document reference
+        $verificationsCollection = $this->db->getCollection('verifications');
+        error_log("documentId: $documentId");
+
+        $verification = $verificationsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($verificationId)]);
+
+        error_log("verification: ".json_encode($verification));
+
+        // Update operation that adds documentId to the documents array
+        $updateResult = $verificationsCollection->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($verificationId)],
+            [
+                '$set' => [
+                      "documents.$documentType" => $documentId,
+                      'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                ]
+            ]
+        );
+        
+        error_log("updateResult: ".json_encode($updateResult));
+
+        if (!$updateResult) {
+            // Clean up the document if verification update failed
+        //    $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($documentId)]);
+            throw new Exception("Failed to link document to verification");
+        }
+
+        return [
+            'success' => true,
+            'documentId' => $documentId,
+            'message' => 'Document uploaded and linked to verification successfully'
+        ];
+
+    } catch (Exception $e) {
+        error_log("Document upload error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'error' => $e->getMessage()
+        ];
     }
+}
 
     /**
-     * Verify identity documents
-     * @param string $param Document ID
-     * @param array $data Additional verification data
+     * Verify identity documents by comparing selfie with ID document using AWS Rekognition
+     * @param string $verificationId Verification ID
      * @return array Verification result
      */
-    public function verify($param = null, $data = null) {
+    public function verify($verificationId) {
         try {
-            // Log incoming parameters to help with debugging
-            error_log("verify method called with param: " . (is_array($param) ? json_encode($param) : $param));
-            error_log("verify data: " . ($data ? json_encode($data) : 'null'));
-            
-            // If $param is null or empty but $data contains documentId, use that instead
-            if ((!$param || empty($param)) && $data && isset($data['documentId'])) {
-                $param = $data['documentId'];
-                error_log("Using documentId from data: " . (is_array($param) ? json_encode($param) : $param));
-            }
-            
+            // Get user ID from token
             $userId = $this->auth->getUserIdFromToken();
             if (!$userId) {
                 throw new Exception('Authentication required');
             }
-            
-            // Handle case where userId might be an array (from decoded JWT)
-            if (is_array($userId)) {
-                error_log("userId is an array in verify method: " . json_encode($userId));
-                if (isset($userId['$oid'])) {
-                    $userId = $userId['$oid'];
-                } else if (isset($userId['_id'])) {
-                    $userId = $userId['_id'];
-                } else if (isset($userId['id'])) {
-                    $userId = $userId['id'];
-                } else {
-                    // If it's some other array format, log it and throw exception
-                    error_log("Unexpected userId format in verify: " . json_encode($userId));
-                    throw new Exception('Invalid user ID format: Received array');
-                }
-            }
-            
-            // Verify that userId is a string before creating ObjectId
-            if (!is_string($userId)) {
-                error_log("getUserIdFromToken returned non-string value in verify: " . json_encode($userId));
-                throw new Exception('Invalid user ID format: Not a string');
-            }
-            
-            // Validate the userId format - should be 24-digit hex string
-            if (!preg_match('/^[a-f0-9]{24}$/i', $userId)) {
-                error_log("Invalid userId format in verify: $userId");
-                throw new Exception('Invalid user ID format: Not a valid MongoDB ObjectId');
-            }
 
-            // For simple marking as reviewed, handle POST data
-            if ($data && isset($data['documentId']) && isset($data['reviewed'])) {
-                $documentId = $data['documentId'];
-                $reviewed = $data['reviewed'];
-                
-                error_log("Processing document verification for ID: $documentId, reviewed: " . ($reviewed ? 'true' : 'false'));
-                
-                // Get document record
-                $document = $this->collection->findOne([
-                    '_id' => new MongoDB\BSON\ObjectId($documentId),
-                    'userId' => new MongoDB\BSON\ObjectId($userId)
-                ]);
-                
-                if (!$document) {
-                    throw new Exception('Document not found or does not belong to the current user');
-                }
-                
-                // Update document status to mark as reviewed
-                $result = $this->collection->updateOne(
-                    ['_id' => new MongoDB\BSON\ObjectId($documentId)],
-                    [
-                        '$set' => [
-                            'reviewedByUser' => (bool)$reviewed,
-                            'reviewedAt' => new MongoDB\BSON\UTCDateTime(),
-                            'status' => 'submitted',
-                            'updatedAt' => new MongoDB\BSON\UTCDateTime()
-                        ]
-                    ]
-                );
-                
-                if (is_object($result) && !$result->getModifiedCount()) {
-                    throw new Exception('Failed to update verification status');
-                } else if (is_array($result) && isset($result['success']) && !$result['success']) {
-                    throw new Exception('Failed to update verification status: ' . ($result['error'] ?? 'Unknown error'));
-                }
-                
-                return [
-                    'success' => true,
-                    'message' => 'Verification marked as reviewed',
-                    'status' => 'submitted'
-                ];
-            }
-
-            // For API request with document ID in URL
-            if (!$param) {
-                throw new Exception('Document ID is required');
-            }
-            
-            // Handle case where document ID ($param) might be an array
-            if (is_array($param)) {
-                error_log("Document ID param is an array: " . json_encode($param));
-                
-                if (isset($param['documentId'])) {
-                    $param = $param['documentId'];
-                } else if (isset($param['$oid'])) {
-                    $param = $param['$oid'];
-                } else if (isset($param['_id'])) {
-                    $param = $param['_id'];
-                } else if (isset($param['id'])) {
-                    $param = $param['id'];
-                } else {
-                    error_log("Unexpected document ID format: " . json_encode($param));
-                    throw new Exception('Invalid document ID format: Received array without documentId');
-                }
-            }
-            
-            // Ensure param is a string and has valid format
-            if (!is_string($param)) {
-                error_log("Document ID is not a string: " . json_encode($param));
-                throw new Exception('Invalid document ID format: Not a string');
-            }
-            
-            if (!preg_match('/^[a-f0-9]{24}$/i', $param)) {
-                error_log("Invalid document ID format: $param");
-                throw new Exception('Invalid document ID format: Not a valid MongoDB ObjectId');
-            }
-            
-            error_log("Verified document ID: $param");
-
-            // Get document record
-            $document = $this->collection->findOne([
-                '_id' => new MongoDB\BSON\ObjectId($param),
+            // Get verification record
+            $verification = $this->collection->findOne([
+                '_id' => new MongoDB\BSON\ObjectId($verificationId),
                 'userId' => new MongoDB\BSON\ObjectId($userId)
             ]);
 
-            if (!$document) {
-                throw new Exception('Document not found');
+            if (!$verification) {
+                throw new Exception('Verification record not found');
             }
 
-            if (!isset($document['selfieImageUrl'])) {
-                throw new Exception('Selfie image required for verification');
+            // Construct file paths
+            //$documentPath = __DIR__ . '/../uploads/documents/document/'. $verificationId . '.jpg';
+            $dpath = __DIR__."/../uploads/document";
+            error_log("Globbing for {$dpath}/{$verificationId}*");
+            $docs = glob($dpath . "/{$verificationId}*");
+            error_log("Documents found for $verificationId: ".json_encode($docs));
+
+            $documentPath = $docs[0];
+            
+            //$selfiePath = __DIR__ . '/../uploads/documents/selfie/selfie-' . $verificationId . '.jpg';
+            $selfies = glob(__DIR__ . "/../uploads/selfie/{$verificationId}*");
+            $selfiePath = $selfies[0];
+
+            // Check if files exist, try PNG if JPG not found
+            if (!file_exists($documentPath)) {
+                $documentPath = str_replace('.jpg', '.png', $documentPath);
+            }
+            if (!file_exists($selfiePath)) {
+                $selfiePath = str_replace('.jpg', '.png', $selfiePath);
             }
 
-            // Initialize AWS Rekognition client if available
-            try {
-                if (class_exists('FaceVerifier')) {
-                    error_log("FaceVerifier class is available, attempting face verification");
-                    $faceVerifier = new FaceVerifier();
-                    
-                    // Get file paths
-                    $documentPath = __DIR__ . '/..' . $document['documentImageUrl'];
-                    $selfiePath = __DIR__ . '/..' . $document['selfieImageUrl'];
-                    
-                    error_log("Document path: $documentPath");
-                    error_log("Selfie path: $selfiePath");
-                    
-                    // Verify files exist
-                    if (!file_exists($documentPath)) {
-                        error_log("Document image file not found at path: $documentPath");
-                        throw new Exception('Document image file not found');
-                    }
-                    if (!file_exists($selfiePath)) {
-                        error_log("Selfie image file not found at path: $selfiePath");
-                        throw new Exception('Selfie image file not found');
-                    }
-                    
-                    // Call the face verification process
-                    error_log("Calling face verification with document ID: $param");
-                    $faceResult = $faceVerifier->verifySelfie([
-                        'tmp_name' => $selfiePath,
-                        'name' => basename($selfiePath)
-                    ], $param);
-                    
-                    return $faceResult;
-                } else {
-                    error_log("FaceVerifier class not available, falling back to manual review");
-                    // Fall back to manually setting the verification status
-                    try {
-                        $result = $this->collection->updateOne(
-                            ['_id' => new MongoDB\BSON\ObjectId($param)],
-                            [
-                                '$set' => [
-                                    'status' => 'pending_review',
-                                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
-                                ]
-                            ]
-                        );
-                        
-                        error_log("Document status updated to pending_review");
-                        
-                        return [
-                            'success' => true,
-                            'message' => 'Face verification not available. Document marked for manual review.',
-                            'status' => 'pending_review',
-                            'needs_review' => true
-                        ];
-                    } catch (Exception $updateEx) {
-                        error_log("Error updating document status: " . $updateEx->getMessage());
-                        throw $updateEx;
-                    }
-                }
-            } catch (Exception $e) {
-                error_log('Face verification error: ' . $e->getMessage());
-                
-                // Update document status to indicate verification failure
-                try {
-                    $this->collection->updateOne(
-                        ['_id' => new MongoDB\BSON\ObjectId($param)],
-                        [
-                            '$set' => [
-                                'status' => 'pending_review',
-                                'verificationError' => $e->getMessage(),
-                                'updatedAt' => new MongoDB\BSON\UTCDateTime()
-                            ]
-                        ]
-                    );
-                    
-                    error_log("Document status updated to pending_review with error");
-                } catch (Exception $updateEx) {
-                    error_log("Failed to update document status after verification error: " . $updateEx->getMessage());
-                }
-                
-                return [
-                    'success' => false,
-                    'error' => $e->getMessage(),
-                    'status' => 'pending_review'
-                ];
+            // Verify both files exist
+            if (!file_exists($documentPath)) {
+                throw new Exception('ID document image not found');
             }
+            if (!file_exists($selfiePath)) {
+                throw new Exception('Selfie image not found');
+            }
+
+            error_log("Verifying faces between document: $documentPath and selfie: $selfiePath");
+
+            // Initialize AWS Rekognition client
+            if (!class_exists('FaceVerifier')) {
+                throw new Exception('Face verification service not available');
+            }
+
+            $faceVerifier = new FaceVerifier();
+            
+            // Call face verification
+            $verificationResult = $faceVerifier->compareFaces($selfiePath, $documentPath);
+            
+            if (!$verificationResult['success']) {
+                throw new Exception($verificationResult['error'] ?? 'Face verification failed');
+            }
+
+            // Update verification record with results
+            $updateData = [
+                'status' => $verificationResult['isMatch'] ? 'APPROVED' : 'PENDING_REVIEW',
+                'similarityScore' => $verificationResult['similarity'],
+                'verificationResults' => [
+                    'provider' => 'aws',
+                    'similarity' => $verificationResult['similarity'],
+                    'confidence' => $verificationResult['matchConfidence'],
+                    'isMatch' => $verificationResult['isMatch'],
+                    'needsReview' => !$verificationResult['isMatch']
+                ],
+                'verifiedAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
+            ];
+
+            $this->collection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($verificationId)],
+                ['$set' => $updateData]
+            );
+
+            return [
+                'success' => true,
+                'verification' => $verificationResult,
+                'status' => $updateData['status'],
+                'message' => $verificationResult['isMatch'] 
+                    ? 'Face verification successful' 
+                    : 'Face verification requires manual review'
+            ];
+
         } catch (Exception $e) {
+            error_log('Face verification error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -506,6 +488,7 @@ class Documents extends Collection {
                 // Create the document with all required fields from the schema
                 $document = [
                     'userId' => new MongoDB\BSON\ObjectId($userId),
+                    'verificationId' => new MongoDB\BSON\ObjectId($verificationId),
                     'firstName' => $data['firstName'],
                     'lastName' => $data['lastName'],
                     'dateOfBirth' => new MongoDB\BSON\UTCDateTime(strtotime($data['dateOfBirth']) * 1000),
@@ -927,6 +910,128 @@ class Documents extends Collection {
                 'success' => false,
                 'error' => $e->getMessage()
             ];
+        }
+    }
+    
+    /**
+     * Serve a document file by ID
+     * 
+     * @param string $documentId Document ID
+     * @return void Outputs file directly
+     */
+    public function getFile($documentId) {
+        try {
+            if (!$documentId) {
+                throw new Exception('Document ID is required');
+            }
+            
+            // Validate document ID format
+            if (!preg_match('/^[a-f0-9]{24}$/i', $documentId)) {
+                throw new Exception('Invalid document ID format');
+            }
+            
+            // Log the request for debugging
+            error_log("Document file requested: $documentId");
+            
+            // Get document record
+            $document = $this->read($documentId);
+            
+            if (!$document) {
+                error_log("Document not found in database: $documentId");
+                throw new Exception('Document not found');
+            }
+            
+            // Check if user has access to this document
+            $currentUserId = $this->auth->getUserIdFromToken();
+            $isAdmin = $this->auth->isAdmin();
+            
+            if (!$isAdmin && (string)$document['userId'] != $currentUserId) {
+                error_log("Access denied - current user: $currentUserId, document user: " . $document['userId']);
+                throw new Exception('Access denied');
+            }
+            
+            // Determine file path based on document type
+            $filePath = '';
+            if (isset($document['documentType']) && $document['documentType'] === 'selfie') {
+                $filePath = __DIR__ . '/../uploads/selfies/selfie_' . $documentId . '.png';
+            } else {
+                $filePath = __DIR__ . '/../uploads/documents/document_' . $documentId . '.png';
+            }
+            
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                error_log("Document file not found at primary path: $filePath");
+                
+                // Try to get the path from the document record
+                if (isset($document['documentImageUrl'])) {
+                    $altFilePath = __DIR__ . '/..' . $document['documentImageUrl'];
+                    if (file_exists($altFilePath)) {
+                        $filePath = $altFilePath;
+                        error_log("Found document at URL path: $filePath");
+                    } else {
+                        error_log("Document not found at URL path either: $altFilePath");
+                    }
+                }
+                
+                // If still not found, try alternative paths
+                if (!file_exists($filePath)) {
+                    $altPaths = [
+                        __DIR__ . '/../uploads/documents/' . $documentId . '.png',
+                        __DIR__ . '/../uploads/selfies/' . $documentId . '.png',
+                        __DIR__ . '/../uploads/documents/document_' . $documentId . '.png',
+                        __DIR__ . '/../uploads/selfies/selfie_' . $documentId . '.png'
+                    ];
+                    
+                    $fileFound = false;
+                    foreach ($altPaths as $path) {
+                        if (file_exists($path)) {
+                            $filePath = $path;
+                            $fileFound = true;
+                            error_log("Found document at alternative path: $path");
+                            break;
+                        }
+                    }
+                    
+                    if (!$fileFound) {
+                        // Serve a placeholder image instead of failing
+                        $filePath = __DIR__ . '/../img/placeholder.jpg';
+                        if (!file_exists($filePath)) {
+                            throw new Exception('Document file not found and no placeholder available');
+                        }
+                        error_log("Using placeholder image for document: $documentId");
+                    }
+                }
+            }
+            
+            // Determine MIME type
+            $mimeType = 'image/png';
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if ($extension === 'jpg' || $extension === 'jpeg') {
+                $mimeType = 'image/jpeg';
+            } else if ($extension === 'pdf') {
+                $mimeType = 'application/pdf';
+            }
+            
+            // Output file with proper headers
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, OPTIONS');
+            header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($filePath));
+            readfile($filePath);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Error serving document file: " . $e->getMessage());
+            header('HTTP/1.1 404 Not Found');
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, OPTIONS');
+            header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            echo 'Document not found or access denied';
+            exit;
         }
     }
 } 
