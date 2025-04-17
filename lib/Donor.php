@@ -13,7 +13,9 @@ class Donor extends Collection {
         parent::__construct();
         $this->collection = $this->db->getCollection('donors');
     }
-
+    public function stats() {
+        return $this->getStats();
+    }
     public function getStats() {
         $now = new MongoDB\BSON\UTCDateTime();
         $monthAgo = new MongoDB\BSON\UTCDateTime(strtotime('-1 month') * 1000);
@@ -49,7 +51,7 @@ class Donor extends Collection {
                     ]
                 ]
             ]
-        ])->toArray();
+        ]);
 
         // Get previous period stats for comparison
         $previousStats = $this->collection->aggregate([
@@ -75,7 +77,7 @@ class Donor extends Collection {
                     ]
                 ]
             ]
-        ])->toArray();
+        ]);
 
         // Calculate trends
         $current = $currentStats[0];
