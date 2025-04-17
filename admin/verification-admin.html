@@ -686,35 +686,57 @@
 
                     const result = await response.json();
 
-                    if (!result.success) {
+                    if (!result.success || !result.verification) {
                         throw new Error(result.error || 'Face comparison failed');
                     }
 
                     const verificationResult = result.verification;
-                    const similarity = verificationResult.similarity || 0;
-                    let verificationStatus;
+                    let similarity = 0;
+                    let matchConfidence = 0;
 
-                    if (similarity >= 80.0) {
-                        verificationStatus = 'STRONG MATCH';
-                        statusDiv.innerHTML = '<div class="status-badge approved">Strong Face Match</div>';
-                    } else if (similarity >= 70.0) {
-                        verificationStatus = 'POSSIBLE MATCH';
-                        statusDiv.innerHTML = '<div class="status-badge warning">Possible Face Match</div>';
+                    // Check if we have matches in the details
+                    if (verificationResult.details?.matches?.length > 0) {
+                        // Get the highest similarity match from the matches array
+                        const bestMatch = verificationResult.details.matches.reduce((prev, current) => 
+                            (prev.similarity > current.similarity) ? prev : current
+                        );
+                        similarity = bestMatch.similarity;
+                        matchConfidence = bestMatch.confidence;
                     } else {
-                        verificationStatus = 'WEAK MATCH';
-                        statusDiv.innerHTML = '<div class="status-badge rejected">Weak Face Match</div>';
+                        // Use top-level verification values
+                        similarity = verificationResult.similarity || 0;
+                        matchConfidence = verificationResult.matchConfidence || 0;
+                    }
+
+                    // Add match level from verification result
+                    const matchLevel = verificationResult.matchLevel || 'UNKNOWN';
+                    let verificationStatus = "";
+
+                    // Set verification status based on match level
+                    switch (matchLevel) {
+                        case 'STRONG':
+                            verificationStatus = 'STRONG MATCH';
+                            statusDiv.innerHTML = '<div class="status-badge approved">Strong Face Match</div>';
+                            break;
+                        case 'WEAK':
+                            verificationStatus = 'WEAK MATCH';
+                            statusDiv.innerHTML = '<div class="status-badge rejected">Weak Face Match</div>';
+                            break;
+                        default:
+                            verificationStatus = 'POSSIBLE MATCH';
+                            statusDiv.innerHTML = '<div class="status-badge warning">Possible Face Match</div>';
                     }
 
                     detailsDiv.innerHTML = `
                         <div style="margin-top: 1rem;">
                             <p><strong>Verification Status:</strong> ${verificationStatus}</p>
                             <p><strong>Similarity Score:</strong> ${similarity.toFixed(2)}%</p>
-                            ${verificationResult.matchConfidence ? 
-                                `<p><strong>Match Confidence:</strong> ${(verificationResult.matchConfidence * 100).toFixed(2)}%</p>` : ''}
+                            <p><strong>Match Confidence:</strong> ${matchConfidence.toFixed(2)}%</p>
+                            <p><strong>Match Level:</strong> ${matchLevel}</p>
                         </div>
                     `;
 
-                    if (similarity < 70.0) {
+                    if (matchLevel === 'WEAK') {
                         recommendationsDiv.innerHTML = `
                             <h4 style="margin-bottom: 0.5rem;">Recommendations:</h4>
                             <ul style="margin: 0; padding-left: 1.5rem;">
