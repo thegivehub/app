@@ -89,6 +89,14 @@ session_start();
 $method = $_SERVER['REQUEST_METHOD'];
 $actions = [];
 
+if ($method === "OPTIONS") {
+    header("Access-Control-Allow-Origin: *");   
+    header("Access-Control-Allow-Methods: GET, POST, DELETE, PUT, OPTIONS");
+    header("Access-Control-Max-Age: 3600");    
+    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");   
+    exit;
+}
+
 if (isset($_SERVER['PATH_INFO'])) {
     $actions = preg_split("/\//", $_SERVER['PATH_INFO']);
     array_shift($actions);
@@ -498,7 +506,8 @@ if (isset($pathParts) && $pathParts[0] === 'verifications') {
                 error_log("Verification submission successful for ID: " . $verificationId);
                 sendAPIJson(200, [
                     'success' => true,
-                    'message' => 'Verification submitted successfully'
+                    'message' => 'Verification submitted successfully',
+                    'verification' => $verifyResult['verification']
                 ]);
             }
         } catch (Exception $e) {
