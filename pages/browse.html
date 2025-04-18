@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // View more link
                 const viewMore = document.createElement("a");
                 viewMore.classList.add("view-more");
-                viewMore.href = `campaign-detail.html?id=${campaign._id || campaign.id || ""}`;
+                viewMore.href = `/pages/campaign-detail.html?id=${campaign._id || campaign.id || ""}`;
                 viewMore.textContent = "View More";
                 card.appendChild(viewMore);
 

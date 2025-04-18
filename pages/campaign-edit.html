@@ -2389,7 +2389,7 @@ Thanks for considering,
                 console.log('Campaign updated');
                 console.log(passData);
                 this.state.loaded = true;
-                location.href='campaign-detail.html?id=' + passData._id;
+                location.href='/pages/campaign-detail.html?id=' + passData._id;
             });
         },
         
@@ -2398,7 +2398,7 @@ Thanks for considering,
             this.state.currentPreviewDevice = device;
             
             // Set the preview URL to the campaign detail page
-            const previewUrl = `/campaign-detail.html?id=${this.data._id}&preview=true`;
+            const previewUrl = `/pages/campaign-detail.html?id=${this.data._id}&preview=true`;
             $('#preview-frame').src = previewUrl;
             
             // Update device buttons
