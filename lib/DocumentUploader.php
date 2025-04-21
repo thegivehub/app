@@ -65,7 +65,7 @@ class DocumentUploader {
         foreach ($directories as $dir) {
             if (!is_dir($dir)) {
                 error_log("Creating directory: {$dir}");
-                if (!mkdir($dir, 0755, true)) {
+                if (!mkdir($dir, 0775, true)) {
                     error_log("Failed to create directory: {$dir}. Error: " . error_get_last()['message'] ?? 'Unknown error');
                 }
             }
