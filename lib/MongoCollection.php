@@ -152,7 +152,34 @@ class MongoCollection {
         
         return $update;
     }
-
+    
+    /**
+     * Create a new document
+     * 
+     * @param array $data Document data
+     * @return MongoDB\InsertOneResult|array MongoDB result object or error array
+     */
+    public function create($data) {
+        try {
+            // Add timestamps if not already present
+            if (!isset($data['createdAt'])) {
+                $data['createdAt'] = new MongoDB\BSON\UTCDateTime();
+            }
+            if (!isset($data['updatedAt'])) {
+                $data['updatedAt'] = new MongoDB\BSON\UTCDateTime();
+            }
+            
+            // Insert document and return MongoDB\InsertOneResult object
+            $result = $this->collection->insertOne($data);
+            
+            // Return the result without checking getInsertedCount to avoid potential errors
+            return $result;
+        } catch (Exception $e) {
+            error_log("Create error in {$this->collectionName}: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+ 
     public function insertOne($document) {
         try {
             // Apply automatic type conversion
@@ -365,6 +392,15 @@ class MongoCollection {
         } catch (Exception $e) {
             error_log("MongoDB aggregate error: " . $e->getMessage());
             return [];
+        }
+    }
+
+    public function countDocuments($filter = []) {
+        try {
+            return $this->collection->countDocuments($filter);
+        } catch (Exception $e) {
+            error_log("MongoDB count error: " . $e->getMessage());
+            return 0;
         }
     }
 

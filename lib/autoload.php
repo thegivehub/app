@@ -37,9 +37,22 @@ function logMessage($message, array $context = [], $level = 'info') {
     
     error_log($logEntry, 3, $logFile);
 }
+// Require Composer's autoloader
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Handle Stellar SDK namespaces if needed
+if (!class_exists('Soneso\StellarSDK\Keypair')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
 // Autoloader function to load the required class file based on the endpoint
 spl_autoload_register(function ($className) {
     if (class_exists($className)) return;
+    
+    // Handle namespaces
+    $parts = explode('\\', $className);
+    $className = end($parts);
+    
     $filePath = __DIR__."/$className.php";
     if (file_exists($filePath)) {
         require_once $filePath;
@@ -61,7 +74,7 @@ spl_autoload_register(function ($className) {
         }
     } else {
         logMessage("Invalid collection name", ['className' => $className], 'error');
-        sendJson(400, ["error" => "Invalid collection name"]);
+        sendJson(400, ["error" => "Invalid collection name:" . $className]);
     }
 });
 

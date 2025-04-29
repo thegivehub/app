@@ -11,7 +11,7 @@ class Database {
     public function __construct($db = null) {
         try {
             // Use environment variables via config.php
-            $dbName = $db ?: MONGODB_DATABASE;
+            $dbName = $db ? $db : MONGODB_DATABASE;
             $host = MONGODB_HOST;
             $port = MONGODB_PORT;
             $username = MONGODB_USERNAME;
@@ -28,12 +28,14 @@ class Database {
             // Add host and port
             $connectionString .= $host . ":" . $port;
 
+
+            error_log("MongoDB connection string: '{$host}:{$port}/{$dbName}'");
             // Create MongoDB client with the connection string
             $this->client = new MongoDB\Client($connectionString);
             $this->db = $this->client->selectDatabase($dbName);
             
             if (APP_DEBUG) {
-                //error_log("MongoDB connection established to {$host}:{$port}/{$dbName}");
+                error_log("MongoDB connection established to {$host}:{$port}/{$dbName}");
             }
         } catch (Exception $e) {
             error_log("MongoDB connection failed: " . $e->getMessage());

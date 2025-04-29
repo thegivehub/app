@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Wallet Management - The Give Hub</title>
+    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/css/wallet-styles.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Wallet Management</h1>
+        <div class="network-badge">TESTNET</div>
+        
+        <div id="message" class="message"></div>
+        <div id="loading" class="loading">Loading...</div>
+        
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div id="total-wallets" class="stat-value">0</div>
+                <div class="stat-label">Total Wallets</div>
+            </div>
+            <div class="stat-card">
+                <div id="active-wallets" class="stat-value">0</div>
+                <div class="stat-label">Active Wallets</div>
+            </div>
+        </div>
+        
+        <!-- Search Box -->
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Search by public key or user ID...">
+        </div>
+        
+        <!-- Wallet Grid -->
+        <div id="wallet-grid" class="wallet-grid">
+            <!-- Wallets will be dynamically inserted here -->
+        </div>
+        
+        <!-- Pagination -->
+        <div id="pagination" class="pagination">
+            <!-- Pagination will be dynamically inserted here -->
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoading = false;
+        let searchTimeout = null;
+        
+        // Templates
+        const walletTemplate = (wallet) => `
+            <div class="wallet-card">
+                <div class="wallet-header">
+                    <div class="balance">
+                        ${parseFloat(wallet.balance).toFixed(7)} XLM
+                    </div>
+                    <div>
+                        <button onclick="fundTestnetAccount('${wallet.publicKey}')" class="button">Fund</button>
+                        <a href="/admin/transactions.php?wallet=${wallet.publicKey}" class="button">Transactions</a>
+                    </div>
+                </div>
+                
+                <div class="user-info">
+                    <div><strong>User:</strong> ${wallet.user ? wallet.user.name : 'N/A'}</div>
+                    <div><strong>Email:</strong> ${wallet.user ? wallet.user.email : 'N/A'}</div>
+                    <div><strong>Created:</strong> ${new Date(wallet.createdAt).toLocaleString()}</div>
+                </div>
+                
+                <div class="address" title="Click to copy">
+                    ${wallet.publicKey}
+                </div>
+            </div>
+        `;
+        
+        // Helper functions
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function setLoading(loading) {
+            isLoading = loading;
+            document.getElementById('loading').style.display = loading ? 'block' : 'none';
+        }
+        
+        function updateStats(data) {
+            document.getElementById('total-wallets').textContent = data.pagination.total.toLocaleString();
+            document.getElementById('active-wallets').textContent = 
+                Math.round(data.pagination.total * 0.8).toLocaleString(); // Example active calculation
+        }
+        
+        function renderPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('pagination');
+            let html = '';
+            
+            if (currentPage > 1) {
+                html += `<a onclick="loadPage(${currentPage - 1})">Previous</a>`;
+            }
+            
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                html += `<a onclick="loadPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</a>`;
+            }
+            
+            if (currentPage < totalPages) {
+                html += `<a onclick="loadPage(${currentPage + 1})">Next</a>`;
+            }
+            
+            pagination.innerHTML = html;
+        }
+        
+        // API calls
+        async function loadWallets(page = 1, search = '') {
+            try {
+                if (isLoading) return;
+                setLoading(true);
+                
+                const response = await fetch('/api/wallets/getAllWallets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        isAdmin: true, // This should be validated server-side
+                        page: page,
+                        limit: 10,
+                        search: search
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update wallet grid
+                    const walletGrid = document.getElementById('wallet-grid');
+                    walletGrid.innerHTML = data.wallets.map(walletTemplate).join('');
+                    
+                    // Update pagination
+                    currentPage = data.pagination.page;
+                    totalPages = data.pagination.pages;
+                    renderPagination(currentPage, totalPages);
+                    
+                    // Update stats
+                    updateStats(data);
+                    
+                    // Set up copy functionality
+                    document.querySelectorAll('.address').forEach(addressDiv => {
+                        addressDiv.addEventListener('click', function() {
+                            navigator.clipboard.writeText(this.textContent.trim()).then(() => {
+                                showMessage('Address copied to clipboard!', 'success');
+                            });
+                        });
+                    });
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load wallets', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function fundTestnetAccount(publicKey) {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/wallets/fundTestnetAccount', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        publicKey: publicKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Account funded successfully!', 'success');
+                    loadWallets(currentPage, document.getElementById('search').value);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to fund account', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        function loadPage(page) {
+            if (page !== currentPage && !isLoading) {
+                loadWallets(page, document.getElementById('search').value);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            loadWallets();
+            
+            // Set up search functionality
+            const searchInput = document.getElementById('search');
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadWallets(1, this.value);
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html> 

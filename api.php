@@ -54,7 +54,7 @@ spl_autoload_register(function ($className) {
     error_log("Autoloader trying to load class: " . $className);
     
     // Check if this is a MongoDB class - skip it
-    if (strpos($className, 'MongoDB\\') === 0) {
+    if ((strpos($className, 'MongoDB\\') === 0) || (strpos($className, 'Zulu') === 0)) {
         error_log("Skipping MongoDB class in autoloader: " . $className);
         return;
     }
@@ -79,8 +79,8 @@ spl_autoload_register(function ($className) {
             sendAPIJson(500, ["error" => "System configuration error"]);
         }
     } else {
-        logMessage("Invalid collection name", ['className' => $className], 'error');
-        sendAPIJson(400, ["error" => "Invalid collection name"]);
+        logMessage("Invalid collection name: ". $className, ['className' => $className], 'error');
+        sendAPIJson(400, ["error" => "Invalid collection name: " . $className]);
     }
 });
 session_start();
@@ -169,7 +169,7 @@ if ($endpoint === 'Document') {
     $endpoint = 'Documents';
     error_log("Mapping Document endpoint to Documents class");
 }
-$instance = new $endpoint();
+$instance = new $endpoint($_GET);
 
 // Verify that the endpoint class exists
 if (!$endpoint || !class_exists($endpoint)) {

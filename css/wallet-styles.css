@@ -1,0 +1,164 @@
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.search-box {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.wallet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.wallet-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.balance {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2196F3;
+}
+
+.address {
+    word-break: break-all;
+    font-family: monospace;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.user-info {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.button {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button:hover {
+    background: #1976D2;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination a {
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #2196F3;
+    cursor: pointer;
+}
+
+.pagination a.active {
+    background: #2196F3;
+    color: white;
+    border-color: #2196F3;
+}
+
+.message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    display: none;
+}
+
+.success {
+    background: #4CAF50;
+    color: white;
+}
+
+.error {
+    background: #f44336;
+    color: white;
+}
+
+.network-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    background: #FFC107;
+    color: black;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2196F3;
+}
+
+.stat-label {
+    color: #666;
+    margin-top: 5px;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+

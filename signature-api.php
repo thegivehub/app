@@ -21,14 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Helper function to send JSON response
-function sendJson($code, $data) {
-    http_response_code($code);
-    header('Content-Type: application/json');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
 // Helper function to get JSON request body
 function getJsonBody() {
     $json = file_get_contents('php://input');

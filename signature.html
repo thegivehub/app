@@ -153,6 +153,15 @@
                 signaturePad.clear();
             });
             
+            // Helper to get JWT token from localStorage
+            /**
+             * Get the JWT access token from localStorage
+             * @returns {string|null} The JWT token or null if not found
+             */
+            function getJwtToken() {
+                return localStorage.getItem("accessToken");
+            }
+            
             // Save button
             document.getElementById('save').addEventListener('click', function() {
                 if (signaturePad.isEmpty()) {
@@ -177,11 +186,19 @@
                     data.documentId = documentId;
                 }
                 
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
                 // Send to API
                 fetch(`signature-api.php?action=save${userId ? '&user_id=' + userId : ''}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(data)
                 })
@@ -212,7 +229,19 @@
                     return;
                 }
                 
-                fetch(`signature-api.php?action=get&user_id=${userId}`)
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
+                fetch(`signature-api.php?action=get&user_id=${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
@@ -267,8 +296,18 @@
             function deleteSignature(signatureId) {
                 const userId = document.getElementById('user-id').value;
                 
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
                 fetch(`signature-api.php?action=delete&id=${signatureId}&user_id=${userId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 })
                 .then(response => response.json())
                 .then(result => {
