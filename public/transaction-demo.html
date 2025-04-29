@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction API Demo</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f0f2f5; }
+        .demo-container { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; padding: 30px; }
+        h1 { color: #1a237e; }
+        h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        form { margin-bottom: 30px; }
+        label { display: block; margin-top: 10px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-top: 2px; border-radius: 4px; border: 1px solid #ccc; }
+        button { margin-top: 15px; padding: 10px 20px; background: #1a237e; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #3949ab; }
+        .result, .error { margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .result { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .section { margin-bottom: 40px; }
+        .milestone-group { background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+        pre { white-space: pre-wrap; word-break: break-all; }
+        .instructions { color: #444; background: #f9f9fc; border-left: 4px solid #1a237e; padding: 10px 18px; margin: 10px 0 18px 0; border-radius: 4px; font-size: 15px; }
+        .field-tip { color: #666; font-size: 13px; margin-left: 4px; }
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            outline: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            color: #1a237e;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid transparent;
+            transition: background 0.2s, border-bottom 0.2s;
+            margin-bottom: -2px;
+        }
+        .tab-btn.active {
+            background: #f0f2f5;
+            border-bottom: 2px solid #1a237e;
+            color: #222;
+            font-weight: bold;
+        }
+        .tab-section { animation: fadein 0.2s; }
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+<div class="demo-container">
+    <h1>Transaction API Demo</h1>
+    <div class="instructions">
+        <b>Welcome!</b> This page lets you test all major blockchain transaction types supported by the Give Hub API.<br>
+        <ul>
+            <li>All forms interact directly with the API.</li>
+            <li><b>Donor</b> and <b>Campaign</b> dropdowns are auto-populated from the live database.</li>
+            <li>If a dropdown fails to load, you can enter an ID manually.</li>
+            <li>Use <b>testnet</b> keys and IDs for safety.</li>
+            <li>Results and errors will be shown below each form.</li>
+        </ul>
+    </div>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="donation-tab">One-Time Donation</button>
+        <button class="tab-btn" data-tab="recurring-tab">Recurring Donation</button>
+        <button class="tab-btn" data-tab="escrow-tab">Milestone Escrow Creation</button>
+        <button class="tab-btn" data-tab="release-tab">Milestone Fund Release</button>
+    </div>
+
+    <div id="donation-tab" class="tab-section">
+        <div class="section">
+            <h2>One-Time Donation</h2>
+            <div class="instructions">
+                <b>Send a one-time donation</b> from a donor to a campaign. Select a donor and campaign, enter the amount (in XLM), and provide the donor's Stellar secret key to sign the transaction.<br>
+                <span class="field-tip">Donor ID: Select a donor from the dropdown. If unavailable, enter the donor's unique ID.</span><br>
+                <span class="field-tip">Campaign ID: Select a campaign from the dropdown. If unavailable, enter the campaign's unique ID.</span><br>
+                <span class="field-tip">Source Secret: The Stellar secret key for the donor's wallet (testnet only).</span><br>
+                <span class="field-tip">Anonymous: If checked, the donation will be recorded as anonymous.</span>
+            </div>
+            <form id="donation-form">
+                <label>Donor ID: <select name="donorId" id="donor-select-1" required><option value="">Loading...</option></select></label>
+                <label>Campaign ID: <select name="campaignId" id="campaign-select-1" required><option value="">Loading...</option></select></label>
+                <label>Amount (XLM): <input type="text" name="amount" required></label>
+                <label>Source Secret: <input type="text" name="sourceSecret" required></label>
+                <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
+                <label>Message: <input type="text" name="message"></label>
+                <button type="submit">Submit Donation</button>
+            </form>
+            <div id="donation-result"></div>
+        </div>
+    </div>
+
+    <div id="recurring-tab" class="tab-section" style="display:none">
+        <div class="section">
+            <h2>Recurring Donation</h2>
+            <div class="instructions">
+                <b>Set up a recurring donation</b> from a donor to a campaign. The donation will repeat at the selected frequency.<br>
+                <span class="field-tip">Frequency: Choose how often the donation should repeat (monthly, weekly, etc.).</span>
+            </div>
+            <form id="recurring-form">
+                <label>Donor ID: <select name="donorId" id="donor-select-2" required><option value="">Loading...</option></select></label>
+                <label>Campaign ID: <select name="campaignId" id="campaign-select-2" required><option value="">Loading...</option></select></label>
+                <label>Amount (XLM): <input type="text" name="amount" required></label>
+                <label>Source Secret: <input type="text" name="sourceSecret" required></label>
+                <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
+                <label>Message: <input type="text" name="message"></label>
+                <label>Frequency:
+                    <select name="frequency">
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annually">Annually</option>
+                    </select>
+                </label>
+                <button type="submit">Setup Recurring Donation</button>
+            </form>
+            <div id="recurring-result"></div>
+        </div>
+    </div>
+
+    <div id="escrow-tab" class="tab-section" style="display:none">
+        <div class="section">
+            <h2>Milestone Escrow Creation</h2>
+            <div class="instructions">
+                <b>Create an escrow account</b> for milestone-based funding. The source account will fund a new escrow account, and you can define up to 3 milestones (each with a title, amount, and release schedule).<br>
+                <span class="field-tip">Initial Funding: The total XLM to fund the escrow account (must cover all milestones and Stellar minimum balance).</span>
+                <span class="field-tip">Milestone fields: You can leave unused milestones blank.</span>
+            </div>
+            <form id="escrow-form">
+                <label>Campaign ID: <select name="campaignId" id="campaign-select-3" required><option value="">Loading...</option></select></label>
+                <label>Source Secret: <input type="text" name="sourceSecret" required></label>
+                <label>Initial Funding (XLM): <input type="text" name="initialFunding" value="1"></label>
+                <div class="milestone-group">
+                    <b>Milestone 1</b>
+                    <label>Title: <input type="text" name="milestone1_title"></label>
+                    <label>Amount (XLM): <input type="text" name="milestone1_amount"></label>
+                    <label>Release Days from Now: <input type="number" name="milestone1_releaseDays"></label>
+                </div>
+                <div class="milestone-group">
+                    <b>Milestone 2</b>
+                    <label>Title: <input type="text" name="milestone2_title"></label>
+                    <label>Amount (XLM): <input type="text" name="milestone2_amount"></label>
+                    <label>Release Days from Now: <input type="number" name="milestone2_releaseDays"></label>
+                </div>
+                <div class="milestone-group">
+                    <b>Milestone 3</b>
+                    <label>Title: <input type="text" name="milestone3_title"></label>
+                    <label>Amount (XLM): <input type="text" name="milestone3_amount"></label>
+                    <label>Release Days from Now: <input type="number" name="milestone3_releaseDays"></label>
+                </div>
+                <button type="submit">Create Escrow</button>
+            </form>
+            <div id="escrow-result"></div>
+        </div>
+    </div>
+
+    <div id="release-tab" class="tab-section" style="display:none">
+        <div class="section">
+            <h2>Milestone Fund Release</h2>
+            <div class="instructions">
+                <b>Release funds from an escrow account</b> for a specific milestone. Select the campaign and the authorized user (creator or admin), enter the milestone ID and amount to release.<br>
+                <span class="field-tip">Milestone ID: You can find this in the campaign's milestone list or from the escrow creation result.</span>
+                <span class="field-tip">Authorized By: Select the user who is authorized to release the funds (usually the campaign creator or an admin).</span>
+            </div>
+            <form id="release-form">
+                <label>Campaign ID: <select name="campaignId" id="campaign-select-4" required><option value="">Loading...</option></select></label>
+                <label>Milestone ID: <input type="text" name="milestoneId" required></label>
+                <label>Authorized By (User ID): <select name="authorizedBy" id="donor-select-3" required><option value="">Loading...</option></select></label>
+                <label>Amount (XLM): <input type="text" name="amount" required></label>
+                <button type="submit">Release Funds</button>
+            </form>
+            <div id="release-result"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function fetchAndPopulateSelect(url, selectIds, labelField, valueField, fallbackLabel) {
+    try {
+        const response = await fetch(url);
+        const json = await response.json();
+        let items = [];
+        if (json.success && Array.isArray(json.data)) {
+            items = json.data;
+        } else if (Array.isArray(json)) {
+            items = json;
+        } else if (json.success && Array.isArray(json.campaigns)) {
+            items = json.campaigns;
+        } else if (json.success && Array.isArray(json.donors)) {
+            items = json.donors;
+        }
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            select.innerHTML = '';
+            if (items.length === 0) {
+                select.innerHTML = `<option value="">No options found</option>`;
+                // Add fallback input if needed
+                const fallback = document.createElement('input');
+                fallback.type = 'text';
+                fallback.name = select.name;
+                fallback.placeholder = fallbackLabel;
+                fallback.required = true;
+                select.parentNode.replaceChild(fallback, select);
+                return;
+            }
+            select.innerHTML = `<option value="">Select...</option>` +
+                items.map(item => `<option value="${item[valueField]}">${item[labelField] || item[valueField]}</option>`).join('');
+        });
+    } catch (e) {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            select.innerHTML = `<option value="">Error loading options</option>`;
+            // Add fallback input if needed
+            const fallback = document.createElement('input');
+            fallback.type = 'text';
+            fallback.name = select.name;
+            fallback.placeholder = fallbackLabel;
+            fallback.required = true;
+            select.parentNode.replaceChild(fallback, select);
+        });
+    }
+}
+
+// Populate donor and campaign selects on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAndPopulateSelect('/api.php/donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
+    fetchAndPopulateSelect('/api.php/campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
+
+    // Auto-fill Source Secret for One-Time Donation and Recurring Donation forms
+    function setupWalletAutoFill(donorSelectId, secretInputSelector) {
+        const donorSelect = document.getElementById(donorSelectId);
+        const secretInput = document.querySelector(secretInputSelector);
+        if (!donorSelect || !secretInput) return;
+        donorSelect.addEventListener('change', async function() {
+            const userId = donorSelect.value;
+            secretInput.value = ""; // Clear first
+            if (!userId) return;
+            try {
+                const res = await fetch(`/api.php/wallets/getUserWallet?userId=${encodeURIComponent(userId)}`);
+                const json = await res.json();
+                if (json.success && json.wallet && json.wallet.secretKey) {
+                    secretInput.value = json.wallet.secretKey;
+                }
+            } catch (e) {
+                // Ignore errors, allow manual entry
+            }
+        });
+    }
+    setupWalletAutoFill('donor-select-1', '#donation-form input[name="sourceSecret"]');
+    setupWalletAutoFill('donor-select-2', '#recurring-form input[name="sourceSecret"]');
+});
+
+async function postForm(url, data, resultDiv) {
+    resultDiv.innerHTML = '';
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const json = await response.json();
+        if (json.success) {
+            resultDiv.innerHTML = '<div class="result"><h3>Result:</h3><pre>' + JSON.stringify(json, null, 2) + '</pre></div>';
+        } else {
+            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + JSON.stringify(json, null, 2) + '</pre></div>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + e.message + '</pre></div>';
+    }
+}
+
+// One-Time Donation
+document.getElementById('donation-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
+    data.recurring = false;
+    postForm('/api.php/transaction/processDonation', data, document.getElementById('donation-result'));
+};
+
+// Recurring Donation
+document.getElementById('recurring-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
+    data.recurring = true;
+    postForm('/api.php/transaction/processDonation', data, document.getElementById('recurring-result'));
+};
+
+// Milestone Escrow Creation
+document.getElementById('escrow-form').onsubmit = function(e) {
+    e.preventDefault();
+    const form = this;
+    const data = Object.fromEntries(new FormData(form).entries());
+    // Build milestones array
+    const milestones = [];
+    for (let i = 1; i <= 3; i++) {
+        if (data[`milestone${i}_title`] && data[`milestone${i}_amount`]) {
+            milestones.push({
+                title: data[`milestone${i}_title`],
+                amount: data[`milestone${i}_amount`],
+                releaseDays: data[`milestone${i}_releaseDays`] || null
+            });
+        }
+        delete data[`milestone${i}_title`];
+        delete data[`milestone${i}_amount`];
+        delete data[`milestone${i}_releaseDays`];
+    }
+    data.milestones = milestones;
+    postForm('/api.php/transaction/createMilestoneEscrow', data, document.getElementById('escrow-result'));
+};
+
+// Milestone Fund Release
+document.getElementById('release-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    postForm('/api.php/transaction/releaseMilestoneFunding', data, document.getElementById('release-result'));
+};
+
+// Tab switching logic
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabSections = document.querySelectorAll('.tab-section');
+tabButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabSections.forEach(s => s.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).style.display = '';
+    });
+});
+</script>
+</body>
+</html> 

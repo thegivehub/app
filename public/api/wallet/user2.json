@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "wallet": {
+    "publicKey": "GDLRCGP6CHBR7ADZXDPRHFHOBGQVEPE77MBQCKTDM2LC6VZ3O4PNRWZF",
+    "balance": "50.5000000",
+    "network": "testnet"
+  }
+}

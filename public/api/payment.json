@@ -1,0 +1,1 @@
+{"success": true, "transaction": {"id": "tx123", "txHash": "c1d5a98e3b4f2c6d7a9b8c7d6e5f4a3b2c1d0e", "amount": "10.0000000", "asset": "XLM", "memo": "Test payment", "status": "completed"}}

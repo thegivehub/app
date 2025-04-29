@@ -1,0 +1,1 @@
+{"success": true, "transactions": [{"type": "payment", "amount": {"value": "25.0000000", "currency": "XLM"}, "createdAt": "2025-04-26T09:15:00Z", "transaction": {"txHash": "f5e4d3c2b1a0b9c8d7e6f5a4b3c2d1e0", "ledger": 12350}, "status": "completed", "memo": "Project funding"}], "pagination": {"hasMore": false, "page": 1, "limit": 10}}
