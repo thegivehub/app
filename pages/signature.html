@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Collection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .signature-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 20px 0;
+            position: relative;
+        }
+        #signature-pad {
+            width: 100%;
+            height: 200px;
+            background-color: #fff;
+        }
+        .buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button.clear {
+            background-color: #f44336;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .signature-list {
+            margin-top: 30px;
+        }
+        .signature-item {
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .signature-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+        .error {
+            color: #f44336;
+            margin-top: 5px;
+        }
+        .success {
+            color: #4CAF50;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Signature Collection</h1>
+    
+    <div class="form-container">
+        <div class="form-group">
+            <label for="type">Signature Type:</label>
+            <select id="type">
+                <option value="consent">Consent</option>
+                <option value="agreement">Agreement</option>
+                <option value="document">Document</option>
+                <option value="verification">Verification</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="document-id">Document ID (optional):</label>
+            <input type="text" id="document-id" placeholder="Enter document ID if applicable">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" placeholder="Enter a description of what is being signed"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="user-id">User ID (for testing):</label>
+            <input type="text" id="user-id" placeholder="Enter user ID for testing">
+        </div>
+        
+        <div class="signature-container">
+            <canvas id="signature-pad"></canvas>
+        </div>
+        
+        <div class="buttons">
+            <button id="save">Save Signature</button>
+            <button id="clear" class="clear">Clear</button>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+    
+    <div class="signature-list">
+        <h2>Your Signatures</h2>
+        <button id="load-signatures">Load Signatures</button>
+        <div id="signatures-container"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize signature pad
+            const canvas = document.getElementById('signature-pad');
+            const signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)'
+            });
+            
+            // Resize canvas
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.clear(); // Clear the canvas
+            }
+            
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+            
+            // Clear button
+            document.getElementById('clear').addEventListener('click', function() {
+                signaturePad.clear();
+            });
+            
+            // Helper to get JWT token from localStorage
+            /**
+             * Get the JWT access token from localStorage
+             * @returns {string|null} The JWT token or null if not found
+             */
+            function getJwtToken() {
+                return localStorage.getItem("accessToken");
+            }
+            
+            // Save button
+            document.getElementById('save').addEventListener('click', function() {
+                if (signaturePad.isEmpty()) {
+                    setMessage('Please provide a signature', 'error');
+                    return;
+                }
+                
+                const signatureData = signaturePad.toDataURL();
+                const type = document.getElementById('type').value;
+                const documentId = document.getElementById('document-id').value;
+                const description = document.getElementById('description').value;
+                const userId = document.getElementById('user-id').value;
+                
+                // Prepare data for API
+                const data = {
+                    signatureData: signatureData,
+                    type: type,
+                    description: description
+                };
+                
+                if (documentId) {
+                    data.documentId = documentId;
+                }
+                
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
+                // Send to API
+                fetch(`signature-api.php?action=save${userId ? '&user_id=' + userId : ''}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        setMessage('Signature saved successfully!', 'success');
+                        signaturePad.clear();
+                        // Optionally reload signatures
+                        loadSignatures();
+                    } else {
+                        setMessage('Error: ' + (result.error || 'Failed to save signature'), 'error');
+                    }
+                })
+                .catch(error => {
+                    setMessage('Error: ' + error.message, 'error');
+                });
+            });
+            
+            // Load signatures button
+            document.getElementById('load-signatures').addEventListener('click', loadSignatures);
+            
+            // Function to load signatures
+            function loadSignatures() {
+                const userId = document.getElementById('user-id').value;
+                if (!userId) {
+                    setMessage('Please enter a user ID to load signatures', 'error');
+                    return;
+                }
+                
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
+                fetch(`signature-api.php?action=get&user_id=${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        displaySignatures(result.signatures);
+                    } else {
+                        setMessage('Error: ' + (result.error || 'Failed to load signatures'), 'error');
+                    }
+                })
+                .catch(error => {
+                    setMessage('Error: ' + error.message, 'error');
+                });
+            }
+            
+            // Function to display signatures
+            function displaySignatures(signatures) {
+                const container = document.getElementById('signatures-container');
+                container.innerHTML = '';
+                
+                if (signatures.length === 0) {
+                    container.innerHTML = '<p>No signatures found.</p>';
+                    return;
+                }
+                
+                signatures.forEach(signature => {
+                    const item = document.createElement('div');
+                    item.className = 'signature-item';
+                    
+                    const date = new Date(signature.createdAt);
+                    
+                    item.innerHTML = `
+                        <p><strong>Type:</strong> ${signature.type}</p>
+                        <p><strong>Date:</strong> ${date.toLocaleString()}</p>
+                        ${signature.description ? `<p><strong>Description:</strong> ${signature.description}</p>` : ''}
+                        ${signature.documentId ? `<p><strong>Document ID:</strong> ${signature.documentId}</p>` : ''}
+                        <img src="${signature.signatureData}" alt="Signature" class="signature-image">
+                        <button class="delete-signature" data-id="${signature._id}">Delete</button>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-signature').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const signatureId = this.getAttribute('data-id');
+                        deleteSignature(signatureId);
+                    });
+                });
+            }
+            
+            // Function to delete a signature
+            function deleteSignature(signatureId) {
+                const userId = document.getElementById('user-id').value;
+                
+                // Get JWT token
+                const token = getJwtToken();
+                if (!token) {
+                    setMessage('Authentication required. Please log in.', 'error');
+                    return;
+                }
+                
+                fetch(`signature-api.php?action=delete&id=${signatureId}&user_id=${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        setMessage('Signature deleted successfully!', 'success');
+                        loadSignatures();
+                    } else {
+                        setMessage('Error: ' + (result.error || 'Failed to delete signature'), 'error');
+                    }
+                })
+                .catch(error => {
+                    setMessage('Error: ' + error.message, 'error');
+                });
+            }
+            
+            // Helper function to set message
+            function setMessage(text, type) {
+                const messageElement = document.getElementById('message');
+                messageElement.textContent = text;
+                messageElement.className = type;
+                
+                // Clear message after 5 seconds
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                    messageElement.className = '';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html> 
