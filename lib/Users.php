@@ -12,7 +12,7 @@ class Users extends Collection {
         return $this->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
     }
 
-    protected function getUserIdFromToken() {
+    public function getUserIdFromToken() {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
         

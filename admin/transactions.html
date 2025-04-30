@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Transaction History - Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .transaction-list {
+            margin-top: 20px;
+        }
+
+        .transaction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .transaction-item pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .no-transactions {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wallet Transaction History</h1>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="loading" class="loading">Loading transactions...</div>
+        <div id="noTransactions" class="no-transactions">No transactions found.</div>
+        <div id="transactionList" class="transaction-list"></div>
+    </div>
+
+    <script>
+        // Function to get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            const regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+            const results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        // Function to show error message
+        function showError(message) {
+            const errorElement = document.getElementById("errorMessage");
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+            document.getElementById("loading").style.display = "none";
+        }
+
+        // Function to display transactions
+        function displayTransactions(transactions) {
+            const transactionList = document.getElementById("transactionList");
+            const noTransactions = document.getElementById("noTransactions");
+            
+            if (!transactions || transactions.length === 0) {
+                noTransactions.style.display = "block";
+                return;
+            }
+
+            transactions.forEach(transaction => {
+                const transactionItem = document.createElement("div");
+                transactionItem.className = "transaction-item";
+                
+                const transactionData = document.createElement("pre");
+                transactionData.textContent = JSON.stringify(transaction, null, 2);
+                
+                transactionItem.appendChild(transactionData);
+                transactionList.appendChild(transactionItem);
+            });
+        }
+
+        // Function to load transactions
+        async function loadTransactions() {
+            const userId = getUrlParameter("userId");
+            if (!userId) {
+                showError("User ID is required");
+                return;
+            }
+
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                showError("Authentication required");
+                return;
+            }
+
+            document.getElementById("loading").style.display = "block";
+
+            try {
+                const response = await fetch(`/api/wallets/getTransactions?userId=${encodeURIComponent(userId)}`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                document.getElementById("loading").style.display = "none";
+                displayTransactions(data);
+
+            } catch (error) {
+                showError(`Failed to load transactions: ${error.message}`);
+            }
+        }
+
+        // Check admin access
+        function checkAdminAccess() {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                showError("Authentication required");
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize page
+        document.addEventListener("DOMContentLoaded", () => {
+            if (checkAdminAccess()) {
+                loadTransactions();
+            }
+        });
+    </script>
+</body>
+</html> 

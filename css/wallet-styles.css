@@ -161,4 +161,102 @@
     padding: 20px;
     color: #666;
 }
+       .wallet-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .wallet-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .balance {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+            margin: 10px 0;
+        }
+        
+        .address {
+            word-break: break-all;
+            font-family: monospace;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
+        .transaction-list {
+            margin-top: 20px;
+        }
+        
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .network-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #FFC107;
+            color: black;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .button:hover {
+            background: #1976D2;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
 
