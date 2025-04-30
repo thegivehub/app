@@ -31,7 +31,7 @@ class StellarPayment extends HTMLElement {
     async loadWallet(walletId) {
         try {
             // Use the proper API endpoint
-            const response = await fetch(`/api.php/wallet?id=${walletId}`);
+            const response = await fetch(`/api.php/wallets?id=${walletId}`);
             const data = await response.json();
             
             if (data && data._id) {

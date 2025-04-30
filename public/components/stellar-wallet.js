@@ -1,4 +1,4 @@
-// stellar-wallet.js
+g/ stellar-wallet.js
 // Web component for managing Stellar wallets
 
 class StellarWallet extends HTMLElement {
@@ -30,7 +30,7 @@ class StellarWallet extends HTMLElement {
     async loadWallet(userId) {
         try {
             // Use the proper API endpoint
-            const response = await fetch(`/api.php/wallet?id=${userId}`);
+            const response = await fetch(`/api.php/wallets?id=${userId}`);
             const data = await response.json();
             
             if (data && data._id) {
@@ -65,7 +65,7 @@ class StellarWallet extends HTMLElement {
             }
             
             // Use the proper API endpoint
-            const response = await fetch('/api.php/wallet/create', {
+            const response = await fetch('/api.php/wallets/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ class StellarWallet extends HTMLElement {
             if (!this.wallet) return;
             
             // Use the proper API endpoint
-            const response = await fetch('/api.php/wallet/fund', {
+            const response = await fetch('/api.php/wallets/fund', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
