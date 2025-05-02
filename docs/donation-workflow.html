@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>donation-workflow</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdr2.com/pandoc.css" />
+</head>
+<body>
+<h1 id="the-givehub-donation-workflow-system">The GiveHub Donation
+Workflow System</h1>
+<h2 id="overview">Overview</h2>
+<p>The GiveHub donation workflow system is a comprehensive payment
+processing infrastructure that enables both traditional payment methods
+and blockchain-based cryptocurrency donations. The system integrates
+with Stellar blockchain, along with other cryptocurrency networks, and
+provides robust mechanisms for transaction tracking, verification, and
+reporting.</p>
+<p>This documentation provides a detailed overview of the donation
+workflow, including the components involved, the relationships between
+them, and the flow of donation processing from end to end.</p>
+<h2 id="system-components">System Components</h2>
+<p>The donation workflow consists of the following key components:</p>
+<ol type="1">
+<li><p><strong>Donate Class (<code>lib/Donate.php</code>)</strong>: The
+entry point for donation processing that handles both Square payments
+and crypto donations.</p></li>
+<li><p><strong>DonationProcessor Class
+(<code>lib/DonationProcessor.php</code>)</strong>: Handles the core
+donation business logic, database management, and
+notifications.</p></li>
+<li><p><strong>TransactionProcessor Class
+(<code>lib/TransactionProcessor.php</code>)</strong>: Handles
+blockchain-specific transaction processing, particularly for the Stellar
+network.</p></li>
+<li><p><strong>BlockchainTransactionController Class
+(<code>lib/BlockchainTransactionController.php</code>)</strong>: Manages
+blockchain transaction records and provides status
+verification.</p></li>
+<li><p><strong>Transaction Class
+(<code>lib/Transaction.php</code>)</strong>: The API controller for
+transaction operations that provides HTTP endpoints.</p></li>
+</ol>
+<h2 id="component-relationships">Component Relationships</h2>
+<p>The relationship between components follows this structure:</p>
+<pre><code>┌─────────────────────┐          ┌──────────────────────────┐
+│                     │          │                          │
+│  Transaction Class  │          │    DonationProcessor     │
+│   (API Controller)  │──────────▶    (Core Donation        │
+│                     │          │     Business Logic)      │
+└─────────────────────┘          │                          │
+                                 └───────────────┬──────────┘
+┌─────────────────────┐                          │
+│                     │                          │
+│     Donate Class    │          ┌───────────────▼──────────┐
+│ (Payment Processor) │──────────▶  TransactionProcessor    │
+│                     │          │  (Blockchain Processing) │
+└────────────┬────────┘          │                          │
+             │                   └───────────────┬──────────┘
+             │                                   │
+┌────────────▼────────┐          ┌───────────────▼──────────┐
+│                     │          │                          │
+│ BlockchainTransaction◄─────────▶ Database Collections     │
+│     Controller      │          │                          │
+│                     │          └──────────────────────────┘
+└─────────────────────┘</code></pre>
+<h2 id="donation-workflow-process">Donation Workflow Process</h2>
+<h3 id="payment-method-selection">1. Payment Method Selection</h3>
+<p>The donation process begins when a user selects a payment method on
+the frontend:</p>
+<ul>
+<li><strong>Traditional Payment</strong>: Credit card processing via
+Square</li>
+<li><strong>Cryptocurrency</strong>: Stellar (XLM), Ethereum (ETH), or
+Bitcoin (BTC) payments</li>
+</ul>
+<h3 id="donation-initiation">2. Donation Initiation</h3>
+<h4 id="a.-square-payment-flow">A. Square Payment Flow</h4>
+<p>For credit card payments through Square:</p>
+<ol type="1">
+<li>The frontend calls <code>/api.php/Donate/processSquarePayment</code>
+with payment details</li>
+<li>The <code>Donate</code> class validates the data and connects to
+Square API</li>
+<li>Square processes the payment and returns a confirmation</li>
+<li>The <code>Donate</code> class forwards the payment data to
+<code>DonationProcessor</code></li>
+<li>The donation is recorded and the campaign funding is updated</li>
+</ol>
+<h4 id="b.-cryptocurrency-payment-flow">B. Cryptocurrency Payment
+Flow</h4>
+<p>For cryptocurrency donations:</p>
+<ol type="1">
+<li>The frontend calls
+<code>/api.php/Donate/processCryptoDonation</code> with donation
+details</li>
+<li>The <code>Donate</code> class validates the crypto type and
+generates payment instructions</li>
+<li>A transaction reference is created and stored in the
+<code>blockchain_transactions</code> collection</li>
+<li>A QR code and payment instructions are generated for the user</li>
+<li>The user sends the cryptocurrency to the provided wallet
+address</li>
+<li>The transaction is later verified through blockchain API calls</li>
+</ol>
+<h3 id="transaction-recording">3. Transaction Recording</h3>
+<p>All transactions, regardless of payment method, are recorded in the
+system:</p>
+<ul>
+<li><strong>donations collection</strong>: Stores donation records
+including amounts, donor info, and status</li>
+<li><strong>blockchain_transactions collection</strong>: Records
+blockchain-specific transaction details</li>
+</ul>
+<h3 id="transaction-verification">4. Transaction Verification</h3>
+<p>For cryptocurrency transactions, verification happens in two
+ways:</p>
+<ol type="1">
+<li><strong>User-Initiated</strong>: The user provides the transaction
+hash after completing the payment</li>
+<li><strong>Automated Checking</strong>: The system periodically checks
+pending transactions via the blockchain API</li>
+</ol>
+<p>The <code>BlockchainTransactionController</code> handles the
+verification by:</p>
+<ol type="1">
+<li>Querying the appropriate blockchain API (Stellar, Ethereum, or
+Bitcoin)</li>
+<li>Updating the transaction status (pending, confirming, confirmed,
+failed)</li>
+<li>Updating the source record (donation, milestone, etc.) with the new
+status</li>
+</ol>
+<h3 id="milestone-and-recurring-donations">5. Milestone and Recurring
+Donations</h3>
+<p>The system supports two advanced donation features:</p>
+<h4 id="a.-milestone-based-funding">A. Milestone-Based Funding</h4>
+<ol type="1">
+<li>Campaign creators can set up milestones for fund releases</li>
+<li>Donors contribute to a campaign with milestone escrow</li>
+<li>Funds are held in an escrow account on the Stellar blockchain</li>
+<li>Authorized users release funds when milestones are completed</li>
+<li>Each release creates a blockchain transaction with appropriate memo
+data</li>
+</ol>
+<h4 id="b.-recurring-donations">B. Recurring Donations</h4>
+<ol type="1">
+<li>Donors can set up recurring donations with specified frequency</li>
+<li>The system records the recurring schedule and donor
+authorization</li>
+<li>A periodic task (<code>processRecurringDonations</code> method)
+processes due donations</li>
+<li>New transactions are created for each recurrence</li>
+<li>Donors can cancel recurring donations at any time</li>
+</ol>
+<h2 id="key-workflow-functions">Key Workflow Functions</h2>
+<h3 id="donation-processing-functions">Donation Processing
+Functions</h3>
+<pre><code>┌───────────────────────┐       ┌──────────────────────────┐
+│ Donate Class          │       │ DonationProcessor Class  │
+├───────────────────────┤       ├──────────────────────────┤
+│ processSquarePayment()│──────▶│ processDonation()        │
+│ processCryptoDonation()│─────▶│ validateDonationData()   │
+│ getSupportedCryptos() │       │ structureDonationData()  │
+│ verifyBlockchain      │       │ initiateTransaction()    │
+│  Transaction()        │       │ updateCampaignFunding()  │
+└───────────────────────┘       │ sendConfirmationEmail()  │
+                                │ updateDonationStatus()   │
+                                │ processRecurringDonations│
+                                └──────────────────────────┘</code></pre>
+<h3 id="blockchain-transaction-functions">Blockchain Transaction
+Functions</h3>
+<pre><code>┌───────────────────────────┐     ┌──────────────────────────┐
+│ TransactionProcessor Class│     │ BlockchainTransaction    │
+├───────────────────────────┤     │ Controller Class         │
+│ processDonation()         │     ├──────────────────────────┤
+│ updateCampaignFunding()   │     │ createTransaction()      │
+│ releaseMilestoneFunding() │     │ updateTransactionStatus()│
+│ createMilestoneEscrow()   │     │ checkTransactionStatus() │
+│ getStellarAccountTrans    │     │ getTransaction()         │
+│  actions()                │     │ getTransactionById()     │
+│ checkStellarAccount       │     │ getTransactionsByStatus()│
+│  Balance()                │     │ getUserTransactions()    │
+└───────────────────────────┘     │ getCampaignTransactions()│
+                                  │ getPendingTransactions() │
+                                  └──────────────────────────┘</code></pre>
+<h2 id="database-collections">Database Collections</h2>
+<p>The donation workflow utilizes several MongoDB collections:</p>
+<ol type="1">
+<li><strong>donations</strong>: Main collection for donation
+records</li>
+<li><strong>blockchain_transactions</strong>: Records of all blockchain
+transactions</li>
+<li><strong>campaigns</strong>: Campaign information including funding
+targets and progress</li>
+<li><strong>donors</strong>: Information about donors and their donation
+history</li>
+<li><strong>escrows</strong>: Records of milestone-based funding escrow
+accounts</li>
+<li><strong>transactions</strong>: General transaction records that
+might not be donations</li>
+<li><strong>notifications</strong>: System notifications for various
+transaction events</li>
+</ol>
+<h2 id="transaction-states">Transaction States</h2>
+<p>Transactions go through several states during their lifecycle:</p>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>State</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pending</td>
+<td>Transaction is created but not yet confirmed on the blockchain</td>
+</tr>
+<tr class="even">
+<td>submitted</td>
+<td>Transaction has been submitted to the blockchain network</td>
+</tr>
+<tr class="odd">
+<td>confirming</td>
+<td>Transaction is being processed by blockchain validators</td>
+</tr>
+<tr class="even">
+<td>confirmed</td>
+<td>Transaction is confirmed and finalized on the blockchain</td>
+</tr>
+<tr class="odd">
+<td>failed</td>
+<td>Transaction failed to process or was rejected</td>
+</tr>
+<tr class="even">
+<td>expired</td>
+<td>Pending transaction that timed out (after 1 hour)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="blockchain-integration">Blockchain Integration</h2>
+<h3 id="stellar-blockchain-integration">Stellar Blockchain
+Integration</h3>
+<p>The system primarily uses the Stellar blockchain with these key
+features:</p>
+<ol type="1">
+<li><strong>Native Asset (XLM)</strong>: Used for all Stellar
+transactions</li>
+<li><strong>Transaction Memos</strong>: Store donation references and
+metadata</li>
+<li><strong>Escrow Accounts</strong>: Hold funds for milestone-based
+campaigns</li>
+<li><strong>Multi-Signature</strong>: Used for added security on escrow
+accounts</li>
+</ol>
+<h3 id="other-cryptocurrency-support">Other Cryptocurrency Support</h3>
+<p>The system also supports:</p>
+<ol type="1">
+<li><strong>Ethereum (ETH)</strong>: Using wallet addresses and
+blockchain API integration</li>
+<li><strong>Bitcoin (BTC)</strong>: Using wallet addresses and
+blockchain API integration</li>
+</ol>
+<h2 id="payment-processing">Payment Processing</h2>
+<h3 id="square-payment-processing">Square Payment Processing</h3>
+<p>For credit card payments, the system:</p>
+<ol type="1">
+<li>Creates a payment with Square API using a payment nonce</li>
+<li>Processes the payment synchronously</li>
+<li>Records the transaction immediately with a completed or failed
+status</li>
+</ol>
+<h3 id="cryptocurrency-payment-processing">Cryptocurrency Payment
+Processing</h3>
+<p>For crypto payments, the system:</p>
+<ol type="1">
+<li>Generates a wallet address and payment instructions</li>
+<li>Creates a pending transaction record</li>
+<li>Waits for the user to complete the payment</li>
+<li>Verifies the transaction through the blockchain API</li>
+<li>Updates the transaction status once confirmed</li>
+</ol>
+<h2 id="error-handling-and-resilience">Error Handling and
+Resilience</h2>
+<p>The donation workflow implements several error handling
+mechanisms:</p>
+<ol type="1">
+<li><strong>Transaction Verification Retries</strong>: Failed
+verifications are retried later</li>
+<li><strong>Expired Transaction Handling</strong>: Transactions pending
+for too long are marked as expired</li>
+<li><strong>Failed Payment Recovery</strong>: System tracks failed
+payments for potential recovery</li>
+<li><strong>Error Logging</strong>: Comprehensive error logging
+throughout the workflow</li>
+</ol>
+<h2 id="security-considerations">Security Considerations</h2>
+<p>The donation system implements these security measures:</p>
+<ol type="1">
+<li><strong>Blockchain Transaction Verification</strong>: Ensures
+donations are legitimate</li>
+<li><strong>Payment Gateway Security</strong>: Uses Square’s security
+infrastructure for credit card processing</li>
+<li><strong>Sensitive Data Handling</strong>: Restricts visibility of
+donor information for anonymous donations</li>
+<li><strong>Authorization Checks</strong>: Ensures only authorized users
+can perform certain actions (like milestone releases)</li>
+</ol>
+<h2 id="reporting-and-analytics">Reporting and Analytics</h2>
+<p>The donation workflow provides comprehensive reporting through:</p>
+<ol type="1">
+<li><strong>Transaction History</strong>: Detailed history of all
+transactions</li>
+<li><strong>Campaign Donation Reports</strong>: Summaries of donations
+by campaign</li>
+<li><strong>Donor Activity Reports</strong>: Tracking of donor
+contributions over time</li>
+<li><strong>Blockchain Transaction Verification</strong>: Proof of
+donation through blockchain records</li>
+</ol>
+<h2 id="api-endpoints">API Endpoints</h2>
+<p>The donation workflow exposes these main API endpoints:</p>
+<table>
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/api.php/Donate/processSquarePayment</code></td>
+<td>Process a Square credit card payment</td>
+</tr>
+<tr class="even">
+<td><code>/api.php/Donate/processCryptoDonation</code></td>
+<td>Generate crypto payment instructions</td>
+</tr>
+<tr class="odd">
+<td><code>/api.php/Transaction/processDonation</code></td>
+<td>Process a blockchain-based donation</td>
+</tr>
+<tr class="even">
+<td><code>/api.php/Transaction/getTransactionHistory</code></td>
+<td>Get history of transactions</td>
+</tr>
+<tr class="odd">
+<td><code>/api.php/Transaction/getTransaction</code></td>
+<td>Get details of a specific transaction</td>
+</tr>
+<tr class="even">
+<td><code>/api.php/Transaction/createMilestoneEscrow</code></td>
+<td>Create a milestone-based escrow account</td>
+</tr>
+<tr class="odd">
+<td><code>/api.php/Transaction/releaseMilestoneFunding</code></td>
+<td>Release funds from an escrow account</td>
+</tr>
+</tbody>
+</table>
+<h2 id="integration-example">Integration Example</h2>
+<h3 id="processing-a-cryptocurrency-donation">Processing a
+Cryptocurrency Donation</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Frontend JavaScript example</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">makeCryptoDonation</span>() {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> donationData <span class="op">=</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cryptoType</span><span class="op">:</span> <span class="st">&quot;XLM&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">amount</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">campaignId</span><span class="op">:</span> <span class="st">&quot;60a3e5b2f91a123456789012&quot;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">donorInfo</span><span class="op">:</span> {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">name</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">email</span><span class="op">:</span> <span class="st">&quot;john@example.com&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">message</span><span class="op">:</span> <span class="st">&quot;Supporting this great cause!&quot;</span><span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">isAnonymous</span><span class="op">:</span> <span class="kw">false</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;/api.php/Donate/processCryptoDonation&#39;</span><span class="op">,</span> {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">headers</span><span class="op">:</span> {</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(donationData)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> result <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (result<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Show QR code and payment instructions to user</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">displayQRCode</span>(result<span class="op">.</span><span class="at">qrCode</span>)<span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">displayWalletAddress</span>(result<span class="op">.</span><span class="at">walletAddress</span>)<span class="op">;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">displayInstructions</span>(result<span class="op">.</span><span class="at">instructions</span>)<span class="op">;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store transaction reference for later verification</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">saveTransactionReference</span>(result<span class="op">.</span><span class="at">reference</span>)<span class="op">;</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle error</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">displayError</span>(result<span class="op">.</span><span class="at">error</span>)<span class="op">;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="when-using-the-donation-system">When Using the Donation
+System:</h3>
+<ol type="1">
+<li><strong>Always Check Transaction Status</strong>: Verify transaction
+status before considering a donation complete</li>
+<li><strong>Handle Multiple Currencies</strong>: Be prepared to handle
+different donation currencies</li>
+<li><strong>Implement Proper Error Handling</strong>: Add robust error
+handling for network and blockchain issues</li>
+<li><strong>Regular Verification</strong>: Use the verification system
+to regularly check pending transactions</li>
+<li><strong>Backup Recovery Information</strong>: For blockchain
+donations, always maintain backup recovery information</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>The GiveHub donation workflow system provides a robust, secure, and
+flexible way to accept and manage donations through both traditional
+payment methods and cryptocurrencies. The system’s modular design allows
+for easy extension to support additional payment methods or blockchain
+networks in the future.</p>
+</body>
+</html>

@@ -1,0 +1,144 @@
+/* Wallet Management Styles */
+
+.wallet-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Wallet Card */
+.wallet-card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Balance Display */
+.balance {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 10px 0;
+}
+
+/* Address Display */
+.address {
+    word-break: break-all;
+    font-family: monospace;
+    padding: 10px;
+    background: var(--background-light);
+    border-radius: 4px;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.address:hover {
+    background: var(--background-lighter);
+}
+
+/* Transaction List */
+.transaction-list {
+    margin-top: 20px;
+}
+
+.transaction-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 15px;
+    align-items: center;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-icon {
+    font-size: 20px;
+}
+
+.transaction-details {
+    font-size: 14px;
+}
+
+.transaction-amount {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* Network Badge */
+.network-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+/* Action Buttons */
+.wallet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.button.fund {
+    background-color: var(--success-color);
+}
+
+.button.fund:hover {
+    background-color: #3d8b40;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wallet-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .wallet-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .button {
+        flex: 1;
+        text-align: center;
+    }
+    
+    .transaction-item {
+        grid-template-columns: auto 1fr;
+    }
+    
+    .transaction-amount {
+        grid-column: 1 / -1;
+        text-align: right;
+    }
+} 

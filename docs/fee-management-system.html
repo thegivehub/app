@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>fee-management-system</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdr2.com/pandoc.css" />
+</head>
+<body>
+<h1 id="stellar-fee-management-system">Stellar Fee Management
+System</h1>
+<h2 id="overview">Overview</h2>
+<p>The Stellar Fee Management System dynamically optimizes transaction
+fees based on network conditions, ensuring transactions are processed
+efficiently without overpaying. The system continuously monitors the
+Stellar network’s fee market and recommends appropriate fees based on
+congestion levels and transaction priority.</p>
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li><strong>Dynamic Fee Calculation</strong>: Automatically adjusts fees
+based on real-time network conditions</li>
+<li><strong>Congestion Analysis</strong>: Identifies network congestion
+levels (low, medium, high, critical)</li>
+<li><strong>Priority Levels</strong>: Supports different priority levels
+for transactions (low, medium, high)</li>
+<li><strong>Fee Bumping</strong>: Ability to increase fees on pending
+transactions to accelerate confirmation</li>
+<li><strong>Fee Caching</strong>: Implements caching to reduce API calls
+to the Stellar network</li>
+<li><strong>Fee Statistics</strong>: Provides reporting on current
+network fee conditions</li>
+</ul>
+<h2 id="how-it-works">How It Works</h2>
+<h3 id="network-congestion-analysis">Network Congestion Analysis</h3>
+<p>The system analyzes Stellar network congestion using fee percentile
+comparisons:</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 22%" />
+<col style="width: 21%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Congestion Level</th>
+<th>Description</th>
+<th>Indicators</th>
+<th>Fee Multiplier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Low</td>
+<td>Normal network conditions</td>
+<td>Fees are relatively uniform (p90 &lt; 1.5x p10)</td>
+<td>1.0x</td>
+</tr>
+<tr class="even">
+<td>Medium</td>
+<td>Moderate congestion</td>
+<td>p90 is 1.5-3x higher than p10</td>
+<td>1.5x</td>
+</tr>
+<tr class="odd">
+<td>High</td>
+<td>High congestion</td>
+<td>p90 is 3-5x higher than p10</td>
+<td>2.0x</td>
+</tr>
+<tr class="even">
+<td>Critical</td>
+<td>Severe congestion</td>
+<td>p90 is 5x+ higher than p10</td>
+<td>3.0x</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fee-recommendation-process">Fee Recommendation Process</h3>
+<ol type="1">
+<li><strong>Fee Stats Collection</strong>: The system fetches current
+fee statistics from the Stellar Horizon API</li>
+<li><strong>Congestion Analysis</strong>: Analyzes fee percentiles to
+determine network congestion</li>
+<li><strong>Priority Selection</strong>: Selects a base fee based on
+requested priority:
+<ul>
+<li>Low Priority: Uses the p10 fee percentile (lower cost, may take
+longer)</li>
+<li>Medium Priority: Uses the p50 fee percentile (median fee)</li>
+<li>High Priority: Uses the p90 fee percentile (higher cost, faster
+processing)</li>
+</ul></li>
+<li><strong>Apply Congestion Multiplier</strong>: Multiplies the base
+fee by a congestion-based factor</li>
+<li><strong>Minimum Fee Enforcement</strong>: Ensures the fee meets
+Stellar’s minimum requirements</li>
+</ol>
+<h3 id="fee-bumping">Fee Bumping</h3>
+<p>When a transaction is stuck due to low fees, the system can “bump”
+the fee by:</p>
+<ol type="1">
+<li>Creating a fee bump transaction that wraps the original
+transaction</li>
+<li>Setting a higher fee based on current network conditions with high
+priority</li>
+<li>Signing and submitting the fee bump transaction</li>
+</ol>
+<p>This is particularly useful during sudden network congestion or when
+transaction processing times are critical.</p>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="basic-fee-recommendation">Basic Fee Recommendation</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize the fee manager</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">$feeManager</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">S</span>tellarFeeManager([</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;useTestnet&#39;</span> =&gt; <span class="kw">true</span><span class="ot">,</span> <span class="co">// Use Stellar testnet</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;enableLogging&#39;</span> =&gt; <span class="kw">true</span> <span class="co">// Enable detailed logging</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Get recommended fee for a standard priority transaction</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="va">$recommendedFee</span> <span class="op">=</span> <span class="va">$feeManager</span>-&gt;getRecommendedFee([</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;priorityLevel&#39;</span> =&gt; <span class="st">&#39;medium&#39;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Estimate fee for a transaction with multiple operations</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="va">$estFee</span> <span class="op">=</span> <span class="va">$feeManager</span>-&gt;estimateTransactionFee(<span class="dv">5</span><span class="ot">,</span> [ <span class="co">// Transaction with 5 operations</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;priorityLevel&#39;</span> =&gt; <span class="st">&#39;high&#39;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span></code></pre></div>
+<h3 id="creating-a-transaction-with-recommended-fee">Creating a
+Transaction with Recommended Fee</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize transaction builder</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">$sourceAccount</span> <span class="op">=</span> <span class="va">$stellarServer</span>-&gt;accounts()-&gt;account(<span class="va">$sourcePublicKey</span>)<span class="ot">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">$transactionBuilder</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">T</span>ransactionBuilder(<span class="va">$sourceAccount</span>)<span class="ot">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Add operations to the transaction</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">$transactionBuilder</span>-&gt;addOperation(<span class="kw">new</span> <span class="cn">P</span>aymentOperation(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">$destinationAddress</span><span class="ot">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cn">A</span>sset::native()<span class="ot">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;100&quot;</span> <span class="co">// Amount in XLM</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>))<span class="ot">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Use fee manager to set the appropriate fee</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="va">$transaction</span> <span class="op">=</span> <span class="va">$feeManager</span>-&gt;createTransactionWithRecommendedFee(<span class="va">$transactionBuilder</span><span class="ot">,</span> [</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;priorityLevel&#39;</span> =&gt; <span class="st">&#39;high&#39;</span><span class="ot">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;operationCount&#39;</span> =&gt; <span class="dv">1</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Sign and submit the transaction</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="va">$transaction</span>-&gt;sign(<span class="va">$sourceKeypair</span><span class="ot">,</span> <span class="cn">N</span>etwork::testnet())<span class="ot">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="va">$response</span> <span class="op">=</span> <span class="va">$stellarServer</span>-&gt;submitTransaction(<span class="va">$transaction</span>)<span class="ot">;</span></span></code></pre></div>
+<h3 id="fee-bumping-a-stuck-transaction">Fee Bumping a Stuck
+Transaction</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Attempt to submit a transaction</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">$response</span> <span class="op">=</span> <span class="va">$stellarServer</span>-&gt;submitTransaction(<span class="va">$transaction</span>)<span class="ot">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (<span class="bu">Exception</span> <span class="va">$e</span>) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if the error is fee-related</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="va">$feeManager</span>-&gt;isFeeRelatedError(<span class="va">$e</span>)) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create a fee bump transaction</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">$feeBumpTransaction</span> <span class="op">=</span> <span class="va">$feeManager</span>-&gt;createFeeBumpTransaction(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            <span class="va">$sourceSecretKey</span><span class="ot">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            <span class="va">$transaction</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        )<span class="ot">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Submit the fee bump transaction</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">$response</span> <span class="op">=</span> <span class="va">$stellarServer</span>-&gt;submitTransaction(<span class="va">$feeBumpTransaction</span>)<span class="ot">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle other errors</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="va">$e</span><span class="ot">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="fee-statistics-and-monitoring">Fee Statistics and
+Monitoring</h2>
+<p>The fee management system provides reporting capabilities to monitor
+network conditions:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get detailed fee statistics</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="va">$feeStats</span> <span class="op">=</span> <span class="va">$feeManager</span>-&gt;getFeeStatistics()<span class="ot">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Output includes:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// - Current timestamp</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">// - Network congestion level</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// - Network type (testnet/public)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// - Fee statistics (min, max, median, p90)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// - Recommended fees for different priority levels</span></span></code></pre></div>
+<h2 id="configuration-options">Configuration Options</h2>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 43%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>defaultBaseFee</code></td>
+<td>Default base fee in stroops</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td><code>lowMultiplier</code></td>
+<td>Fee multiplier for low congestion</td>
+<td>1.0</td>
+</tr>
+<tr class="odd">
+<td><code>mediumMultiplier</code></td>
+<td>Fee multiplier for medium congestion</td>
+<td>1.5</td>
+</tr>
+<tr class="even">
+<td><code>highMultiplier</code></td>
+<td>Fee multiplier for high congestion</td>
+<td>2.0</td>
+</tr>
+<tr class="odd">
+<td><code>criticalMultiplier</code></td>
+<td>Fee multiplier for critical congestion</td>
+<td>3.0</td>
+</tr>
+<tr class="even">
+<td><code>cacheDuration</code></td>
+<td>Duration to cache fee stats (milliseconds)</td>
+<td>60000 (1 minute)</td>
+</tr>
+<tr class="odd">
+<td><code>useTestnet</code></td>
+<td>Whether to use Stellar testnet</td>
+<td>true</td>
+</tr>
+<tr class="even">
+<td><code>horizonUrl</code></td>
+<td>Custom Horizon server URL</td>
+<td>Based on testnet setting</td>
+</tr>
+<tr class="odd">
+<td><code>enableLogging</code></td>
+<td>Enable detailed logging</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<h2 id="best-practices">Best Practices</h2>
+<ol type="1">
+<li><strong>Use Appropriate Priority Levels</strong>:
+<ul>
+<li>Low: For non-urgent transactions where cost is a concern</li>
+<li>Medium: For standard transactions with normal processing times</li>
+<li>High: For time-sensitive transactions that need quick
+processing</li>
+</ul></li>
+<li><strong>Handle Fee-Related Errors</strong>:
+<ul>
+<li>Always check for fee-related errors when submitting
+transactions</li>
+<li>Use fee bumping when transactions are stuck due to insufficient
+fees</li>
+</ul></li>
+<li><strong>Monitor Network Conditions</strong>:
+<ul>
+<li>Periodically fetch fee statistics to monitor network health</li>
+<li>Consider adjusting default multipliers based on observed
+patterns</li>
+</ul></li>
+<li><strong>Cache Optimization</strong>:
+<ul>
+<li>Adjust cache duration based on network volatility and application
+needs</li>
+<li>For high-frequency applications, consider shorter cache times</li>
+</ul></li>
+<li><strong>Transaction Batching</strong>:
+<ul>
+<li>When possible, batch multiple operations into a single
+transaction</li>
+<li>Use <code>estimateTransactionFee()</code> with the correct operation
+count</li>
+</ul></li>
+</ol>
+<h2 id="technical-implementation">Technical Implementation</h2>
+<p>The fee management system is implemented in the
+<code>StellarFeeManager.php</code> class, which integrates with the
+Soneso Stellar SDK. The system maintains compatibility with the overall
+application architecture while providing a comprehensive fee management
+solution.</p>
+</body>
+</html>
