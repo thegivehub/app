@@ -9,7 +9,7 @@
         "ext-mongodb": "*",
         "ext-json": "*",
         "ramsey/uuid": "^4.0",
-        "soneso/stellar-php-sdk": "^1.0",
+        "soneso/stellar-php-sdk": "^1.7",
         "phpseclib/bcmath_compat": "^2.0",
         "square/square": "^40.0",
         "aws/aws-sdk-php": "^3.337",

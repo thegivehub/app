@@ -5,106 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wallet Management - The Give Hub</title>
     <link rel="stylesheet" href="/assets/css/styles.css">
-    <style>
-        .wallet-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .wallet-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .balance {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2196F3;
-            margin: 10px 0;
-        }
-        
-        .address {
-            word-break: break-all;
-            font-family: monospace;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            margin: 10px 0;
-            cursor: pointer;
-        }
-        
-        .transaction-list {
-            margin-top: 20px;
-        }
-        
-        .transaction-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .network-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #FFC107;
-            color: black;
-        }
-        
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            display: none;
-        }
-        
-        .success {
-            background: #4CAF50;
-            color: white;
-        }
-        
-        .error {
-            background: #f44336;
-            color: white;
-        }
-        
-        .button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .button:hover {
-            background: #1976D2;
-        }
-        
-        .button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/wallet-styles.css">
 </head>
 <body>
     <div class="wallet-container">
@@ -113,8 +14,16 @@
         <div id="message" class="message"></div>
         <div id="loading" class="loading">Loading...</div>
         
+        <div id="wallets-list" class="wallets-list">
+            <!-- List of wallets will be dynamically inserted here -->
+        </div>
+
+        <div class="wallet-actions">
+            <button onclick="createWallet()" class="button">Create New Wallet</button>
+        </div>
+        
         <div id="wallet-content">
-            <!-- Content will be dynamically inserted here -->
+            <!-- Selected wallet content will be dynamically inserted here -->
         </div>
         
         <div id="transactions-content" class="wallet-card" style="display: none;">
@@ -131,14 +40,26 @@
         let currentPage = 1;
         let hasMoreTransactions = false;
         let isLoading = false;
+        let userId = null;
+        let currentWalletId = null;
         
         // Templates
+        const walletListItemTemplate = (wallet) => `
+            <div class="wallet-list-item ${wallet.isDefault ? 'default' : ''}" 
+                data-wallet-id="${wallet.id}" onclick="selectWallet('${wallet.id}')">
+                <div class="wallet-list-name">${wallet.label}</div>
+                <div class="wallet-list-balance">${parseFloat(wallet.balance).toFixed(7)} ${wallet.currency}</div>
+                ${wallet.isDefault ? '<div class="default-badge">Default</div>' : 
+                    `<button class="set-default-btn" onclick="setDefaultWallet('${wallet.id}', event)">Set as Default</button>`}
+            </div>
+        `;
+        
         const walletTemplate = (wallet) => `
             <div class="wallet-card">
-                <div class="network-badge">TESTNET</div>
-                <h2>Your Wallet</h2>
+                <div class="network-badge">${wallet.network.toUpperCase()}</div>
+                <h2>${wallet.label}</h2>
                 <div class="balance">
-                    ${parseFloat(wallet.balance).toFixed(7)} XLM
+                    ${parseFloat(wallet.balance).toFixed(7)} ${wallet.currency}
                 </div>
                 
                 <h3>Public Key</h3>
@@ -149,6 +70,13 @@
                 <button onclick="fundTestnetAccount('${wallet.publicKey}')" class="button">
                     Fund Testnet Account
                 </button>
+            </div>
+        `;
+        
+        const walletListEmptyTemplate = () => `
+            <div class="wallets-empty">
+                <p>You don't have any wallets yet.</p>
+                <p>Create a new wallet to get started.</p>
             </div>
         `;
         
@@ -185,7 +113,93 @@
         }
         
         // API calls
-        async function getUserWallet() {
+        async function getUserIdFromToken() {
+            try {
+                const token = localStorage.getItem("accessToken");
+                if (!token) {
+                    throw new Error("No access token found");
+                }
+
+                const response = await fetch("/api/auth/getUserIdFromToken", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+                if (!data) {
+                    throw new Error(data.error || "Failed to get user ID");
+                }
+
+                userId = data;
+                return userId;
+            } catch (error) {
+                showMessage(error.message, "error");
+                // Redirect to login if token is invalid or missing
+//                window.location.href = "/login.html?r=/pages/wallet-management.html";
+                throw error;
+            }
+        }
+        
+        async function getUserWallets() {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/wallets/getUserWallets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId
+                    })
+                });
+                
+                const data = await response.json();
+                const walletsListEl = document.getElementById('wallets-list');
+                
+                if (data.success) {
+                    if (data.wallets && data.wallets.length > 0) {
+                        let walletListHTML = '';
+                        
+                        // Find default wallet
+                        let defaultWallet = data.wallets.find(w => w.isDefault);
+                        
+                        // If no default wallet, use the first one
+                        if (!defaultWallet) {
+                            defaultWallet = data.wallets[0];
+                        }
+                        
+                        // Set current wallet ID
+                        currentWalletId = defaultWallet.id;
+                        
+                        // Display wallet list
+                        data.wallets.forEach(wallet => {
+                            walletListHTML += walletListItemTemplate(wallet);
+                        });
+                        
+                        walletsListEl.innerHTML = walletListHTML;
+                        
+                        // Load the default wallet details
+                        loadWalletDetails(defaultWallet.id);
+                    } else {
+                        // Show empty state
+                        walletsListEl.innerHTML = walletListEmptyTemplate();
+                        document.getElementById('wallet-content').innerHTML = '';
+                        document.getElementById('transactions-content').style.display = 'none';
+                    }
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load wallets', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function loadWalletDetails(walletId) {
             try {
                 setLoading(true);
                 const response = await fetch('/api/wallets/getUserWallet', {
@@ -194,16 +208,25 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userId: window.userId // Set by server-side template
+                        userId: userId,
+                        walletId: walletId
                     })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
+                    // Highlight selected wallet in the list
+                    document.querySelectorAll('.wallet-list-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    const selectedItem = document.querySelector(`.wallet-list-item[data-wallet-id="${walletId}"]`);
+                    if (selectedItem) {
+                        selectedItem.classList.add('selected');
+                    }
+                    
+                    // Update wallet details
                     document.getElementById('wallet-content').innerHTML = walletTemplate(data.wallet);
-                    document.getElementById('transactions-content').style.display = 'block';
-                    loadTransactions();
                     
                     // Set up copy functionality
                     document.querySelector('.address').addEventListener('click', function() {
@@ -211,18 +234,59 @@
                             showMessage('Address copied to clipboard!', 'success');
                         });
                     });
+                    
+                    // Show transactions
+                    document.getElementById('transactions-content').style.display = 'block';
+                    
+                    // Load transactions for this wallet
+                    currentWalletId = walletId;
+                    loadTransactions();
                 } else {
-                    // No wallet exists, show create button
-                    document.getElementById('wallet-content').innerHTML = `
-                        <div class="wallet-card">
-                            <div class="network-badge">TESTNET</div>
-                            <p>You don't have a wallet yet.</p>
-                            <button onclick="createWallet()" class="button">Create Wallet</button>
-                        </div>
-                    `;
+                    showMessage(data.error, 'error');
                 }
             } catch (error) {
-                showMessage('Failed to load wallet', 'error');
+                showMessage('Failed to load wallet details', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function selectWallet(walletId) {
+            if (currentWalletId !== walletId) {
+                await loadWalletDetails(walletId);
+            }
+        }
+        
+        async function setDefaultWallet(walletId, event) {
+            // Prevent the click from also triggering wallet selection
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            try {
+                setLoading(true);
+                const response = await fetch('/api/wallets/setDefaultWallet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        walletId: walletId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Default wallet updated successfully', 'success');
+                    // Reload wallet list to update default indicators
+                    getUserWallets();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to update default wallet', 'error');
             } finally {
                 setLoading(false);
             }
@@ -237,7 +301,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userId: window.userId
+                        userId: userId
                     })
                 });
                 
@@ -245,7 +309,11 @@
                 
                 if (data.success) {
                     showMessage('Wallet created successfully!', 'success');
-                    getUserWallet(); // Refresh wallet display
+                    // Refresh wallets list and select new wallet
+                    await getUserWallets();
+                    if (data.wallet && data.wallet.id) {
+                        await loadWalletDetails(data.wallet.id);
+                    }
                 } else {
                     showMessage(data.error, 'error');
                 }
@@ -273,7 +341,8 @@
                 
                 if (data.success) {
                     showMessage('Account funded successfully!', 'success');
-                    getUserWallet(); // Refresh wallet display
+                    // Refresh wallet display
+                    await loadWalletDetails(currentWalletId);
                 } else {
                     showMessage(data.error, 'error');
                 }
@@ -300,7 +369,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userId: window.userId,
+                        userId: userId,
+                        walletId: currentWalletId,
                         page: currentPage,
                         limit: 10
                     })
@@ -333,8 +403,13 @@
         }
         
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            getUserWallet();
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await getUserIdFromToken();
+                await getUserWallets();
+            } catch (error) {
+                // Error already handled in getUserIdFromToken
+            }
         });
     </script>
 </body>

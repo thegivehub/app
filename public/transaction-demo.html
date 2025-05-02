@@ -83,11 +83,12 @@
             </div>
             <form id="donation-form">
                 <label>Donor ID: <select name="donorId" id="donor-select-1" required><option value="">Loading...</option></select></label>
+                <label>Wallet: <select name="walletId" id="wallet-select-1" required><option value="">Select donor first...</option></select></label>
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-1" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
-                <label>Source Secret: <input type="text" name="sourceSecret" required></label>
                 <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
                 <label>Message: <input type="text" name="message"></label>
+                <input type="hidden" name="sourceSecret" id="donation-source-secret">
                 <button type="submit">Submit Donation</button>
             </form>
             <div id="donation-result"></div>
@@ -105,7 +106,7 @@
                 <label>Donor ID: <select name="donorId" id="donor-select-2" required><option value="">Loading...</option></select></label>
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-2" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
-                <label>Source Secret: <input type="text" name="sourceSecret" required></label>
+                <label>Source Secret: <input type="text" name="sourceSecret" id="recurring-source-secret" required></label>
                 <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
                 <label>Message: <input type="text" name="message"></label>
                 <label>Frequency:
@@ -229,8 +230,8 @@ async function fetchAndPopulateSelect(url, selectIds, labelField, valueField, fa
 
 // Populate donor and campaign selects on page load
 document.addEventListener('DOMContentLoaded', function() {
-    fetchAndPopulateSelect('/api.php/donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
-    fetchAndPopulateSelect('/api.php/campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
+    fetchAndPopulateSelect('/api.php/Donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
+    fetchAndPopulateSelect('/api.php/Campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
 
     // Auto-fill Source Secret for One-Time Donation and Recurring Donation forms
     function setupWalletAutoFill(donorSelectId, secretInputSelector) {
@@ -242,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             secretInput.value = ""; // Clear first
             if (!userId) return;
             try {
-                const res = await fetch(`/api.php/wallets/getUserWallet?userId=${encodeURIComponent(userId)}`);
+                const res = await fetch(`/api.php/Wallet/getUserWallet?userId=${encodeURIComponent(userId)}`);
                 const json = await res.json();
                 if (json.success && json.wallet && json.wallet.secretKey) {
                     secretInput.value = json.wallet.secretKey;
@@ -252,8 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    setupWalletAutoFill('donor-select-1', '#donation-form input[name="sourceSecret"]');
-    setupWalletAutoFill('donor-select-2', '#recurring-form input[name="sourceSecret"]');
+    setupWalletAutoFill('donor-select-1', '#donation-source-secret');
+    setupWalletAutoFill('donor-select-2', '#recurring-source-secret');
 });
 
 async function postForm(url, data, resultDiv) {
@@ -281,7 +282,7 @@ document.getElementById('donation-form').onsubmit = function(e) {
     const data = Object.fromEntries(new FormData(this).entries());
     data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
     data.recurring = false;
-    postForm('/api.php/transaction/processDonation', data, document.getElementById('donation-result'));
+    postForm('/api.php/Transaction/processDonation', data, document.getElementById('donation-result'));
 };
 
 // Recurring Donation
@@ -290,7 +291,7 @@ document.getElementById('recurring-form').onsubmit = function(e) {
     const data = Object.fromEntries(new FormData(this).entries());
     data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
     data.recurring = true;
-    postForm('/api.php/transaction/processDonation', data, document.getElementById('recurring-result'));
+    postForm('/api.php/Transaction/processDonation', data, document.getElementById('recurring-result'));
 };
 
 // Milestone Escrow Creation
@@ -313,14 +314,14 @@ document.getElementById('escrow-form').onsubmit = function(e) {
         delete data[`milestone${i}_releaseDays`];
     }
     data.milestones = milestones;
-    postForm('/api.php/transaction/createMilestoneEscrow', data, document.getElementById('escrow-result'));
+    postForm('/api.php/Transaction/createMilestoneEscrow', data, document.getElementById('escrow-result'));
 };
 
 // Milestone Fund Release
 document.getElementById('release-form').onsubmit = function(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(this).entries());
-    postForm('/api.php/transaction/releaseMilestoneFunding', data, document.getElementById('release-result'));
+    postForm('/api.php/Transaction/releaseMilestoneFunding', data, document.getElementById('release-result'));
 };
 
 // Tab switching logic

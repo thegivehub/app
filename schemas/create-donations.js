@@ -1,20 +1,28 @@
-// donations.schema.js  (collection options)
+// create-donations.js
+// run with: mongosh --file create-donations.js
+//-----------------------------------
+// 1. choose a database
+//-----------------------------------
+//use givehub;   // change this if you want a different db
 
-export const donationCollectionOptions = {
+//-----------------------------------
+// 2. create the collection + validator
+//-----------------------------------
+db.createCollection("donations", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["userId", "campaignId", "amount", "transaction", "status", "created"],
+      required: ["userId","campaignId","amount","transaction","status","created"],
       properties: {
-        userId:        { bsonType: "objectId", description: "Reference to user making donation" },
-        campaignId:    { bsonType: "objectId", description: "Reference to campaign receiving donation" },
+        userId:     { bsonType: "objectId" },
+        campaignId: { bsonType: "objectId" },
 
         amount: {
           bsonType: "object",
-          required: ["value", "currency"],
+          required: ["value","currency"],
           properties: {
-            value:          { bsonType: "decimal" },
-            currency:       { bsonType: "string" },
+            value:    { bsonType: "decimal" },
+            currency: { bsonType: "string" },
             fiatEquivalent: {
               bsonType: "object",
               properties: {
@@ -28,7 +36,7 @@ export const donationCollectionOptions = {
 
         transaction: {
           bsonType: "object",
-          required: ["txHash", "stellarAddress", "status"],
+          required: ["txHash","stellarAddress","status"],
           properties: {
             txHash:        { bsonType: "string" },
             stellarAddress:{ bsonType: "string" },
@@ -39,9 +47,9 @@ export const donationCollectionOptions = {
           }
         },
 
-        type:       { bsonType: "string", enum: ["one-time","recurring","milestone"],  default: "one-time" },
+        type:       { bsonType: "string", enum: ["one-time","recurring","milestone"] },
         status:     { bsonType: "string", enum: ["pending","processing","completed","failed","refunded"] },
-        visibility: { bsonType: "string", enum: ["public","anonymous","private"],     default: "public" },
+        visibility: { bsonType: "string", enum: ["public","anonymous","private"] },
 
         recurringDetails: {
           bsonType: "object",
@@ -60,7 +68,7 @@ export const donationCollectionOptions = {
           bsonType: "object",
           properties: {
             milestoneId: { bsonType: "objectId" },
-            conditions:  {
+            conditions: {
               bsonType: "array",
               items: {
                 bsonType: "object",
@@ -150,12 +158,15 @@ export const donationCollectionOptions = {
         updated: { bsonType: "date" }
       }
     }
-  }
-};
+  },
+  validationLevel: "strict",
+  validationAction: "error"
+});
 
-// donations.indexes.js
-
-export const donationIndexes = [
+//-----------------------------------
+// 3. create indexes
+//-----------------------------------
+db.donations.createIndexes([
   { key: { userId: 1, campaignId: 1 } },
   { key: { "transaction.txHash": 1 }, unique: true },
   { key: { "transaction.stellarAddress": 1 } },
@@ -164,4 +175,6 @@ export const donationIndexes = [
   { key: { created: -1 } },
   { key: { "amount.currency": 1 } },
   { key: { "impact.category": 1 } }
-];
+]);
+
+print("donations collection and indexes created ✔");

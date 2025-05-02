@@ -151,6 +151,7 @@ $posted = json_decode($rawInput, true);
 
 // Debug the posted data
 error_log("Posted data: " . json_encode($posted));
+error_log("_REQUEST data: " . json_encode($_REQUEST));
 
 // If JSON decode failed, check if it's form data
 if ($posted === null && $method === 'POST') {
@@ -169,8 +170,9 @@ if ($endpoint === 'Document') {
     $endpoint = 'Documents';
     error_log("Mapping Document endpoint to Documents class");
 }
-$instance = new $endpoint($_GET);
 
+$params = $_REQUEST;
+$instance = new $endpoint($params);
 // Verify that the endpoint class exists
 if (!$endpoint || !class_exists($endpoint)) {
     logMessage("Invalid endpoint", ['endpoint' => $endpoint], 'error');

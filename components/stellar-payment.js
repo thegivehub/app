@@ -31,7 +31,7 @@ class StellarPayment extends HTMLElement {
     async loadWallet(walletId) {
         try {
             // Use the proper API endpoint
-            const response = await fetch(`/api.php/wallets?id=${walletId}`);
+            const response = await fetch(`/api.php/wallets/getUserWallet?userId=${walletId}`);
             const data = await response.json();
             
             if (data && data._id) {
@@ -62,7 +62,6 @@ class StellarPayment extends HTMLElement {
         
         if (this.isProcessing) return;
         this.isProcessing = true;
-        this.render();
         
         try {
             const form = this.shadowRoot.querySelector('form');
@@ -75,18 +74,20 @@ class StellarPayment extends HTMLElement {
             }
             
             // Use the proper API endpoint
-            const response = await fetch('/api.php/payment/send', {
+            let formData = {
+                sourceWalletId: this.getAttribute('wallet-id'),
+                destinationAddress,
+                amount,
+                memo,
+                testnet: this.isTestnet
+            };
+
+            const response = await fetch('/api.php/wallets/sendPayment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    sourceWalletId: this.getAttribute('wallet-id'),
-                    destinationAddress,
-                    amount,
-                    memo,
-                    testnet: this.isTestnet
-                })
+                body: JSON.stringify(formData)
             });
             
             const data = await response.json();

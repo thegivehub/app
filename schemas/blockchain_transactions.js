@@ -48,7 +48,7 @@ db.createCollection("blockchain_transactions", {
           description: "Current status of the transaction (required)"
         },
         type: {
-          enum: ["payment", "account_creation", "escrow_setup", "milestone_release", "other"],
+          enum: ["payment", "account_creation", "escrow_setup", "milestone_release", "other", "donation"],
           description: "Type of blockchain transaction (required)"
         },
         stellarDetails: {

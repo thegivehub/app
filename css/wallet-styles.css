@@ -259,4 +259,87 @@
             padding: 20px;
             color: #666;
         }
+        
+        /* Wallet List Styles */
+        .wallets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-list-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            align-items: center;
+        }
+        
+        .wallet-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .wallet-list-item.selected {
+            border-left: 4px solid #2196F3;
+            background-color: #f4f9ff;
+        }
+        
+        .wallet-list-item.default {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .wallet-list-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .wallet-list-balance {
+            font-family: monospace;
+            text-align: right;
+        }
+        
+        .default-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .set-default-btn {
+            background: transparent;
+            border: 1px solid #2196F3;
+            color: #2196F3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .set-default-btn:hover {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .wallets-empty {
+            text-align: center;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            color: #666;
+        }
+        
+        .wallet-actions {
+            margin: 20px 0;
+            text-align: right;
+        }
 

@@ -10,7 +10,7 @@
 require_once __DIR__ . "/db.php";
 require_once __DIR__ . "/DonationProcessor.php";
 require_once __DIR__ . "/BlockchainTransactionController.php";
-require_once __DIR__ . "/vendor/autoload.php";
+require_once __DIR__ . "/../vendor/autoload.php";
 
 use Square\SquareClient;
 use Square\Environment;
@@ -52,19 +52,38 @@ class Donate {
             "ETH" => [
                 "name" => "Ethereum",
                 "network" => $testMode ? "goerli" : "mainnet",
-                "address" => getenv("ETH_WALLET_ADDRESS")
+                "address" => getenv("ETHEREUM_ADDRESS")
             ],
             "BTC" => [
                 "name" => "Bitcoin",
                 "network" => $testMode ? "testnet" : "mainnet",
-                "address" => getenv("BTC_WALLET_ADDRESS")
+                "address" => getenv("BITCOIN_ADDRESS")
             ],
             "XLM" => [
                 "name" => "Stellar",
                 "network" => $testMode ? "testnet" : "public",
-                "address" => getenv("XLM_WALLET_ADDRESS")
+                "address" => getenv("STELLAR_PUBLIC_KEY")
             ]
         ];
+        
+        // Only include crypto options that have wallet addresses configured
+        foreach ($this->supportedCryptos as $symbol => $data) {
+            if (empty($data["address"])) {
+                unset($this->supportedCryptos[$symbol]);
+            }
+        }
+        
+        // Check if we should enable multiple cryptocurrencies
+        $enableMultipleCurrencies = getenv("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true";
+        if (!$enableMultipleCurrencies) {
+            // Keep only the default currency if multiple currencies are disabled
+            $defaultCurrency = getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM";
+            if (isset($this->supportedCryptos[$defaultCurrency])) {
+                $this->supportedCryptos = [
+                    $defaultCurrency => $this->supportedCryptos[$defaultCurrency]
+                ];
+            }
+        }
     }
 
     /**
@@ -131,56 +150,90 @@ class Donate {
      */
     public function processCryptoDonation($data) {
         try {
-            if (empty($data["cryptoType"]) || !isset($this->supportedCryptos[$data["cryptoType"]])) {
-                throw new Exception("Unsupported cryptocurrency type");
+            // Validate crypto type
+            $cryptoType = strtoupper($data["cryptoType"] ?? '');
+            if (empty($cryptoType) || !isset($this->supportedCryptos[$cryptoType])) {
+                // If not specified or invalid, try to use default
+                $defaultCurrency = getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM";
+                
+                if (isset($this->supportedCryptos[$defaultCurrency])) {
+                    $cryptoType = $defaultCurrency;
+                } else {
+                    throw new Exception("No supported cryptocurrencies configured");
+                }
             }
 
-            $crypto = $this->supportedCryptos[$data["cryptoType"]];
-            if (empty($crypto["address"])) {
-                throw new Exception("Wallet address not configured for " . $crypto["name"]);
+            $crypto = $this->supportedCryptos[$cryptoType];
+            
+            // Additional validation
+            if (!isset($data["campaignId"])) {
+                throw new Exception("Campaign ID is required");
             }
-
+            
+            // Create unique transaction reference
+            $transactionRef = uniqid("CRYPTO_", true);
+            
             // Create blockchain transaction record
             $txData = [
-                "txHash" => null, // Will be provided by donor
-                "type" => "donation",
+                "txHash" => null, // Will be provided by donor later
+                "type" => "payment", // Use "payment" as it's in the allowed list
                 "status" => "pending",
-                "cryptoType" => $data["cryptoType"],
+                "cryptoType" => $cryptoType,
                 "network" => $crypto["network"],
-                "expectedAmount" => $data["amount"],
+                "expectedAmount" => $data["amount"] ?? null,
                 "walletAddress" => $crypto["address"],
                 "campaignId" => new MongoDB\BSON\ObjectId($data["campaignId"]),
                 "sourceType" => "donation",
+                "reference" => $transactionRef,
                 "metadata" => [
                     "donorInfo" => $data["donorInfo"] ?? null,
-                    "campaignData" => $data["campaignData"] ?? null
+                    "campaignData" => $data["campaignData"] ?? null,
+                    "isAnonymous" => $data["isAnonymous"] ?? false,
+                    "message" => $data["message"] ?? null,
+                    "isTestDonation" => $data["isTestDonation"] ?? false // Track if this is a test donation
                 ]
             ];
+
+            // Add user ID if available
+            if (isset($data["userId"])) {
+                $txData["userId"] = new MongoDB\BSON\ObjectId($data["userId"]);
+            }
 
             $txResult = $this->blockchainController->createTransaction($txData);
             
             if (!$txResult["success"]) {
-                throw new Exception("Failed to create blockchain transaction record");
+                throw new Exception("Failed to create blockchain transaction record: " . 
+                    ($txResult["error"] ?? "Unknown error"));
             }
 
             // Generate payment URI and QR code
+            // Include reference in payment URI when possible
             $paymentUri = $this->generateCryptoPaymentUri(
-                $data["cryptoType"],
+                $cryptoType,
                 $crypto["address"],
-                $data["amount"] ?? null
+                $data["amount"] ?? null,
+                $transactionRef
             );
 
             return [
                 "success" => true,
+                "cryptoType" => $cryptoType,
+                "cryptoName" => $crypto["name"],
                 "walletAddress" => $crypto["address"],
                 "network" => $crypto["network"],
+                "isTestnet" => $crypto["network"] !== "mainnet" && $crypto["network"] !== "public",
                 "transactionId" => $txResult["transactionId"],
-                "instructions" => $this->getCryptoInstructions($data["cryptoType"]),
+                "reference" => $transactionRef,
+                "instructions" => $this->getCryptoInstructions($cryptoType, $transactionRef),
                 "paymentUri" => $paymentUri,
-                "qrCode" => $this->generateQrCode($paymentUri)
+                "qrCode" => $this->generateQrCode($paymentUri),
+                "expectedAmount" => $data["amount"] ?? null
             ];
         } catch (Exception $e) {
-            throw new Exception("Crypto donation error: " . $e->getMessage());
+            return [
+                "success" => false,
+                "error" => "Crypto donation error: " . $e->getMessage()
+            ];
         }
     }
 
@@ -190,28 +243,55 @@ class Donate {
      * @param string $cryptoType Type of cryptocurrency
      * @param string $address Wallet address
      * @param float|null $amount Optional amount to include in URI
+     * @param string|null $reference Optional transaction reference to include
      * @return string Payment URI for QR code
      */
-    private function generateCryptoPaymentUri($cryptoType, $address, $amount = null) {
+    private function generateCryptoPaymentUri($cryptoType, $address, $amount = null, $reference = null) {
         switch ($cryptoType) {
             case "BTC":
                 $uri = "bitcoin:" . $address;
+                $params = [];
+                
                 if ($amount) {
-                    $uri .= "?amount=" . $amount;
+                    $params[] = "amount=" . $amount;
+                }
+                
+                if ($reference) {
+                    $params[] = "message=GiveHub:" . $reference;
+                }
+                
+                if (!empty($params)) {
+                    $uri .= "?" . implode("&", $params);
                 }
                 break;
                 
             case "ETH":
                 $uri = "ethereum:" . $address;
+                $params = [];
+                
                 if ($amount) {
-                    $uri .= "?value=" . $this->convertEthToWei($amount);
+                    $params[] = "value=" . $this->convertEthToWei($amount);
+                }
+                
+                if ($reference) {
+                    $params[] = "data=GiveHub:" . $reference;
+                }
+                
+                if (!empty($params)) {
+                    $uri .= "?" . implode("&", $params);
                 }
                 break;
                 
             case "XLM":
                 $uri = "web+stellar:pay?destination=" . $address;
+                
                 if ($amount) {
                     $uri .= "&amount=" . $amount;
+                }
+                
+                if ($reference) {
+                    $uri .= "&memo=" . urlencode($reference);
+                    $uri .= "&memo_type=text";
                 }
                 break;
                 
@@ -229,15 +309,25 @@ class Donate {
      * @return string Base64 encoded QR code image data URI
      */
     private function generateQrCode($uri) {
-        $options = new QROptions([
-            'outputType' => QRCode::OUTPUT_MARKUP_SVG,
-            'eccLevel' => QRCode::ECC_L,
-            'version' => 5,
-            'imageBase64' => true,
-        ]);
+        try {
+            if (!class_exists('\\chillerlan\\QRCode\\QROptions')) {
+                // Return placeholder if QR code library is not available
+                return 'QR code generation not available - library not installed';
+            }
+            
+            $options = new QROptions([
+                'outputType' => QRCode::OUTPUT_MARKUP_SVG,
+                'eccLevel' => QRCode::ECC_L,
+                'version' => 5,
+                'imageBase64' => true,
+            ]);
 
-        $qrcode = new QRCode($options);
-        return $qrcode->render($uri);
+            $qrcode = new QRCode($options);
+            return $qrcode->render($uri);
+        } catch (Exception $e) {
+            // Return a placeholder if QR code generation fails
+            return 'QR code generation failed: ' . $e->getMessage();
+        }
     }
 
     /**
@@ -254,24 +344,51 @@ class Donate {
      * Get cryptocurrency payment instructions
      * 
      * @param string $cryptoType Type of cryptocurrency
+     * @param string|null $reference Optional transaction reference
      * @return string Payment instructions
      */
-    private function getCryptoInstructions($cryptoType) {
+    private function getCryptoInstructions($cryptoType, $reference = null) {
         $crypto = $this->supportedCryptos[$cryptoType];
-        $instructions = "Please send your {$crypto["name"]} donation to the following address:\n\n";
+        $network = $crypto["network"] !== "mainnet" && $crypto["network"] !== "public" 
+            ? " (" . strtoupper($crypto["network"]) . ")" 
+            : "";
+            
+        $instructions = "Please send your {$crypto["name"]}{$network} donation to the following address:\n\n";
         $instructions .= $crypto["address"] . "\n\n";
+        
+        if ($reference) {
+            $instructions .= "Transaction Reference: " . $reference . "\n\n";
+        }
         
         switch ($cryptoType) {
             case "ETH":
-                $instructions .= "Make sure to send only ETH or ERC-20 tokens to this address.";
+                $instructions .= "IMPORTANT:\n";
+                $instructions .= "• Make sure to send only ETH or ERC-20 tokens to this address.\n";
+                if ($crypto["network"] !== "mainnet") {
+                    $instructions .= "• This is a " . strtoupper($crypto["network"]) . " address. Do not send mainnet ETH here.\n";
+                }
                 break;
+                
             case "BTC":
-                $instructions .= "Make sure to send only BTC to this address.";
+                $instructions .= "IMPORTANT:\n";
+                $instructions .= "• Make sure to send only BTC to this address.\n";
+                if ($crypto["network"] !== "mainnet") {
+                    $instructions .= "• This is a TESTNET address. Do not send mainnet BTC here.\n";
+                }
                 break;
+                
             case "XLM":
-                $instructions .= "Make sure to include the memo ID provided above when sending XLM.";
+                $instructions .= "IMPORTANT:\n";
+                if ($reference) {
+                    $instructions .= "• When sending XLM, you MUST include this memo: " . $reference . "\n";
+                }
+                if ($crypto["network"] !== "public") {
+                    $instructions .= "• This is a TESTNET address. Do not send public network XLM here.\n";
+                }
                 break;
         }
+        
+        $instructions .= "\nScan the QR code to quickly open this address in your wallet app.";
         
         return $instructions;
     }
@@ -279,16 +396,43 @@ class Donate {
     /**
      * Get supported cryptocurrency options
      * 
+     * @param bool $includeAddresses Whether to include wallet addresses in the response
      * @return array List of supported cryptocurrencies and their configurations
      */
-    public function getSupportedCryptos() {
+    public function getSupportedCryptos($includeAddresses = false) {
         $cryptos = [];
-        foreach ($this->supportedCryptos as $symbol => $data) {
-            $cryptos[$symbol] = [
-                "name" => $data["name"],
-                "network" => $data["network"]
+        
+        // If none are configured, provide instructions
+        if (empty($this->supportedCryptos)) {
+            return [
+                'error' => 'No cryptocurrency wallets configured',
+                'instructions' => 'Set environment variables for wallet addresses in your .env file'
             ];
         }
+        
+        // Format response with configured crypto options
+        foreach ($this->supportedCryptos as $symbol => $data) {
+            $cryptoData = [
+                "name" => $data["name"],
+                "network" => $data["network"],
+                "isTestnet" => $data["network"] !== "mainnet" && $data["network"] !== "public",
+                "isDefault" => $symbol === (getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM")
+            ];
+            
+            // Only include addresses if specifically requested (admin features)
+            if ($includeAddresses) {
+                $cryptoData["address"] = $data["address"];
+            }
+            
+            $cryptos[$symbol] = $cryptoData;
+        }
+        
+        // Add configuration status
+        $cryptos["_config"] = [
+            "multiCurrencyEnabled" => getenv("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true",
+            "defaultCurrency" => getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM"
+        ];
+        
         return $cryptos;
     }
 

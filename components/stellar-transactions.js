@@ -43,7 +43,7 @@ class StellarTransactions extends HTMLElement {
         try {
             // Use the proper API endpoint
             const response = await fetch(
-                `/api/wallet/getTransactions?walletId=${walletId}&page=${this.page}&limit=${this.limit}`
+                `/api/wallets/getTransactions?walletId=${walletId}&page=${this.page}&limit=${this.limit}`
             );
             const data = await response.json();
             

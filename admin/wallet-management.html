@@ -59,7 +59,7 @@
                     </div>
                     <div>
                         <button onclick="fundTestnetAccount('${wallet.publicKey}')" class="button">Fund</button>
-                        <a href="/admin/transactions.php?wallet=${wallet.publicKey}" class="button">Transactions</a>
+                        <a href="/admin/transactions.html?userId=${wallet.user ? wallet.user.id : ''}" class="button">Transactions</a>
                     </div>
                 </div>
                 

@@ -20,16 +20,6 @@ require_once __DIR__ . '/../lib/BlockchainTransactionController.php';
 $useTestnet = defined('STELLAR_TESTNET') && STELLAR_TESTNET === true;
 $txController = new BlockchainTransactionController($useTestnet);
 
-// Set up logging
-$logFile = __DIR__ . '/../logs/blockchain_transactions.log';
-function logMessage($message) {
-    global $logFile;
-    $timestamp = date('Y-m-d H:i:s');
-    $logMessage = "[{$timestamp}] {$message}" . PHP_EOL;
-    file_put_contents($logFile, $logMessage, FILE_APPEND);
-    echo $logMessage;
-}
-
 // Get pending transactions to check
 $maxAge = 3600; // 1 hour
 $limit = 50; // Process up to 50 transactions at a time

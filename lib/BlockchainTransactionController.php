@@ -31,13 +31,29 @@ class BlockchainTransactionController {
      * @return array Result of the operation
      */
     public function createTransaction($data) {
+        // Special handling for test donations
+        $isTestDonation = !empty($data['metadata']) && 
+                         !empty($data['metadata']['isTestDonation']) && 
+                         $data['metadata']['isTestDonation'] === true;
+
         // Validate required fields
-        if (empty($data['txHash'])) {
-            return ['success' => false, 'error' => 'Transaction hash is required'];
+        if (empty($data['txHash']) && empty($data['reference'])) {
+            return ['success' => false, 'error' => 'Either Transaction hash or reference is required'];
         }
         
         if (empty($data['type'])) {
             return ['success' => false, 'error' => 'Transaction type is required'];
+        }
+        
+        // If it's a test donation, ensure type is supported by the schema
+        if ($isTestDonation && $data['type'] === 'donation') {
+            $data['type'] = 'payment';  // Convert 'donation' to 'payment' which is supported
+        }
+        
+        // If txHash is not provided but we have a reference, generate a placeholder hash for testing
+        if (empty($data['txHash']) && !empty($data['reference'])) {
+            $data['txHash'] = 'TEST_' . $data['reference'] . '_' . uniqid();
+            $data['isTestTransaction'] = true;
         }
         
         // Check if transaction already exists
