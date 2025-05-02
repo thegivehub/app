@@ -104,9 +104,10 @@
             </div>
             <form id="recurring-form">
                 <label>Donor ID: <select name="donorId" id="donor-select-2" required><option value="">Loading...</option></select></label>
+                <label>Wallet: <select name="walletId" id="wallet-select-2" required><option value="">Select donor first...</option></select></label>
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-2" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
-                <label>Source Secret: <input type="text" name="sourceSecret" id="recurring-source-secret" required></label>
+                <input type="hidden" name="sourceSecret" id="recurring-source-secret">
                 <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
                 <label>Message: <input type="text" name="message"></label>
                 <label>Frequency:
@@ -230,31 +231,232 @@ async function fetchAndPopulateSelect(url, selectIds, labelField, valueField, fa
 
 // Populate donor and campaign selects on page load
 document.addEventListener('DOMContentLoaded', function() {
-    fetchAndPopulateSelect('/api.php/Donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
-    fetchAndPopulateSelect('/api.php/Campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
+    fetchAndPopulateSelect('/api.php/donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
+    fetchAndPopulateSelect('/api.php/campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
 
-    // Auto-fill Source Secret for One-Time Donation and Recurring Donation forms
-    function setupWalletAutoFill(donorSelectId, secretInputSelector) {
+    // Populate wallet select and auto-fill Source Secret
+    function setupWalletSelection(donorSelectId, walletSelectId, secretInputSelector) {
         const donorSelect = document.getElementById(donorSelectId);
+        const walletSelect = document.getElementById(walletSelectId);
         const secretInput = document.querySelector(secretInputSelector);
-        if (!donorSelect || !secretInput) return;
+        
+        if (!donorSelect || !walletSelect || !secretInput) return;
+        
         donorSelect.addEventListener('change', async function() {
-            const userId = donorSelect.value;
-            secretInput.value = ""; // Clear first
-            if (!userId) return;
+            const donorId = donorSelect.value;
+            walletSelect.innerHTML = '<option value="">Loading wallets...</option>';
+            secretInput.value = ""; // Clear secret first
+            
+            if (!donorId) {
+                walletSelect.innerHTML = '<option value="">Select donor first...</option>';
+                return;
+            }
+
+            // Display diagnostic information in wallet dropdown
+            walletSelect.innerHTML = '<option value="">Checking donor ID...</option>';
+            
             try {
-                const res = await fetch(`/api.php/Wallet/getUserWallet?userId=${encodeURIComponent(userId)}`);
-                const json = await res.json();
-                if (json.success && json.wallet && json.wallet.secretKey) {
-                    secretInput.value = json.wallet.secretKey;
+                // Step 1: Try to get direct donor document to check for userId
+                let userId = null;
+                let donorHasUserId = false;
+                
+                try {
+                    // Try to get donor directly from database
+                    const donorRes = await fetch(`/api.php/donors?id=${encodeURIComponent(donorId)}`);
+                    const donorData = await donorRes.json();
+                    
+                    if (donorData && donorData.userId) {
+                        userId = donorData.userId;
+                        donorHasUserId = true;
+                        console.log(`Found userId ${userId} in donor document`);
+                    }
+                } catch (e) {
+                    console.log("Could not get direct donor document, trying alternatives");
+                }
+                
+                // Step 2: If not found, try getting donor details through API method
+                if (!userId) {
+                    try {
+                        const donorDetailsRes = await fetch(`/api.php/donor/getDonorDetails?id=${encodeURIComponent(donorId)}`);
+                        const donorDetails = await donorDetailsRes.json();
+                        
+                        if (donorDetails && donorDetails.donor && donorDetails.donor.userId) {
+                            userId = donorDetails.donor.userId;
+                            donorHasUserId = true;
+                            console.log(`Found userId in donor details: ${userId}`);
+                        }
+                    } catch (e) {
+                        console.log("Could not get donor details");
+                    }
+                }
+                
+                // Step 3: If still not found, check if donor ID itself is a user ID
+                if (!userId) {
+                    try {
+                        const userRes = await fetch(`/api.php/user?id=${encodeURIComponent(donorId)}`);
+                        const userData = await userRes.json();
+                        
+                        if (userData && userData.success) {
+                            userId = donorId;
+                            console.log("Donor ID is itself a valid user ID");
+                        }
+                    } catch (e) {
+                        console.log("Donor ID is not a valid user ID");
+                    }
+                }
+                
+                // Step 4: If we still don't have a userId, use the donorId as a last resort
+                if (!userId) {
+                    userId = donorId;
+                    console.log("Using donor ID as user ID (fallback)");
+                    walletSelect.innerHTML = '<option value="">Warning: No user account found</option>';
+                    
+                    // Add instructional option
+                    const noUserOption = document.createElement('option');
+                    noUserOption.value = "";
+                    noUserOption.disabled = true;
+                    noUserOption.textContent = "Run link_donors_to_users.php script first";
+                    walletSelect.appendChild(noUserOption);
+                    
+                    // Add option to create wallet anyway
+                    const createAnyway = document.createElement('option');
+                    createAnyway.value = "create_new";
+                    createAnyway.textContent = "➕ Create wallet anyway (may not work)";
+                    walletSelect.appendChild(createAnyway);
+                    
+                    walletSelect.onchange = function() {
+                        if (walletSelect.value === "create_new") {
+                            createNewWallet(userId, walletSelect, secretInput);
+                        }
+                    };
+                    
+                    return;
+                }
+                
+                // Step 5: Now that we have a userId, get the wallets
+                walletSelect.innerHTML = '<option value="">Getting wallets for user...</option>';
+                console.log(`Fetching wallets for userId: ${userId}`);
+                
+                const walletsRes = await fetch(`/api.php/wallets/getUserWallets?userId=${encodeURIComponent(userId)}`);
+                const walletsJson = await walletsRes.json();
+                
+                if (walletsJson.success && walletsJson.wallets && walletsJson.wallets.length > 0) {
+                    walletSelect.innerHTML = '<option value="">Select wallet...</option>';
+                    walletsJson.wallets.forEach(wallet => {
+                        walletSelect.innerHTML += `<option value="${wallet.id}" data-secret="${wallet.secretKey || ''}">${wallet.label || wallet.publicKey.substr(0, 10)}... (Balance: ${wallet.balance} XLM)</option>`;
+                    });
+                    
+                    // Add event listener to wallet select to set secret when wallet is selected
+                    walletSelect.onchange = function() {
+                        const selectedOption = walletSelect.options[walletSelect.selectedIndex];
+                        if (selectedOption && selectedOption.dataset.secret) {
+                            secretInput.value = selectedOption.dataset.secret;
+                        } else {
+                            secretInput.value = "";
+                        }
+                    };
+                } else {
+                    walletSelect.innerHTML = '<option value="">No wallets found</option>';
+                    // Add option to create a wallet
+                    const createWalletOption = document.createElement('option');
+                    createWalletOption.value = "create_new";
+                    createWalletOption.textContent = "➕ Create new wallet";
+                    walletSelect.appendChild(createWalletOption);
+                    
+                    walletSelect.onchange = function() {
+                        if (walletSelect.value === "create_new") {
+                            createNewWallet(userId, walletSelect, secretInput);
+                        }
+                    };
                 }
             } catch (e) {
-                // Ignore errors, allow manual entry
+                console.error("Error fetching wallet data:", e);
+                walletSelect.innerHTML = '<option value="">Error loading wallets</option>';
+                
+                // Add retry option
+                const retryOption = document.createElement('option');
+                retryOption.value = "retry";
+                retryOption.textContent = "🔄 Retry";
+                walletSelect.appendChild(retryOption);
+                
+                walletSelect.onchange = function() {
+                    if (walletSelect.value === "retry") {
+                        // Trigger the change event again to retry
+                        donorSelect.dispatchEvent(new Event('change'));
+                    }
+                };
             }
         });
+        
+        // Function to create a new wallet
+        async function createNewWallet(userId, walletSelect, secretInput) {
+            try {
+                walletSelect.disabled = true;
+                walletSelect.innerHTML = '<option value="">Creating wallet...</option>';
+                
+                const createRes = await fetch(`/api.php/wallets/createWallet`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                const createJson = await createRes.json();
+                
+                if (createJson.success && createJson.wallet) {
+                    walletSelect.innerHTML = `<option value="${createJson.wallet.id}" selected data-secret="${createJson.wallet.secretKey || ''}">${createJson.wallet.label || createJson.wallet.publicKey.substr(0, 10)}... (New)</option>`;
+                    secretInput.value = createJson.wallet.secretKey || '';
+                    
+                    // Add funding status option
+                    const fundingOption = document.createElement('option');
+                    fundingOption.disabled = true;
+                    fundingOption.textContent = "⏳ Funding wallet via testnet...";
+                    walletSelect.appendChild(fundingOption);
+                    
+                    // Try to fund the wallet
+                    try {
+                        const fundRes = await fetch(`/api.php/wallets/fundTestnetAccount`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ publicKey: createJson.wallet.publicKey })
+                        });
+                        
+                        const fundJson = await fundRes.json();
+                        
+                        if (fundJson.success) {
+                            // Update the wallet option to show the funded balance
+                            const balance = fundJson.account.balances[0].balance;
+                            walletSelect.querySelector('option:first-child').textContent = 
+                                `${createJson.wallet.label || createJson.wallet.publicKey.substr(0, 10)}... (Funded: ${balance} XLM)`;
+                            
+                            // Remove the funding status option
+                            walletSelect.removeChild(fundingOption);
+                        } else {
+                            fundingOption.textContent = "⚠️ Funding failed - wallet may have 0 balance";
+                        }
+                    } catch (e) {
+                        fundingOption.textContent = "⚠️ Funding error - wallet may have 0 balance";
+                    }
+                } else {
+                    walletSelect.innerHTML = '<option value="">Failed to create wallet</option>';
+                    // Add error details if available
+                    if (createJson.error) {
+                        const errorOption = document.createElement('option');
+                        errorOption.disabled = true;
+                        errorOption.textContent = `Error: ${createJson.error}`;
+                        walletSelect.appendChild(errorOption);
+                    }
+                }
+                
+                walletSelect.disabled = false;
+            } catch (e) {
+                walletSelect.innerHTML = '<option value="">Error creating wallet</option>';
+                walletSelect.disabled = false;
+            }
+        }
     }
-    setupWalletAutoFill('donor-select-1', '#donation-source-secret');
-    setupWalletAutoFill('donor-select-2', '#recurring-source-secret');
+    
+    setupWalletSelection('donor-select-1', 'wallet-select-1', '#donation-source-secret');
+    setupWalletSelection('donor-select-2', 'wallet-select-2', '#recurring-source-secret');
 });
 
 async function postForm(url, data, resultDiv) {
@@ -282,7 +484,12 @@ document.getElementById('donation-form').onsubmit = function(e) {
     const data = Object.fromEntries(new FormData(this).entries());
     data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
     data.recurring = false;
-    postForm('/api.php/Transaction/processDonation', data, document.getElementById('donation-result'));
+    
+    // Add helpful message for debugging
+    document.getElementById('donation-result').innerHTML = 
+        '<div class="instructions">Processing donation... Please wait.</div>';
+    
+    postForm('/api.php/transaction/processDonation', data, document.getElementById('donation-result'));
 };
 
 // Recurring Donation
@@ -291,7 +498,12 @@ document.getElementById('recurring-form').onsubmit = function(e) {
     const data = Object.fromEntries(new FormData(this).entries());
     data.isAnonymous = !!this.isAnonymous && this.isAnonymous.checked;
     data.recurring = true;
-    postForm('/api.php/Transaction/processDonation', data, document.getElementById('recurring-result'));
+    
+    // Add helpful message for debugging
+    document.getElementById('recurring-result').innerHTML = 
+        '<div class="instructions">Processing recurring donation... Please wait.</div>';
+    
+    postForm('/api.php/transaction/processDonation', data, document.getElementById('recurring-result'));
 };
 
 // Milestone Escrow Creation
@@ -306,7 +518,8 @@ document.getElementById('escrow-form').onsubmit = function(e) {
             milestones.push({
                 title: data[`milestone${i}_title`],
                 amount: data[`milestone${i}_amount`],
-                releaseDays: data[`milestone${i}_releaseDays`] || null
+                releaseDays: data[`milestone${i}_releaseDays`] || null,
+                id: `milestone-${i}-${Date.now()}`
             });
         }
         delete data[`milestone${i}_title`];
@@ -314,14 +527,14 @@ document.getElementById('escrow-form').onsubmit = function(e) {
         delete data[`milestone${i}_releaseDays`];
     }
     data.milestones = milestones;
-    postForm('/api.php/Transaction/createMilestoneEscrow', data, document.getElementById('escrow-result'));
+    postForm('/api.php/transaction/createMilestoneEscrow', data, document.getElementById('escrow-result'));
 };
 
 // Milestone Fund Release
 document.getElementById('release-form').onsubmit = function(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(this).entries());
-    postForm('/api.php/Transaction/releaseMilestoneFunding', data, document.getElementById('release-result'));
+    postForm('/api.php/transaction/releaseMilestoneFunding', data, document.getElementById('release-result'));
 };
 
 // Tab switching logic

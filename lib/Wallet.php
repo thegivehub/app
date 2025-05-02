@@ -58,7 +58,7 @@ class Wallets extends Collection {
             // Check if user already has wallets
             $existingWallets = $this->collection->find([
                 'userId' => new MongoDB\BSON\ObjectId($uid)
-            ])->toArray();
+            ]);
             
             // Generate new Stellar keypair
             $keypair = Keypair::random();
@@ -138,7 +138,7 @@ class Wallets extends Collection {
             // Get wallets from database
             $wallets = $this->collection->find([
                 'userId' => new MongoDB\BSON\ObjectId($uid)
-            ])->toArray();
+            ]);
             
             if (empty($wallets)) {
                 return [
