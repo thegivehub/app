@@ -3,6 +3,7 @@
  * BlockchainTransactionController - Handles operations related to blockchain transactions
  */
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/autoload.php';
 
 class BlockchainTransactionController {
     private $db;
@@ -14,7 +15,7 @@ class BlockchainTransactionController {
      * 
      * @param bool $useTestnet Whether to use the Stellar testnet
      */
-    public function __construct($useTestnet = false) {
+    public function __construct($useTestnet = true) {
         $this->db = Database::getInstance();
         $this->collection = $this->db->getCollection('blockchain_transactions');
         
@@ -281,9 +282,10 @@ class BlockchainTransactionController {
                 // Transaction not found on blockchain yet
                 if ($transaction['status'] === 'pending') {
                     // If it's been pending for too long, mark as expired
-                    $createdAt = $transaction['createdAt']->toDateTime();
-                    $now = new DateTime();
-                    $diff = $now->getTimestamp() - $createdAt->getTimestamp();
+
+                    $createdAt = strtotime($transaction['createdAt']);
+                    $now = time();
+                    $diff = $now - $createdAt;
                     
                     // If pending for more than 1 hour, mark as expired
                     if ($diff > 3600) {
