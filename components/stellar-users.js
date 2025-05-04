@@ -28,7 +28,8 @@ class StellarUsers extends HTMLElement {
             if (data && Array.isArray(data)) {
                 this.users = data.map(user => ({
                     id: user._id || user.id,
-                    name: user.name || user.username || user.id,
+                    name: user.name || user.personalInfo?.lastName + ', ' + user.personalInfo?.firstName || user.id,
+                    personalInfo: user.personalInfo,
                     wallet: user.wallet || null
                 }));
                 console.log('Loaded users:', this.users);
@@ -172,7 +173,9 @@ class StellarUsers extends HTMLElement {
                             <div class="user-item" data-user-id="${user.id}">
                                 <div class="user-info">
                                     <div class="user-id">${user.id}</div>
-                                    <div class="user-balance">${this.formatBalance(user.wallet?.balance)} XLM</div>
+                                    <div class="user-name">${user.personalInfo?.lastName}, ${user.personalInfo?.firstName}</div>
+                                    <div class="user-email">${user.personalInfo?.email}</div>
+                                    <!--div class="user-balance">${this.formatBalance(user.wallet?.balance)} XLM</div-->
                                 </div>
                                 <button class="select-user-btn" data-user-id="${user.id}">Select</button>
                             </div>

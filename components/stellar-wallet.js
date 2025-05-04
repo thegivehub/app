@@ -29,22 +29,24 @@ class StellarWallet extends HTMLElement {
     
     async loadWallet(userId) {
         try {
-            // Use the proper API endpoint
-            const response = await fetch(`/api.php/wallets/getUserWallet?userId=${userId}`);
+            // Use the correct API endpoint
+            const response = await fetch(`/api.php/Wallets/getUserWallet?userId=${userId}`);
             const data = await response.json();
             
-            if (data && data._id) {
+            console.log('Wallet API response:', data);
+            
+            if (data && data.success && data.wallet) {
+                // Success response with wallet object
+                this.wallet = data.wallet;
+                console.log('Loaded wallet:', this.wallet);
+                this.render();
+            } else if (data && data._id) {
                 // Single wallet object returned
                 this.wallet = {
                     publicKey: data.publicKey,
                     balance: data.balance || '0.0000000',
                     network: data.network || this.isTestnet ? 'testnet' : 'public'
                 };
-                console.log('Loaded wallet:', this.wallet);
-                this.render();
-            } else if (data && data.success && data.wallet) {
-                // Success response with wallet object
-                this.wallet = data.wallet;
                 console.log('Loaded wallet:', this.wallet);
                 this.render();
             } else {
@@ -64,8 +66,8 @@ class StellarWallet extends HTMLElement {
                 return;
             }
             
-            // Use the proper API endpoint
-            const response = await fetch('/api.php/wallets/create', {
+            // Use the correct API endpoint
+            const response = await fetch('/api.php/Wallets/createWallet', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -97,8 +99,8 @@ class StellarWallet extends HTMLElement {
         try {
             if (!this.wallet) return;
             
-            // Use the proper API endpoint
-            const response = await fetch('/api.php/wallets/fund', {
+            // Use the correct API endpoint
+            const response = await fetch('/api.php/Wallets/fundTestnetAccount', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -287,4 +289,4 @@ class StellarWallet extends HTMLElement {
     }
 }
 
-customElements.define('stellar-wallet', StellarWallet); 
+customElements.define('stellar-wallet', StellarWallet);

@@ -35,14 +35,15 @@ if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
     exit(1);
 }
 
-// Load Composer dependencies
+// Load Composer dependencies and project autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../lib/autoload.php';
 
 // Try to import the StellarKeypair class - we'll check if it exists later
 $stellarSdkAvailable = false;
 try {
     // Check if the class exists before trying to use it
-    if (class_exists('Soneso\StellarSDK\Keypair')) {
+    if (class_exists('Soneso\StellarSDK\Crypto\KeyPair')) {
         $stellarSdkAvailable = true;
     }
 } catch (Throwable $e) {
@@ -85,9 +86,9 @@ try {
         echo "for demonstration only. Install the Stellar SDK for proper key generation.\n\n";
     } else {
         // Use the Stellar SDK to generate a proper keypair
-        $stellarKeypair = \Soneso\StellarSDK\Keypair::random();
-        $stellarPublicKey = $stellarKeypair->getPublicKey();
-        $stellarSecretKey = $stellarKeypair->getSecret();
+        $stellarKeypair = \Soneso\StellarSDK\Crypto\KeyPair::random();
+        $stellarPublicKey = $stellarKeypair->getAccountId();
+        $stellarSecretKey = $stellarKeypair->getSecretSeed();
         
         echo "Public Key: $stellarPublicKey\n";
         echo "Secret Key: $stellarSecretKey\n\n";

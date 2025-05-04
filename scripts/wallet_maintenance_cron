@@ -1,0 +1,4 @@
+# Crontab entry for wallet maintenance
+# To install: crontab -e and paste this line
+# Run wallet maintenance daily at 1:00 AM
+0 1 * * * /home/cdr/domains/thegivehub.com/app/scripts/maintain_wallets.sh >> /home/cdr/domains/thegivehub.com/app/logs/cron_wallet.log 2>&1

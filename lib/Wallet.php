@@ -1,20 +1,21 @@
 <?php
 /**
- * Wallets.php
+ * Wallet.php
  * Handles multiple Stellar wallet operations and serves as a collection manager
  * API endpoints are automatically created for public methods
  */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Collection.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/soneso/stellar-php-sdk/Soneso/StellarSDK/StellarSDK.php';
 
 // Use Soneso Stellar SDK
-use Soneso\StellarSDK\Keypair;
+use Soneso\StellarSDK\Crypto\KeyPair;
 use Soneso\StellarSDK\Server;
 use Soneso\StellarSDK\Asset;
 use Soneso\StellarSDK\StellarSDK;
 
-class Wallets extends Collection {
+class Wallet extends Collection {
     private $stellarServer;
     private $network;
     public $isTestnet = true;
@@ -25,7 +26,9 @@ class Wallets extends Collection {
      * @param bool $useTestnet Whether to use testnet (default: true)
      */
     public function __construct() {
-        parent::__construct('wallets');
+        $this->collectionName = 'wallets';
+        parent::__construct();
+        
         $useTestnet = true;
         $this->isTestnet = $useTestnet;
         $this->horizonUrl = $useTestnet 
@@ -61,8 +64,8 @@ class Wallets extends Collection {
             ]);
             
             // Generate new Stellar keypair
-            $keypair = Keypair::random();
-            $publicKey = $keypair->getPublicKey();
+            $keypair = KeyPair::random();
+            $publicKey = $keypair->getAccountId();
             $secretKey = $keypair->getSecretSeed();
             
             // Set default flag if this is the first wallet
@@ -76,6 +79,7 @@ class Wallets extends Collection {
                 'network' => $this->isTestnet ? 'testnet' : 'public',
                 'isDefault' => $isDefault,
                 'currency' => 'XLM',
+                'type' => 'user', // Add explicit type for consistency
                 'label' => 'Stellar Wallet ' . (count($existingWallets) + 1),
                 'createdAt' => new MongoDB\BSON\UTCDateTime(),
                 'lastAccessed' => new MongoDB\BSON\UTCDateTime(),
@@ -667,8 +671,8 @@ class Wallets extends Collection {
             }
             
             // Create keypair from secret key
-            $sourceKeypair = Keypair::fromSeed($sourceWallet['secretKey']);
-            $sourceAccountId = $sourceKeypair->getPublicKey();
+            $sourceKeyPair = KeyPair::fromSeed($sourceWallet['secretKey']);
+            $sourceAccountId = $sourceKeyPair->getAccountId();
             
             // Load the source account
             $sourceAccount = $this->stellarServer->accounts()->account($sourceAccountId);
@@ -691,7 +695,7 @@ class Wallets extends Collection {
             
             // Build and sign transaction
             $transaction = $transaction->build();
-            $transaction->sign($sourceKeypair, $this->network);
+            $transaction->sign($sourceKeyPair, $this->network);
             
             // Submit transaction
             $response = $server->submitTransaction($transaction);
@@ -835,6 +839,700 @@ class Wallets extends Collection {
 
         } catch (\Exception $e) {
             $this->lastError = $e->getMessage();
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Create a new wallet for a campaign
+     * Endpoint: /api.php/wallet/createCampaignWallet
+     * @param array $params Request parameters with campaignId
+     * @return array Created wallet details or error
+     */
+    public function createCampaignWallet($params) {
+        try {
+            // Ensure campaign ID is provided
+            $campaignId = (isset($params) && isset($params['campaignId'])) ? $params['campaignId'] : $_REQUEST['campaignId'];
+            if (!isset($campaignId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign ID is required'
+                ];
+            }
+
+            // Get campaign details to validate and get the title
+            $db = new Database();
+            $campaignsCollection = $db->getCollection('campaigns');
+            try {
+                $campaign = $campaignsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid campaign ID format'
+                ];
+            }
+
+            if (!$campaign) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign not found'
+                ];
+            }
+
+            $campaignTitle = $campaign['title'] ?? "Untitled Campaign";
+
+            // Check if campaign already has a wallet
+            if (isset($campaign['walletId']) && !empty($campaign['walletId'])) {
+                // Find the existing wallet
+                $existingWallet = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['walletId'])]);
+                
+                if ($existingWallet) {
+                    return [
+                        'success' => true,
+                        'wallet' => [
+                            'id' => (string)$existingWallet['_id'],
+                            'campaignId' => (string)$campaignId,
+                            'publicKey' => $existingWallet['publicKey'],
+                            'balance' => '0', // We'll get the real balance later
+                            'network' => $this->isTestnet ? 'testnet' : 'public',
+                            'currency' => 'XLM',
+                            'label' => $existingWallet['label'] ?? "Campaign Wallet: {$campaignTitle}",
+                            'message' => 'Campaign already has a wallet',
+                            'createdAt' => isset($existingWallet['createdAt'])
+                                ? (is_object($existingWallet['createdAt']) && method_exists($existingWallet['createdAt'], 'toDateTime')
+                                    ? $existingWallet['createdAt']->toDateTime()->format('c')
+                                    : (is_string($existingWallet['createdAt']) ? $existingWallet['createdAt'] : null))
+                                : null
+                        ]
+                    ];
+                }
+            }
+
+            // Generate new Stellar keypair
+            $keypair = KeyPair::random();
+            $publicKey = $keypair->getAccountId();
+            $secretKey = $keypair->getSecretSeed();
+            
+            // Create wallet document
+            $wallet = [
+                'campaignId' => new MongoDB\BSON\ObjectId($campaignId),
+                'publicKey' => $publicKey,
+                'secretKey' => $secretKey, // In production, this should be encrypted
+                'network' => $this->isTestnet ? 'testnet' : 'public',
+                'type' => 'campaign',
+                'currency' => 'XLM',
+                'label' => "Campaign Wallet: {$campaignTitle}",
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'lastAccessed' => new MongoDB\BSON\UTCDateTime(),
+                'status' => 'active'
+                // Note: userId is no longer required for campaign wallets thanks to schema update
+            ];
+            
+            // Add debug output
+            error_log("DEBUG: Attempting to insert wallet for campaign: " . $campaignId);
+            error_log("DEBUG: Wallet data: " . json_encode($wallet));
+            
+            try {
+                // Insert wallet into database
+                $result = $this->collection->insertOne($wallet);
+            } catch (\Exception $e) {
+                error_log("DEBUG: MongoDB insert error: " . $e->getMessage());
+                throw $e;
+            }
+            
+            // Check if result is an array (error) or MongoDB\InsertOneResult
+            if (is_array($result) && isset($result['success']) && $result['success'] === false) {
+                error_log("DEBUG: Insert error result: " . json_encode($result));
+                throw new \Exception($result['error'] ?? "Failed to insert wallet");
+            }
+            
+            // Update campaign with wallet information
+            $walletId = (string)$result->getInsertedId();
+            $campaignsCollection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($campaignId)],
+                [
+                    '$set' => [
+                        'walletId' => $walletId,
+                        'stellarAddress' => $publicKey,
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                    ]
+                ]
+            );
+            
+            return [
+                'success' => true,
+                'wallet' => [
+                    'id' => $walletId,
+                    'campaignId' => $campaignId,
+                    'publicKey' => $publicKey,
+                    'balance' => '0',
+                    'network' => $this->isTestnet ? 'testnet' : 'public',
+                    'currency' => 'XLM',
+                    'label' => $wallet['label'],
+                    'createdAt' => $wallet['createdAt']->toDateTime()->format('c')
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Get a campaign's wallet
+     * Endpoint: /api.php/wallet/getCampaignWallet
+     * @param array $params Request parameters with campaignId
+     * @return array Wallet details or error
+     */
+    public function getCampaignWallet($params) {
+        try {
+            // Ensure campaign ID is provided
+            $campaignId = (isset($params) && isset($params['campaignId'])) ? $params['campaignId'] : $_REQUEST['campaignId'];
+            if (!isset($campaignId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign ID is required'
+                ];
+            }
+
+            // Get campaign details to validate
+            $db = new Database();
+            $campaignsCollection = $db->getCollection('campaigns');
+            try {
+                $campaign = $campaignsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid campaign ID format'
+                ];
+            }
+
+            if (!$campaign) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign not found'
+                ];
+            }
+
+            // Check if the campaign has a wallet
+            if (!isset($campaign['walletId']) || empty($campaign['walletId'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign does not have a wallet',
+                    'createUrl' => '/api.php/wallet/createCampaignWallet?campaignId=' . urlencode($campaignId)
+                ];
+            }
+
+            // Get wallet details
+            try {
+                $wallet = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['walletId'])]);
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid wallet ID format'
+                ];
+            }
+
+            if (!$wallet) {
+                return [
+                    'success' => false,
+                    'error' => 'Wallet not found even though campaign has a walletId',
+                    'walletId' => $campaign['walletId'],
+                    'createUrl' => '/api.php/wallet/createCampaignWallet?campaignId=' . urlencode($campaignId)
+                ];
+            }
+
+            // Get current balance from Stellar network
+            $balance = '0';
+            try {
+                $accountResponse = $this->stellarServer->accounts()->account($wallet['publicKey']);
+                
+                // Process balances from account data
+                $balances = $accountResponse->getBalances();
+                if (!empty($balances)) {
+                    foreach ($balances as $stellarBalance) {
+                        if ($stellarBalance->getAssetType() === "native") {
+                            $balance = $stellarBalance->getBalance();
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Account might not be activated yet
+                $balance = '0';
+            }
+            
+            return [
+                'success' => true,
+                'wallet' => [
+                    'id' => (string)$wallet['_id'],
+                    'campaignId' => (string)$wallet['campaignId'],
+                    'publicKey' => $wallet['publicKey'],
+                    'balance' => $balance,
+                    'network' => $this->isTestnet ? 'testnet' : 'public',
+                    'currency' => $wallet['currency'] ?? 'XLM',
+                    'label' => $wallet['label'] ?? 'Campaign Wallet',
+                    'createdAt' => isset($wallet['createdAt'])
+                        ? (is_object($wallet['createdAt']) && method_exists($wallet['createdAt'], 'toDateTime')
+                            ? $wallet['createdAt']->toDateTime()->format('c')
+                            : (is_string($wallet['createdAt']) ? $wallet['createdAt'] : null))
+                        : null,
+                    'status' => $wallet['status'] ?? 'active'
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Get all campaign wallets
+     * Endpoint: /api.php/wallet/getAllCampaignWallets
+     * @param array $params Request parameters
+     * @return array List of campaign wallets
+     */
+    public function getAllCampaignWallets($params) {
+        try {
+            // Setup pagination
+            $page = isset($params['page']) ? max(1, intval($params['page'])) : 1;
+            $limit = isset($params['limit']) ? min(50, max(1, intval($params['limit']))) : 10;
+            $skip = ($page - 1) * $limit;
+
+            // Query for campaign wallets
+            $query = [
+                'type' => 'campaign'
+            ];
+
+            // Get wallets from database with pagination
+            $wallets = $this->collection->find(
+                $query,
+                [
+                    'skip' => $skip,
+                    'limit' => $limit,
+                    'sort' => ['createdAt' => -1]
+                ]
+            );
+            
+            // Get total count
+            $totalWallets = $this->collection->countDocuments($query);
+            
+            if (empty($wallets)) {
+                return [
+                    'success' => true,
+                    'wallets' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'total' => 0,
+                        'pages' => 0
+                    ]
+                ];
+            }
+            
+            $formattedWallets = [];
+            foreach ($wallets as $wallet) {
+                // Get campaign details if possible
+                $campaign = null;
+                if (isset($wallet['campaignId'])) {
+                    $db = new Database();
+                    $campaignsCollection = $db->getCollection('campaigns');
+                    $campaign = $campaignsCollection->findOne([
+                        '_id' => $wallet['campaignId']
+                    ]);
+                }
+                
+                // Get current balance from Stellar network
+                $balance = '0';
+                try {
+                    $accountResponse = $this->stellarServer->accounts()->account($wallet['publicKey']);
+                    
+                    // Process balances from account data
+                    $balances = $accountResponse->getBalances();
+                    if (!empty($balances)) {
+                        foreach ($balances as $stellarBalance) {
+                            if ($stellarBalance->getAssetType() === "native") {
+                                $balance = $stellarBalance->getBalance();
+                                break;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Account might not be activated yet
+                    $balance = '0';
+                }
+                
+                $formattedWallets[] = [
+                    'id' => (string)$wallet['_id'],
+                    'campaignId' => isset($wallet['campaignId']) ? (string)$wallet['campaignId'] : null,
+                    'publicKey' => $wallet['publicKey'],
+                    'balance' => $balance,
+                    'network' => $this->isTestnet ? 'testnet' : 'public',
+                    'currency' => $wallet['currency'] ?? 'XLM',
+                    'label' => $wallet['label'] ?? 'Campaign Wallet',
+                    'createdAt' => isset($wallet['createdAt'])
+                        ? (is_object($wallet['createdAt']) && method_exists($wallet['createdAt'], 'toDateTime')
+                            ? $wallet['createdAt']->toDateTime()->format('c')
+                            : (is_string($wallet['createdAt']) ? $wallet['createdAt'] : null))
+                        : null,
+                    'status' => $wallet['status'] ?? 'active',
+                    'campaign' => $campaign ? [
+                        'title' => $campaign['title'] ?? 'Unknown Campaign',
+                        'status' => $campaign['status'] ?? 'unknown',
+                        'fundingTarget' => isset($campaign['funding']) ? ($campaign['funding']['targetAmount'] ?? 0) : 0,
+                        'fundingRaised' => isset($campaign['funding']) ? ($campaign['funding']['raisedAmount'] ?? 0) : 0
+                    ] : null
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'wallets' => $formattedWallets,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $totalWallets,
+                    'pages' => ceil($totalWallets / $limit)
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Fund a campaign wallet with testnet funds
+     * Endpoint: /api.php/wallet/fundCampaignWallet
+     * @param array $params Request parameters with campaignId
+     * @return array Result of the funding operation
+     */
+    public function fundCampaignWallet($params) {
+        try {
+            // Verify we are on testnet
+            if (!$this->isTestnet) {
+                throw new Exception("Funding is only available on testnet");
+            }
+
+            // Ensure campaign ID is provided
+            $campaignId = (isset($params) && isset($params['campaignId'])) ? $params['campaignId'] : $_REQUEST['campaignId'];
+            if (!isset($campaignId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign ID is required'
+                ];
+            }
+
+            // Get campaign details
+            $db = new Database();
+            $campaignsCollection = $db->getCollection('campaigns');
+            try {
+                $campaign = $campaignsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid campaign ID format'
+                ];
+            }
+
+            if (!$campaign) {
+                return [
+                    'success' => false,
+                    'error' => 'Campaign not found'
+                ];
+            }
+
+            // Check if the campaign has a wallet
+            if (!isset($campaign['walletId']) || empty($campaign['walletId'])) {
+                // Try to create a wallet first
+                $createResult = $this->createCampaignWallet(['campaignId' => $campaignId]);
+                if (!$createResult['success']) {
+                    return [
+                        'success' => false,
+                        'error' => 'Campaign does not have a wallet and could not create one: ' . ($createResult['error'] ?? 'Unknown error')
+                    ];
+                }
+                
+                // Update the campaign variable with the new wallet
+                $campaign = $campaignsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+                if (!$campaign || !isset($campaign['walletId']) || empty($campaign['walletId'])) {
+                    return [
+                        'success' => false,
+                        'error' => 'Failed to get campaign wallet after creation'
+                    ];
+                }
+            }
+
+            // Get wallet details
+            $wallet = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['walletId'])]);
+            if (!$wallet) {
+                return [
+                    'success' => false,
+                    'error' => 'Wallet not found even though campaign has a walletId'
+                ];
+            }
+
+            // Check if wallet has a public key
+            if (!isset($wallet['publicKey']) || empty($wallet['publicKey'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Wallet does not have a public key'
+                ];
+            }
+
+            // Call Friendbot to fund the account
+            $publicKey = $wallet['publicKey'];
+            $friendbotUrl = "https://friendbot.stellar.org?addr=" . urlencode($publicKey);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $friendbotUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                $error = json_decode($response, true);
+                throw new Exception("Failed to fund account: " . 
+                    ($error['detail'] ?? $error['title'] ?? "HTTP Error {$httpCode}"));
+            }
+
+            // Get the funded account details
+            $accountDetails = $this->checkStellarAccountBalance($publicKey);
+            
+            if (!$accountDetails['success']) {
+                throw new Exception("Failed to verify account funding: " . $accountDetails['error']);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Campaign wallet funded successfully',
+                'wallet' => [
+                    'id' => (string)$wallet['_id'],
+                    'campaignId' => $campaignId,
+                    'publicKey' => $publicKey,
+                    'balance' => $accountDetails['balances'][0]['balance'] ?? '0',
+                    'network' => $this->isTestnet ? 'testnet' : 'public',
+                    'all_balances' => $accountDetails['balances']
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Get a wallet by ID or public key
+     * Endpoint: /api.php/wallet/getWalletDetails
+     * @param array $params Request parameters with walletId or publicKey
+     * @return array Wallet details or error
+     */
+    public function getWalletDetails($params) {
+        try {
+            // Check if wallet ID is provided
+            if (isset($params['walletId']) && !empty($params['walletId'])) {
+                try {
+                    $wallet = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($params['walletId'])]);
+                } catch (\Exception $e) {
+                    return [
+                        'success' => false,
+                        'error' => 'Invalid wallet ID format'
+                    ];
+                }
+            }
+            // Or check if public key is provided
+            else if (isset($params['publicKey']) && !empty($params['publicKey'])) {
+                $wallet = $this->collection->findOne(['publicKey' => $params['publicKey']]);
+            }
+            else {
+                return [
+                    'success' => false,
+                    'error' => 'Either walletId or publicKey is required'
+                ];
+            }
+            
+            if (!$wallet) {
+                return [
+                    'success' => false,
+                    'error' => 'Wallet not found'
+                ];
+            }
+            
+            // Get current balance from Stellar network
+            $balance = '0';
+            try {
+                $accountResponse = $this->stellarServer->accounts()->account($wallet['publicKey']);
+                
+                // Process balances from account data
+                $balances = $accountResponse->getBalances();
+                if (!empty($balances)) {
+                    foreach ($balances as $stellarBalance) {
+                        if ($stellarBalance->getAssetType() === "native") {
+                            $balance = $stellarBalance->getBalance();
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Account might not be activated yet
+                $balance = '0';
+            }
+            
+            $result = [
+                'success' => true,
+                'wallet' => [
+                    'id' => (string)$wallet['_id'],
+                    'publicKey' => $wallet['publicKey'],
+                    'balance' => $balance,
+                    'network' => $this->isTestnet ? 'testnet' : 'public',
+                    'currency' => $wallet['currency'] ?? 'XLM',
+                    'label' => $wallet['label'] ?? 'Wallet',
+                    'createdAt' => isset($wallet['createdAt'])
+                        ? (is_object($wallet['createdAt']) && method_exists($wallet['createdAt'], 'toDateTime')
+                            ? $wallet['createdAt']->toDateTime()->format('c')
+                            : (is_string($wallet['createdAt']) ? $wallet['createdAt'] : null))
+                        : null,
+                    'type' => $wallet['type'] ?? 'user',
+                    'status' => $wallet['status'] ?? 'active'
+                ]
+            ];
+            
+            // Add campaign info if this is a campaign wallet
+            if (isset($wallet['campaignId'])) {
+                $result['wallet']['campaignId'] = (string)$wallet['campaignId'];
+                
+                // Try to get campaign details
+                try {
+                    $db = new Database();
+                    $campaignsCollection = $db->getCollection('campaigns');
+                    $campaign = $campaignsCollection->findOne(['_id' => $wallet['campaignId']]);
+                    
+                    if ($campaign) {
+                        $result['wallet']['campaign'] = [
+                            'title' => $campaign['title'] ?? 'Unknown Campaign',
+                            'status' => $campaign['status'] ?? 'unknown',
+                            'fundingTarget' => isset($campaign['funding']) ? ($campaign['funding']['targetAmount'] ?? 0) : 0,
+                            'fundingRaised' => isset($campaign['funding']) ? ($campaign['funding']['raisedAmount'] ?? 0) : 0
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Ignore campaign lookup errors
+                }
+            }
+            
+            // Add user info if this is a user wallet
+            if (isset($wallet['userId'])) {
+                $result['wallet']['userId'] = (string)$wallet['userId'];
+                
+                // Try to get user details
+                try {
+                    $db = new Database();
+                    $usersCollection = $db->getCollection('users');
+                    $user = $usersCollection->findOne(['_id' => $wallet['userId']]);
+                    
+                    if ($user) {
+                        $result['wallet']['user'] = [
+                            'email' => $user['email'] ?? 'unknown',
+                            'username' => $user['username'] ?? 'Unknown User'
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Ignore user lookup errors
+                }
+            }
+            
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: Ensure all campaigns have wallets
+     * Endpoint: /api.php/wallet/ensureAllCampaignsHaveWallets
+     * @param array $params Request parameters
+     * @return array Result of the operation
+     */
+    public function ensureAllCampaignsHaveWallets($params) {
+        try {
+            // Only allow admins to run this
+            if (!(isset($params['isAdmin']) && $params['isAdmin'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Admin access required'
+                ];
+            }
+
+            $db = new Database();
+            $campaignsCollection = $db->getCollection('campaigns');
+            
+            // Get all campaigns that don't have a walletId
+            $campaigns = $campaignsCollection->find([
+                '$or' => [
+                    ['walletId' => ['$exists' => false]],
+                    ['walletId' => null],
+                    ['walletId' => '']
+                ]
+            ]);
+            
+            $totalCampaigns = 0;
+            $createdWallets = 0;
+            $failedWallets = 0;
+            $results = [];
+            
+            foreach ($campaigns as $campaign) {
+                $totalCampaigns++;
+                $campaignId = (string)$campaign['_id'];
+                $campaignTitle = $campaign['title'] ?? "Untitled Campaign";
+                
+                $createResult = $this->createCampaignWallet(['campaignId' => $campaignId]);
+                
+                if ($createResult['success']) {
+                    $createdWallets++;
+                    $results[] = [
+                        'campaignId' => $campaignId,
+                        'campaignTitle' => $campaignTitle,
+                        'walletId' => $createResult['wallet']['id'],
+                        'publicKey' => $createResult['wallet']['publicKey'],
+                        'success' => true
+                    ];
+                } else {
+                    $failedWallets++;
+                    $results[] = [
+                        'campaignId' => $campaignId,
+                        'campaignTitle' => $campaignTitle,
+                        'error' => $createResult['error'],
+                        'success' => false
+                    ];
+                }
+            }
+            
+            return [
+                'success' => true,
+                'summary' => [
+                    'totalProcessed' => $totalCampaigns,
+                    'walletsCreated' => $createdWallets,
+                    'walletsFailed' => $failedWallets,
+                    'message' => $totalCampaigns === 0 ? 'All campaigns already have wallets' : null
+                ],
+                'results' => $results
+            ];
+        } catch (\Exception $e) {
             return [
                 'success' => false,
                 'error' => $e->getMessage()

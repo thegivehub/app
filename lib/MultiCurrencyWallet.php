@@ -10,7 +10,7 @@ require_once __DIR__ . '/Collection.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Use Soneso Stellar SDK for XLM
-use Soneso\StellarSDK\Keypair as StellarKeypair;
+use Soneso\StellarSDK\Crypto\KeyPair as StellarKeypair;
 use Soneso\StellarSDK\StellarSDK;
 
 class MultiCurrencyWallet extends Collection {

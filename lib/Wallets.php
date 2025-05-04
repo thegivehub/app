@@ -9,7 +9,7 @@ require_once __DIR__ . '/Collection.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Use Soneso Stellar SDK
-use Soneso\StellarSDK\Keypair;
+use Soneso\StellarSDK\Crypto\KeyPair;
 use Soneso\StellarSDK\Server;
 use Soneso\StellarSDK\Asset;
 use Soneso\StellarSDK\StellarSDK;

@@ -13,7 +13,7 @@ require_once __DIR__ . '/../lib/Donor.php';
 require_once __DIR__ . '/../lib/User.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Soneso\StellarSDK\Keypair;
+use Soneso\StellarSDK\Crypto\KeyPair;
 
 class DonorAccountsCreator {
     private $db;

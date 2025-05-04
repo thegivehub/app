@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Maintenance System - The Give Hub</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2563eb;
+        }
+        h1 {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 30px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .note {
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .warning {
+            background-color: #fff7e6;
+            border-left: 4px solid #fa8c16;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wallet Maintenance System</h1>
+    
+    <h2>Overview</h2>
+    <p>
+        The Give Hub platform integrates with the Stellar blockchain to manage cryptocurrency wallets for users and campaigns. To ensure proper synchronization between our database and the Stellar network, we've implemented an automated wallet maintenance system.
+    </p>
+    <p>
+        This document outlines the components and processes involved in wallet maintenance.
+    </p>
+    
+    <h2>Key Components</h2>
+    
+    <h3>1. Wallet Cleanup Script</h3>
+    <p><strong>Purpose</strong>: Identifies and removes orphaned wallets (those without valid user or campaign associations) and updates balances from Stellar.</p>
+    <p><strong>File</strong>: <code>/scripts/cleanup_and_update_wallets.php</code></p>
+    <p><strong>Features</strong>:</p>
+    <ul>
+        <li>Identifies wallets without valid user or campaign references</li>
+        <li>Removes orphaned wallets that are no longer needed</li>
+        <li>Updates wallet balances from the Stellar testnet for valid wallets</li>
+        <li>Provides detailed logging of all operations</li>
+        <li>Supports dry-run mode for testing without making changes</li>
+    </ul>
+    
+    <h3>2. Wallet Balance Update Script</h3>
+    <p><strong>Purpose</strong>: Updates wallet balances from the Stellar network without removing any wallets.</p>
+    <p><strong>File</strong>: <code>/scripts/update_wallet_balances.php</code></p>
+    <p><strong>Features</strong>:</p>
+    <ul>
+        <li>Queries the Stellar network for current balances of all wallets</li>
+        <li>Updates balance information in the MongoDB database</li>
+        <li>Sets balance to 0 for unactivated accounts</li>
+        <li>Maintains a log of all balance updates</li>
+    </ul>
+    
+    <h3>3. Maintenance Shell Script</h3>
+    <p><strong>Purpose</strong>: Provides a convenient wrapper for the PHP scripts to be used in cron jobs.</p>
+    <p><strong>File</strong>: <code>/scripts/maintain_wallets.sh</code></p>
+    <p><strong>Features</strong>:</p>
+    <ul>
+        <li>Runs the wallet balance update process daily</li>
+        <li>Runs the wallet cleanup process monthly (on the first day of the month)</li>
+        <li>Maintains separate logs for each process</li>
+        <li>Provides informative output and error handling</li>
+    </ul>
+    
+    <h2>Implementation Details</h2>
+    
+    <h3>Database Integration</h3>
+    <p>
+        The scripts interface with MongoDB through the following collections:
+    </p>
+    <ul>
+        <li><code>wallets</code>: Stores wallet information including publicKey, secretKey, and balance</li>
+        <li><code>users</code>: Linked to wallets through userId</li>
+        <li><code>campaigns</code>: Linked to wallets through campaignId</li>
+    </ul>
+    
+    <h3>Stellar Network Integration</h3>
+    <p>
+        The system interacts with the Stellar Horizon API to:
+    </p>
+    <ul>
+        <li>Fetch account balances</li>
+        <li>Check account activation status</li>
+        <li>Retrieve transaction history when needed</li>
+    </ul>
+    <p>
+        By default, the system is configured to use the Stellar testnet, but can be adjusted to work with the public network.
+    </p>
+    
+    <h3>Logging</h3>
+    <p>
+        All maintenance operations are logged to:
+    </p>
+    <ul>
+        <li><code>/logs/wallet_maintenance.log</code>: Main maintenance log</li>
+        <li><code>/logs/wallet_updates.log</code>: Detailed balance update logs</li>
+        <li><code>/logs/cron_wallet.log</code>: Cron execution logs</li>
+    </ul>
+    
+    <h3>Error Handling</h3>
+    <p>
+        The system includes robust error handling:
+    </p>
+    <ul>
+        <li>Graceful recovery from network failures</li>
+        <li>Special handling for unactivated Stellar accounts</li>
+        <li>Proper MongoDB exception handling</li>
+        <li>Detailed error reporting in logs</li>
+    </ul>
+    
+    <h2>Usage</h2>
+    
+    <h3>Manual Execution</h3>
+    <p>
+        The scripts can be run manually as follows:
+    </p>
+    <pre><code># Run wallet cleanup with dry-run (no changes)
+php scripts/cleanup_and_update_wallets.php --dry-run
+
+# Run wallet cleanup with actual changes
+php scripts/cleanup_and_update_wallets.php
+
+# Update wallet balances with verbose output
+php scripts/update_wallet_balances.php --verbose
+
+# Run the full maintenance process
+./scripts/maintain_wallets.sh</code></pre>
+    
+    <h3>Scheduled Execution (Cron)</h3>
+    <p>
+        To automate the maintenance process, add the following cron job:
+    </p>
+    <pre><code># Run wallet maintenance daily at 1:00 AM
+0 1 * * * /home/cdr/domains/thegivehub.com/app/scripts/maintain_wallets.sh >> /home/cdr/domains/thegivehub.com/app/logs/cron_wallet.log 2>&1</code></pre>
+    
+    <h2>Best Practices</h2>
+    <ol>
+        <li><strong>Regular Monitoring</strong>: Review the logs periodically to ensure proper functioning.</li>
+        <li><strong>Backup Before Cleanup</strong>: Always create database backups before running the cleanup with actual changes.</li>
+        <li><strong>Test in Dry-Run Mode</strong>: Use the <code>--dry-run</code> flag to test the cleanup process before actual execution.</li>
+        <li><strong>Performance Considerations</strong>: Schedule maintenance during off-peak hours to minimize impact on users.</li>
+        <li><strong>Balance Verification</strong>: Periodically verify wallet balances through the Stellar network explorer.</li>
+    </ol>
+    
+    <h2>Troubleshooting</h2>
+    
+    <h3>Common Issues</h3>
+    <ol>
+        <li>
+            <strong>Database Connection Failures</strong>:
+            <ul>
+                <li>Check MongoDB connection settings in <code>lib/db.php</code></li>
+                <li>Verify MongoDB service is running</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Stellar API Rate Limiting</strong>:
+            <ul>
+                <li>If encountering rate limits, adjust the script to process wallets in smaller batches</li>
+                <li>Consider implementing exponential backoff for retries</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Missing Wallet Balances</strong>:
+            <ul>
+                <li>Check the wallet's status on the Stellar network explorer</li>
+                <li>Verify that the wallet's public key is correctly stored in the database</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h3>Support</h3>
+    <p>
+        For issues with the wallet maintenance system, contact the development team or create an issue in the project repository.
+    </p>
+    
+    <h2>Security Considerations</h2>
+    <ol>
+        <li>The wallet maintenance scripts handle sensitive information including wallet keys.</li>
+        <li>Access to the scripts should be restricted to authorized personnel only.</li>
+        <li>The scripts do not expose private keys in logs or error messages.</li>
+        <li>All operations are conducted over secured connections.</li>
+    </ol>
+    
+    <h2>Future Enhancements</h2>
+    <ol>
+        <li>Add support for notifications when orphaned wallets are detected</li>
+        <li>Implement more detailed transaction history synchronization</li>
+        <li>Add support for additional cryptocurrencies beyond Stellar</li>
+        <li>Develop a dashboard for manual wallet maintenance operations</li>
+    </ol>
+    
+    <div class="note">
+        <p><strong>Note:</strong> This documentation is specific to The Give Hub platform's integration with the Stellar blockchain. The processes and components described may need to be adapted if the platform's architecture changes significantly.</p>
+    </div>
+</body>
+</html>
