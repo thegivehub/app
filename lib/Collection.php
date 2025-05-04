@@ -113,8 +113,10 @@ abstract class Collection {
             $options = array_merge($this->defaultOptions, $options);
             
             if ($id !== null) {
+                $mid = (gettype($id)==="string") ? new MongoDB\BSON\ObjectId($id) : $id;
+
                 return $this->collection->findOne([
-                    '_id' => new MongoDB\BSON\ObjectId($id)
+                    '_id' => $mid
                 ]);
             }
             
