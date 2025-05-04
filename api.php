@@ -31,31 +31,38 @@ function sendAPIJson($code, $data, $exit = true) {
  * @param array $context Additional context data
  * @param string $level Log level (debug, info, error, etc)
  */
-function logMessage($message, array $context = [], $level = 'info') {
-    $timestamp = date('Y-m-d H:i:s');
-    $contextJson = empty($context) ? '' : json_encode($context);
-    $logEntry = "[{$timestamp}] [{$level}] {$message} {$contextJson}\n";
-    
-    // You can adjust the log path as needed
-    $logFile = __DIR__ . "/logs/" . date('Y-m-d') . ".log";
-    
-    // Ensure logs directory exists
-    $logDir = dirname($logFile);
-    if (!is_dir($logDir)) {
-        mkdir($logDir, 0755, true);
+if (!function_exists("logMessage")) {
+    function logMessage($message, array $context = [], $level = 'info') {
+        $timestamp = date('Y-m-d H:i:s');
+        $contextJson = empty($context) ? '' : json_encode($context);
+        $logEntry = "[{$timestamp}] [{$level}] {$message} {$contextJson}\n";
+        
+        // You can adjust the log path as needed
+        $logFile = __DIR__ . "/logs/" . date('Y-m-d') . ".log";
+        
+        // Ensure logs directory exists
+        $logDir = dirname($logFile);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        error_log($logEntry, 3, $logFile);
     }
-    
-    error_log($logEntry, 3, $logFile);
 }
-
 // Autoloader function to load the required class file based on the endpoint
 spl_autoload_register(function ($className) {
     // Add debugging to see what class names are being requested
     error_log("Autoloader trying to load class: " . $className);
     
+    // Check if this class has a namespace - if so, skip it to let Composer handle it
+    if (strpos($className, '\\') !== false) {
+        error_log("Skipping namespaced class in our autoloader: " . $className);
+        return;
+    }
+    
     // Check if this is a MongoDB class - skip it
-    if ((strpos($className, 'MongoDB\\') === 0) || (strpos($className, 'Zulu') === 0)) {
-        error_log("Skipping MongoDB class in autoloader: " . $className);
+    if ((strpos($className, 'MongoDB') === 0) || (strpos($className, 'Zulu') === 0) || (strpos($className, 'Soneso') === 0)) {
+        error_log("Skipping external library class in autoloader: " . $className);
         return;
     }
     
