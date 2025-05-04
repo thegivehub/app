@@ -41,8 +41,24 @@ function logMessage($message, array $context = [], $level = 'info') {
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Handle Stellar SDK namespaces if needed
-if (!class_exists('Soneso\StellarSDK\Keypair')) {
+if (!class_exists('Soneso\StellarSDK\Crypto\KeyPair')) {
     require_once __DIR__ . '/../vendor/autoload.php';
+}
+
+// Define the core classes that should be loaded explicitly
+$coreClasses = [
+    'Auth', 'Campaign', 'Collection', 'Donation', 'DonationProcessor', 'Document', 
+    'DocumentUploader', 'Donor', 'Impactmetrics', 'Mailer', 'Notification', 
+    'Organization', 'Transaction', 'TransactionProcessor', 'Update', 'User', 
+    'Verify', 'Wallet', 'Wallets'
+];
+
+// Preload core classes
+foreach ($coreClasses as $class) {
+    $filePath = __DIR__ . "/$class.php";
+    if (file_exists($filePath)) {
+        require_once $filePath;
+    }
 }
 
 // Autoloader function to load the required class file based on the endpoint
