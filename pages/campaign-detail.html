@@ -283,31 +283,11 @@
             right: 24px;
             z-index: 1000;
         }
-
-        .donate-button {
-            background-color: var(--success-color);
-            color: white;
-            padding: 16px 32px;
-            border-radius: 9999px;
-            font-size: 1.25rem;
-            font-weight: 600;
-            text-decoration: none;
-            box-shadow: var(--shadow-lg);
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .donate-button:hover {
-            transform: translateY(-2px);
-            background-color: #15803d;
-        }
-
-        .donate-button i {
-            font-size: 1.5rem;
+        
+        /* Custom styling for the donate-button web component */
+        donate-button {
+            --primary-color: var(--success-color);
+            --primary-hover: #15803d;
         }
 
         /* Inline Editing Styles */
@@ -455,6 +435,7 @@
     </style>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+    <script src="/lib/DonateButton.js"></script>
 </head>
 <body>
 <main>
@@ -470,10 +451,7 @@
             </button>
         </div>
         <div class="donate-button-container">
-            <button class="donate-button" onclick="app.handleDonate()">
-                <i class="fa-solid fa-heart"></i>
-                Donate Now
-            </button>
+            <donate-button id="donate-btn"></donate-button>
         </div>
         <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
         <div class="card campaign-header">
@@ -515,6 +493,14 @@
                 </div>
                 <div class="progress-bar">
                     <div id="progress-bar-fill"></div>
+                </div>
+                
+                <!-- Recent Donations -->
+                <div class="recent-donations-container" style="margin-top: 20px;">
+                    <h3 style="font-size: 1.2rem; margin-bottom: 10px;">Recent Donations</h3>
+                    <ul id="recent-donations" class="recent-donations" style="list-style: none; padding: 0;">
+                        <li>Loading recent donations...</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -728,8 +714,75 @@
                 app.data = data;
                 app.state.loaded = true;
                 app.render();
+                
+                // After rendering the campaign, fetch donations data
+                if (app.state.id) {
+                    app.fetchDonations(app.state.id);
+                }
             })
             .catch(error => console.error('Fetch error:', error));
+        },
+        
+        fetchDonations(campaignId) {
+            // Fetch donations from the donations collection
+            fetch(`/api.php/Donation/getCampaignDonations?campaignId=${campaignId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    console.log('Donation data:', result.data);
+                    
+                    // Update the campaign funding data with actual donations
+                    if (!app.data.funding) {
+                        app.data.funding = {};
+                    }
+                    
+                    // Update the funding data
+                    app.data.funding.raisedAmount = result.data.totalAmount || 0;
+                    app.data.funding.donorCount = result.data.donorCount || 0;
+                    
+                    // Render recent donations
+                    if (result.data.recentDonations && result.data.recentDonations.length > 0) {
+                        const donationsHtml = result.data.recentDonations.map(donation => {
+                            // Only show donor name if donation is public
+                            const donorName = donation.visibility === 'public' ? donation.donor : 'Anonymous';
+                            return `
+                                <li style="padding: 10px; margin-bottom: 8px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <strong>${donorName}</strong>
+                                        <span>${app.utils.formatCurrency(donation.amount, donation.currency)}</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #666;">
+                                        ${donation.date ? new Date(donation.date).toLocaleDateString() : 'Recently'}
+                                    </div>
+                                </li>
+                            `;
+                        }).join('');
+                        
+                        $('#recent-donations').innerHTML = donationsHtml;
+                    } else {
+                        $('#recent-donations').innerHTML = '<li>No donations yet. Be the first to donate!</li>';
+                    }
+                    
+                    // Update progress bar based on new numbers
+                    const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                    $('#progress-bar-fill').style.width = `${progress}%`;
+                    
+                    // Update displayed amount
+                    $('#campaign-raised').textContent = app.utils.formatCurrency(
+                        app.data.funding.raisedAmount, 
+                        app.data.funding.currency || 'USD'
+                    );
+                    
+                    // Update donor count
+                    $('#campaign-donors').textContent = new Intl.NumberFormat().format(app.data.funding.donorCount);
+                }
+            })
+            .catch(error => console.error('Donation fetch error:', error));
         },
         render() {
             const data = app.data;
@@ -762,15 +815,11 @@
             const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
             $('#progress-bar-fill').style.width = `${progress}%`;
 
-            // Add donation handling
-            app.handleDonate = function() {
-                // You can customize this to integrate with your payment system
-                const amount = prompt("Enter donation amount:", "10");
-                if (amount) {
-                    // Here you would typically redirect to a payment gateway
-                    alert("Thank you for your interest in donating! This feature will be integrated with a payment system soon.");
-                }
-            };
+            // Set campaign ID for the donate button web component
+            const donateBtn = document.getElementById('donate-btn');
+            if (donateBtn) {
+                donateBtn.setAttribute('campaign-id', app.state.id);
+            }
 
             // Impact Metrics
             const impactMetrics = data.impact?.metrics || [];
