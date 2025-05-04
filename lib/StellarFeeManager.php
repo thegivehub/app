@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Use Soneso Stellar SDK
-use Soneso\StellarSDK\Keypair;
+use Soneso\StellarSDK\Crypto\KeyPair;
 use Soneso\StellarSDK\Server;
 use Soneso\StellarSDK\Network;
 use Soneso\StellarSDK\StellarSDK;
@@ -388,5 +388,4 @@ class StellarFeeManager {
             throw $error;
         }
     }
-}
 }
