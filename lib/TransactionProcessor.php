@@ -1,18 +1,35 @@
 <?php
 // lib/TransactionProcessor.php
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/Model.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/Collection.php';
 
-use ZuluCrypto\StellarSdk\Keypair;
-use ZuluCrypto\StellarSdk\Server;
-use ZuluCrypto\StellarSdk\XdrModel\Operation\CreateAccountOp;
-use ZuluCrypto\StellarSdk\XdrModel\Operation\PaymentOp;
-use ZuluCrypto\StellarSdk\Transaction\TransactionBuilder;
-use ZuluCrypto\StellarSdk\Network;
-use ZuluCrypto\StellarSdk\Memo\MemoText;
-use ZuluCrypto\StellarSdk\Asset\AssetTypeNative;
+// Import the necessary Soneso Stellar SDK classes
+use Soneso\StellarSDK\StellarSDK;
+use Soneso\StellarSDK\Crypto\KeyPair;  // Fix: Use the correct namespace for KeyPair
+use Soneso\StellarSDK\Network;
+use Soneso\StellarSDK\Asset;
+use Soneso\StellarSDK\Memo;  // Fix: Use Memo instead of MemoText
+use Soneso\StellarSDK\MuxedAccount; // Add MuxedAccount for payment operations
+use Soneso\StellarSDK\TransactionBuilder;
+use Soneso\StellarSDK\PaymentOperation;
+use Soneso\StellarSDK\CreateAccountOperation;
+use Soneso\StellarSDK\PaymentOperationBuilder;
+use Soneso\StellarSDK\AssetTypeCreditAlphanum4;
+use Soneso\StellarSDK\ChangeTrustOperationBuilder;
+use Soneso\StellarSDK\CreateAccountOperationBuilder;
+use Soneso\StellarSDK\LedgerBounds;
+use Soneso\StellarSDK\ManageDataOperationBuilder;
+use Soneso\StellarSDK\ManageSellOfferOperationBuilder;
+use Soneso\StellarSDK\PathPaymentStrictReceiveOperationBuilder;
+use Soneso\StellarSDK\PathPaymentStrictSendOperationBuilder;
+use Soneso\StellarSDK\Responses\Operations\CreateAccountOperationResponse;
+use Soneso\StellarSDK\Responses\Operations\PaymentOperationResponse;
+use Soneso\StellarSDK\TimeBounds;
+use Soneso\StellarSDK\Transaction;
+use Soneso\StellarSDK\TransactionPreconditions;
+use Soneso\StellarSDK\Util\FriendBot;
+
 
 /**
  * TransactionProcessor Collection
@@ -28,22 +45,33 @@ class TransactionProcessor extends Collection {
     
     public function __construct($useTestnet = true) {
         parent::__construct();
-        
-        // Set network based on environment
-        $this->useTestnet = $useTestnet;
-        $this->horizonUrl = $useTestnet 
-            ? 'https://horizon-testnet.stellar.org' 
-            : 'https://horizon.stellar.org';
+        $useTestnet = true;
+        error_log("In TransactionProcessor");
+        try {
+            // Set network based on environment
+            $this->useTestnet = $useTestnet;
+            $this->horizonUrl = $useTestnet 
+                ? 'https://horizon-testnet.stellar.org' 
+                : 'https://horizon.stellar.org';
+                
+            $this->network = $useTestnet
+                ? Network::testnet()
+                : Network::public();
             
-        $this->network = $useTestnet
-            ? Network::testnet()
-            : Network::public();
-        
-        // Initialize Stellar SDK
-        $this->stellarSdk = new Server($this->horizonUrl);
-        
-        // Set base fee (default is 100 stroops = 0.00001 XLM)
-        $this->baseFee = 100;
+            // Add debug logging
+            error_log("TransactionProcessor: Initializing StellarSDK with URL: " . $this->horizonUrl);
+            
+            // Initialize Stellar SDK with the horizon URL
+            $this->stellarSdk = new StellarSDK($this->horizonUrl);
+            
+            // Set base fee (default is 100 stroops = 0.00001 XLM)
+            $this->baseFee = 100;
+            
+            error_log("TransactionProcessor: Successfully initialized StellarSDK");
+        } catch (\Exception $e) {
+            error_log("TransactionProcessor: Failed to initialize StellarSDK: " . $e->getMessage());
+            throw $e; // Re-throw the exception to ensure proper error reporting
+        }
     }
     
     /**
@@ -61,31 +89,93 @@ class TransactionProcessor extends Collection {
      */
     public function processDonation($params) {
         try {
+            $sdk = StellarSDK::getTestNetInstance();
+
             // Required parameters
             $donorId = $params['donorId'] ?? null;
             $campaignId = $params['campaignId'] ?? null;
             $amount = $params['amount'] ?? null;
-            $sourceSecret = $params['sourceSecret'] ?? null;
+            $walletId = $params['walletId'] ?? null;
             $isAnonymous = $params['isAnonymous'] ?? false;
             $message = $params['message'] ?? '';
             $isRecurring = $params['recurring'] ?? false;
             $frequency = $params['frequency'] ?? 'monthly';
             
             // Validate required parameters
-            if (!$donorId || !$campaignId || !$amount || !$sourceSecret) {
-                throw new Exception('Missing required parameters: donorId, campaignId, amount, sourceSecret');
+            if (!$donorId || !$campaignId || !$amount || !$walletId) {
+                $missingParams = [];
+                if (!$donorId) $missingParams[] = "donorId";
+                if (!$campaignId) $missingParams[] = "campaignId";
+                if (!$amount) $missingParams[] = "amount";
+                if (!$walletId) $missingParams[] = "walletId";
+
+                throw new Exception('Missing required parameters: '.join(', ', $missingParams));
             }
             
-            // Get campaign details from MongoDB
-            $campaign = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+            // Get wallet secret key from database
+            $db = new Database();
+            $walletsCollection = $db->getCollection('wallets');
+            $wallet = $walletsCollection->findOne([
+                '_id' => new MongoDB\BSON\ObjectId($walletId),
+                'userId' => new MongoDB\BSON\ObjectId($donorId)
+            ]);
+            
+            if (!$wallet) {
+                throw new Exception("Wallet not found or does not belong to the donor");
+            }
+            
+            $sourceSecret = $wallet['secretKey'] ?? null;
+            
+            if (!$sourceSecret) {
+                throw new Exception("Wallet secret key not available");
+            }
+            
+            // Get campaign details from MongoDB using the campaigns collection
+            $db = new Database();
+            $campaignsCollection = $db->getCollection('campaigns');
+            
+            // Try to get campaign by ID
+            try {
+                $campaign = $campaignsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaignId)]);
+            } catch (\Exception $e) {
+                error_log("Error parsing campaign ID: " . $e->getMessage());
+                throw new Exception("Invalid campaign ID format: {$campaignId}");
+            }
+            
             if (!$campaign) {
+                // Log more details about the campaign lookup attempt
+                error_log("Campaign not found - ID: {$campaignId}");
+                error_log("MongoDB query: ['_id' => ObjectId('{$campaignId}')]");
+                
+                // Try a broader search to debug
+                $campaign = $campaignsCollection->findOne([], ['limit' => 1]);
+                if ($campaign) {
+                    error_log("However, at least one campaign exists in the collection with ID: " . $campaign['_id']);
+                } else {
+                    error_log("No campaigns found in the collection at all");
+                }
+                
                 throw new Exception("Campaign not found: {$campaignId}");
             }
             
-            // Get campaign's Stellar address
-            $campaignAddress = $campaign['stellarAddress'] ?? null;
-            if (!$campaignAddress) {
-                throw new Exception("Campaign does not have a Stellar address");
+            // Get campaign's wallet information and Stellar address
+            $destAddress = $campaignAddress = $campaign['stellarAddress'] ?? null;
+            $campaignWalletId = $campaign['walletId'] ?? null;
+
+            error_log(">>>> Dest Address: ".$destAddress);
+            error_log(">>>> WalletId: ".$campaignWalletId);
+
+            // Ensure the campaign has a wallet and Stellar address
+            if (!$campaignAddress || !$campaignWalletId) {
+                // Try to create a wallet for this campaign
+                $campaignWallet = $this->ensureCampaignHasWallet($campaign);
+                if ($campaignWallet) {
+                    $campaignAddress = $campaignWallet['publicKey'];
+                    $campaignWalletId = (string)$campaignWallet['_id'];
+                    error_log("Created new wallet for campaign: $campaignId, Address: $campaignAddress");
+                } else {
+                    throw new Exception("Campaign does not have a Stellar address and could not create one");
+                }
             }
             
             // Create transaction record
@@ -105,14 +195,19 @@ class TransactionProcessor extends Collection {
                 'createdAt' => new MongoDB\BSON\UTCDateTime(),
                 'updatedAt' => new MongoDB\BSON\UTCDateTime()
             ];
+
+            $senderKeyPair = KeyPair::fromSeed($sourceSecret);
+            $senderAccountId = $senderKeyPair->getAccountId();
+            $sender = $sdk->requestAccount($senderKeyPair->getAccountId());
+
+            $destAddress = "GD7LKMPY76XFFGXWX2ASBSCPJLZPHA3UMJIZAPM6N5EYFDH45CSLY6XS";
+
+            $paymentOperation = (new PaymentOperationBuilder($destAddress, Asset::native(), $amount))->build();
+            
             
             // Create Stellar keypair from secret
-            $sourceKeypair = Keypair::newFromSeed($sourceSecret);
-            $sourceAccount = $this->stellarSdk->requestAccount($sourceKeypair->getPublicKey());
-            
-            // Create transaction builder
-            $transaction = (new TransactionBuilder($sourceAccount))
-                ->setBaseFee($this->baseFee);
+            // $sourceKeypair = Keypair::fromSeed($sourceSecret);
+            // $sourceAccount = $this->stellarSdk->accounts()->account($sourceAccountId);
             
             // Prepare memo text
             $memoText = "campaign:{$campaignId}";
@@ -124,14 +219,18 @@ class TransactionProcessor extends Collection {
             if (strlen($memoText) > 28) {
                 $memoText = substr($memoText, 0, 28);
             }
-            $transaction->addMemo(new MemoText($memoText));
             
-            // Add payment operation
-            $transaction->addPaymentOperation(
-                $campaignAddress,
-                $amount,
-                AssetTypeNative::getAssetType()
-            );
+            // Create transaction builder
+            $transaction = (new TransactionBuilder($sender))
+                ->setMaxOperationFee($this->baseFee) // Using setMaxOperationFee instead of setBaseFee
+                ->addMemo(Memo::text($memoText))
+                ->addOperation(
+                    // Add payment operation with native XLM asset
+                    //(new PaymentOperation(MuxedAccount::fromAccountId($campaignAddress), Asset::native(), $amount))
+                    $paymentOperation
+                )
+                ->build();
+            error_log(">>> Stellar transaction pre-sign: ".json_encode($transaction));
             
             // If recurring, add metadata to transaction record
             if ($isRecurring) {
@@ -162,13 +261,18 @@ class TransactionProcessor extends Collection {
                     'totalProcessed' => 1
                 ];
             }
+            error_log(">>>> transactionRecord: ".print_r($transactionRecord, true));
             
             // Sign and submit transaction
-            $transaction->sign($sourceKeypair);
-            
+            $x = $transaction->sign($senderKeyPair, $this->network);
+            error_log("==== Post sign ".print_r($x, true)."\n"); 
             try {
-                $response = $transaction->submit($this->network);
+                $response = $sdk->submitTransaction($transaction);
                 
+                if ($response->isSuccessful()) {
+                    error_log("!!!!!!! Stellar transaction successful!!!");
+                }
+                error_log(">>> Stellar response: ".json_encode($response));
                 // Handle successful transaction
                 $hash = $response->getHash();
                 
@@ -196,6 +300,13 @@ class TransactionProcessor extends Collection {
                     'transactionId' => $result['id'] ?? null
                 ];
             } catch (\Exception $e) {
+                $responseBody = $e->getHttpResponse()->getBody()->__toString();
+                $errorData = json_decode($responseBody, true);
+
+                if (isset($errorData['extras']) && isset($errorData['extras']['result_codes'])) {
+                    $resultCodes = $errorData['extras']['result_codes'];
+                    error_log(">>>>> Result codes: " . json_encode($resultCodes));
+                }
                 // Handle transaction submission error
                 $errorMessage = $e->getMessage();
                 $this->lastError = $errorMessage;
@@ -495,28 +606,25 @@ class TransactionProcessor extends Collection {
             }
             
             // Create Stellar keypair from escrow secret
-            $escrowKeypair = Keypair::newFromSeed($escrow['escrowSecretKey']);
-            $escrowAccount = $this->stellarSdk->requestAccount($escrowKeypair->getPublicKey());
+            $escrowKeypair = Keypair::fromSeed($escrow['escrowSecretKey']);
+            $escrowAccountId = $escrowKeypair->getAccountId();
+            $escrowAccount = $this->stellarSdk->accounts()->account($escrowAccountId);
             
-            // Create transaction builder
+            // Create transaction with memo and payment operation
             $transaction = (new TransactionBuilder($escrowAccount))
-                ->setBaseFee($this->baseFee);
-            
-            // Add payment operation
-            $transaction->addPaymentOperation(
-                $campaign['stellarAddress'],
-                $releaseAmount,
-                AssetTypeNative::getAssetType()
-            );
-            
-            // Add memo with milestone info
-            $transaction->addMemo(new MemoText("milestone:{$campaignId},{$milestoneId}"));
+                ->setMaxOperationFee($this->baseFee) // Using setMaxOperationFee instead of setBaseFee
+                ->addMemo(Memo::text("milestone:{$campaignId},{$milestoneId}"))
+                ->addOperation(
+                    // Payment operation to send XLM from escrow to campaign account
+                    (new PaymentOperation(MuxedAccount::fromAccountId($campaign['stellarAddress']), Asset::native(), $releaseAmount))
+                )
+                ->build();
             
             // Sign and submit transaction
-            $transaction->sign($escrowKeypair);
+            $transaction->sign($escrowKeypair, $this->network);
             
             try {
-                $response = $transaction->submit($this->network);
+                $response = $this->stellarSdk->submitTransaction($transaction);
                 
                 // Handle successful transaction
                 $hash = $response->getHash();
@@ -728,26 +836,30 @@ class TransactionProcessor extends Collection {
             }
             
             // Create new Stellar account for escrow
-            $escrowKeypair = Keypair::newFromRandom();
-            $escrowPublicKey = $escrowKeypair->getPublicKey();
-            $escrowSecretKey = $escrowKeypair->getSecret();
+            $escrowKeypair = Keypair::random();
+            $escrowPublicKey = $escrowKeypair->getAccountId();
+            $escrowSecretKey = $escrowKeypair->getSecretSeed();
             
             // Create source keypair
-            $sourceKeypair = Keypair::newFromSeed($sourceSecret);
-            $sourceAccount = $this->stellarSdk->requestAccount($sourceKeypair->getPublicKey());
-            
+            $sourceKeypair = Keypair::fromSeed($sourceSecret);
+            $sourceAccountId = $sourceKeypair->getAccountId();
+            $sourceAccount = $this->stellarSdk->accounts()->account($sourceAccountId);
             
             // Create transaction to fund escrow account
             $transaction = (new TransactionBuilder($sourceAccount))
-                ->setBaseFee($this->baseFee)
-                ->addCreateAccountOperation($escrowPublicKey, $initialFunding)
-                ->addMemo(new MemoText("escrow:{$campaignId}"));
+                ->setMaxOperationFee($this->baseFee) // Using setMaxOperationFee instead of setBaseFee
+                ->addMemo(Memo::text("escrow:{$campaignId}"))
+                ->addOperation(
+                    // Create account operation to fund the escrow account
+                    (new CreateAccountOperation($escrowPublicKey, $initialFunding))
+                )
+                ->build();
             
             // Sign and submit transaction
-            $transaction->sign($sourceKeypair);
+            $transaction->sign($sourceKeypair, $this->network);
             
             try {
-                $response = $transaction->submit($this->network);
+                $response = $this->stellarSdk->submitTransaction($transaction);
                 $hash = $response->getHash();
                 
                 // Prepare milestones metadata
@@ -954,53 +1066,48 @@ class TransactionProcessor extends Collection {
      */
     public function getStellarTransactionDetails($txHash) {
         try {
-            // Send request to Horizon API
-            $horizonUrl = $this->useTestnet ?
-                'https://horizon-testnet.stellar.org' :
-                'https://horizon.stellar.org';
-
-            $response = file_get_contents("{$horizonUrl}/transactions/{$txHash}");
-
-            if (!$response) {
+            // Get transaction details via SDK instead of raw API call
+            $transaction = $this->stellarSdk->transactions()->transaction($txHash);
+            
+            if (!$transaction) {
                 throw new Exception("Unable to retrieve transaction: {$txHash}");
             }
-
-            $transaction = json_decode($response, true);
-
+            
             // Extract and format relevant details
             $result = [
-                'hash' => $transaction['hash'],
-                'ledger' => $transaction['ledger'],
-                'created_at' => $transaction['created_at'],
-                'source_account' => $transaction['source_account'],
-                'fee_charged' => $transaction['fee_charged'],
-                'successful' => $transaction['successful'],
-                'memo_type' => $transaction['memo_type'],
-                'memo' => $transaction['memo'],
+                'hash' => $transaction->getHash(),
+                'ledger' => $transaction->getLedger(),
+                'created_at' => $transaction->getCreatedAt(),
+                'source_account' => $transaction->getSourceAccount(),
+                'fee_charged' => $transaction->getFeeCharged(),
+                'successful' => $transaction->isSuccessful(),
+                'memo_type' => $transaction->getMemoType(),
+                'memo' => $transaction->getMemo(),
             ];
-
-            // Get operations if available
-            if (isset($transaction['_links']['operations'])) {
-                $opsResponse = file_get_contents($transaction['_links']['operations']['href']);
-
-                if ($opsResponse) {
-                    $operations = json_decode($opsResponse, true);
-                    $result['operations'] = [];
-
-                    if (isset($operations['_embedded']['records'])) {
-                        foreach ($operations['_embedded']['records'] as $op) {
-                            $result['operations'][] = [
-                                'id' => $op['id'],
-                                'type' => $op['type'],
-                                'source_account' => $op['source_account'],
-                                'created_at' => $op['created_at'],
-                                'details' => $this->extractOperationDetails($op)
-                            ];
-                        }
+            
+            // Get operations for this transaction
+            try {
+                $operations = $this->stellarSdk->operations()->forTransaction($txHash)->execute();
+                $result['operations'] = [];
+                
+                if ($operations && count($operations->getOperations()) > 0) {
+                    foreach ($operations->getOperations() as $op) {
+                        $opDetails = [
+                            'id' => $op->getOperationId(),
+                            'type' => $op->getType(),
+                            'source_account' => $op->getSourceAccount(),
+                            'created_at' => $op->getCreatedAt(),
+                            'details' => $this->extractOperationDetails($op)
+                        ];
+                        
+                        $result['operations'][] = $opDetails;
                     }
                 }
+            } catch (\Exception $e) {
+                // If operations can't be fetched, continue with just transaction details
+                error_log("Error fetching operations for transaction {$txHash}: " . $e->getMessage());
             }
-
+            
             return [
                 'success' => true,
                 'transaction' => $result
@@ -1016,75 +1123,144 @@ class TransactionProcessor extends Collection {
 
     /**
      * Extract operation details based on operation type
-     * @param array $operation Operation data
+     * @param object $operation Operation response object
      * @return array Extracted details
      */
     private function extractOperationDetails($operation) {
         $details = [];
 
-        switch ($operation['type']) {
-            case 'payment':
-                $details = [
-                    'amount' => $operation['amount'],
-                    'asset_type' => $operation['asset_type'],
-                    'from' => $operation['from'],
-                    'to' => $operation['to']
-                ];
-                break;
-
-            case 'create_account':
-                $details = [
-                    'account' => $operation['account'],
-                    'funder' => $operation['funder'],
-                    'starting_balance' => $operation['starting_balance']
-                ];
-                break;
-
-            case 'path_payment_strict_receive':
-            case 'path_payment_strict_send':
-                $details = [
-                    'from' => $operation['from'],
-                    'to' => $operation['to'],
-                    'asset_type' => $operation['asset_type'],
-                    'amount' => $operation['amount'],
-                    'source_asset_type' => $operation['source_asset_type'],
-                    'source_amount' => $operation['source_amount']
-                ];
-                break;
-
-            case 'manage_sell_offer':
-            case 'manage_buy_offer':
-                $details = [
-                    'amount' => $operation['amount'],
-                    'price' => $operation['price'],
-                    'selling_asset_type' => $operation['selling_asset_type'],
-                    'buying_asset_type' => $operation['buying_asset_type']
-                ];
-                break;
-
-            case 'set_options':
-                $details = [
-                    'signer_key' => $operation['signer_key'] ?? null,
-                    'signer_weight' => $operation['signer_weight'] ?? null,
-                    'master_key_weight' => $operation['master_key_weight'] ?? null,
-                    'low_threshold' => $operation['low_threshold'] ?? null,
-                    'med_threshold' => $operation['med_threshold'] ?? null,
-                    'high_threshold' => $operation['high_threshold'] ?? null,
-                    'home_domain' => $operation['home_domain'] ?? null
-                ];
-                break;
-
-            default:
-                // For other operation types, just include all fields
-                $details = $operation;
-
-                // Remove common fields that are already included at the operation level
-                unset($details['id']);
-                unset($details['type']);
-                unset($details['source_account']);
-                unset($details['created_at']);
-                unset($details['transaction_hash']);
-                unset($details['_links']);
+        // Check the operation class to determine type
+        if ($operation instanceof \Soneso\StellarSDK\Responses\Operations\PaymentOperationResponse) {
+            $details = [
+                'amount' => $operation->getAmount(),
+                'asset_type' => $operation->getAsset()->getType(),
+                'from' => $operation->getFrom(),
+                'to' => $operation->getTo()
+            ];
+            
+            // Add asset code and issuer if not native
+            if ($operation->getAsset()->getType() !== 'native') {
+                $details['asset_code'] = $operation->getAsset()->getCode();
+                $details['asset_issuer'] = $operation->getAsset()->getIssuer();
+            }
+        } 
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\CreateAccountOperationResponse) {
+            $details = [
+                'account' => $operation->getAccount(),
+                'funder' => $operation->getFunder(),
+                'starting_balance' => $operation->getStartingBalance()
+            ];
+        }
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\PathPaymentStrictReceiveOperationResponse) {
+            $details = [
+                'from' => $operation->getFrom(),
+                'to' => $operation->getTo(),
+                'amount' => $operation->getAmount(),
+                'asset_type' => $operation->getAsset()->getType(),
+                'source_asset_type' => $operation->getSourceAsset()->getType(),
+                'source_amount' => $operation->getSourceAmount()
+            ];
+            
+            // Add path assets if present
+            if (count($operation->getPath()) > 0) {
+                $details['path'] = [];
+                foreach ($operation->getPath() as $pathAsset) {
+                    $details['path'][] = [
+                        'asset_type' => $pathAsset->getType(),
+                        'asset_code' => $pathAsset->getType() !== 'native' ? $pathAsset->getCode() : null,
+                        'asset_issuer' => $pathAsset->getType() !== 'native' ? $pathAsset->getIssuer() : null
+                    ];
+                }
+            }
+        }
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\PathPaymentStrictSendOperationResponse) {
+            $details = [
+                'from' => $operation->getFrom(),
+                'to' => $operation->getTo(),
+                'amount' => $operation->getDestAmount(),
+                'asset_type' => $operation->getDestAsset()->getType(),
+                'source_asset_type' => $operation->getSourceAsset()->getType(),
+                'source_amount' => $operation->getSourceAmount()
+            ];
+        }
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\ManageSellOfferOperationResponse) {
+            $details = [
+                'amount' => $operation->getAmount(),
+                'price' => $operation->getPrice(),
+                'selling_asset_type' => $operation->getSellingAsset()->getType(),
+                'buying_asset_type' => $operation->getBuyingAsset()->getType(),
+                'offer_id' => $operation->getOfferId()
+            ];
+        }
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\ManageBuyOfferOperationResponse) {
+            $details = [
+                'amount' => $operation->getAmount(),
+                'price' => $operation->getPrice(),
+                'selling_asset_type' => $operation->getSellingAsset()->getType(),
+                'buying_asset_type' => $operation->getBuyingAsset()->getType(),
+                'offer_id' => $operation->getOfferId()
+            ];
+        }
+        elseif ($operation instanceof \Soneso\StellarSDK\Responses\Operations\SetOptionsOperationResponse) {
+            $details = [
+                'home_domain' => $operation->getHomeDomain(),
+                'inflation_dest' => $operation->getInflationDest(),
+                'clear_flags' => $operation->getClearFlags(),
+                'set_flags' => $operation->getSetFlags(),
+                'master_key_weight' => $operation->getMasterKeyWeight(),
+                'low_threshold' => $operation->getLowThreshold(),
+                'med_threshold' => $operation->getMedThreshold(),
+                'high_threshold' => $operation->getHighThreshold(),
+                'signer_key' => $operation->getSignerKey(),
+                'signer_weight' => $operation->getSignerWeight()
+            ];
+            
+            // Remove null values
+            foreach ($details as $key => $value) {
+                if ($value === null) {
+                    unset($details[$key]);
+                }
+            }
+        }
+        else {
+            // For other operation types, attempt to extract common properties
+            $details = [
+                'type' => $operation->getType()
+            ];
+            
+            // Try to extract additional properties using reflection
+            $methods = get_class_methods($operation);
+            foreach ($methods as $method) {
+                if (substr($method, 0, 3) === 'get' && $method !== 'getType' && 
+                    $method !== 'getOperationId' && $method !== 'getSourceAccount' && 
+                    $method !== 'getCreatedAt' && $method !== 'getTransactionHash') {
+                    
+                    $property = lcfirst(substr($method, 3));
+                    try {
+                        $value = $operation->$method();
+                        
+                        // Skip object values except for Asset objects
+                        if (is_object($value)) {
+                            if ($value instanceof \Soneso\StellarSDK\Asset) {
+                                $details[$property] = [
+                                    'type' => $value->getType(),
+                                    'code' => $value->getType() !== 'native' ? $value->getCode() : null,
+                                    'issuer' => $value->getType() !== 'native' ? $value->getIssuer() : null
+                                ];
+                            }
+                            continue;
+                        }
+                        
+                        // Include simple values
+                        if (!is_array($value) && !is_resource($value) && $value !== null) {
+                            $details[$property] = $value;
+                        }
+                    } catch (\Exception $e) {
+                        // Skip properties that can't be accessed
+                        continue;
+                    }
+                }
+            }
         }
 
         return $details;
@@ -1098,59 +1274,73 @@ class TransactionProcessor extends Collection {
      */
     public function getStellarAccountTransactions($accountId, $options = []) {
         try {
-            $horizonUrl = $this->useTestnet ?
-                'https://horizon-testnet.stellar.org' :
-                'https://horizon.stellar.org';
-
-            $url = "{$horizonUrl}/accounts/{$accountId}/transactions?";
-
-            // Add parameters
+            // Create the transaction request builder
+            $transactionsRequestBuilder = $this->stellarSdk->transactions()->forAccount($accountId);
+            
+            // Apply options/filters
             if (isset($options['limit'])) {
-                $url .= "limit=" . intval($options['limit']) . "&";
+                $transactionsRequestBuilder->limit(intval($options['limit']));
             }
-
+            
             if (isset($options['cursor'])) {
-                $url .= "cursor=" . urlencode($options['cursor']) . "&";
+                $transactionsRequestBuilder->cursor($options['cursor']);
             }
-
+            
             if (isset($options['order']) && in_array($options['order'], ['asc', 'desc'])) {
-                $url .= "order=" . $options['order'] . "&";
+                $transactionsRequestBuilder->order($options['order']);
             }
-
-            // Remove trailing & or ?
-            $url = rtrim($url, "&?");
-
-            $response = file_get_contents($url);
-
-            if (!$response) {
-                throw new Exception("Unable to retrieve transactions for account: {$accountId}");
-            }
-
-            $data = json_decode($response, true);
-
+            
+            // Execute request
+            $response = $transactionsRequestBuilder->execute();
+            
+            // Extract and format transactions
             $transactions = [];
-
-            if (isset($data['_embedded']['records'])) {
-                foreach ($data['_embedded']['records'] as $tx) {
-                    $transaction = [
-                        'hash' => $tx['hash'],
-                        'ledger' => $tx['ledger'],
-                        'created_at' => $tx['created_at'],
-                        'source_account' => $tx['source_account'],
-                        'successful' => $tx['successful'],
-                        'memo_type' => $tx['memo_type'],
-                        'memo' => $tx['memo'],
-                    ];
-
-                    $transactions[] = $transaction;
+            
+            foreach ($response->getTransactions() as $tx) {
+                $transaction = [
+                    'hash' => $tx->getHash(),
+                    'ledger' => $tx->getLedger(),
+                    'created_at' => $tx->getCreatedAt(),
+                    'source_account' => $tx->getSourceAccount(),
+                    'successful' => $tx->isSuccessful(),
+                    'memo_type' => $tx->getMemoType(),
+                    'memo' => $tx->getMemo(),
+                ];
+                
+                $transactions[] = $transaction;
+            }
+            
+            // Get pagination links
+            $links = [
+                'next' => null,
+                'prev' => null,
+            ];
+            
+            // Check for pagination links in response
+            $responseLinks = $response->getLinks();
+            if ($responseLinks) {
+                // Handle next link
+                if (array_key_exists('next', $responseLinks)) {
+                    $nextLink = $responseLinks['next'];
+                    if ($nextLink && method_exists($nextLink, 'getHref')) {
+                        $links['next'] = $nextLink->getHref();
+                    }
+                }
+                
+                // Handle previous link
+                if (array_key_exists('prev', $responseLinks)) {
+                    $prevLink = $responseLinks['prev'];
+                    if ($prevLink && method_exists($prevLink, 'getHref')) {
+                        $links['prev'] = $prevLink->getHref();
+                    }
                 }
             }
-
+            
             return [
                 'success' => true,
                 'transactions' => $transactions,
-                'next' => isset($data['_links']['next']) ? $data['_links']['next']['href'] : null,
-                'prev' => isset($data['_links']['prev']) ? $data['_links']['prev']['href'] : null,
+                'next' => $links['next'],
+                'prev' => $links['prev'],
             ];
         } catch (\Exception $e) {
             $this->lastError = $e->getMessage();
@@ -1168,47 +1358,42 @@ class TransactionProcessor extends Collection {
      */
     public function checkStellarAccountBalance($accountId) {
         try {
-            $horizonUrl = $this->useTestnet ?
-                'https://horizon-testnet.stellar.org' :
-                'https://horizon.stellar.org';
-
-            $response = file_get_contents("{$horizonUrl}/accounts/{$accountId}");
-
-            if (!$response) {
+            // Load account using the SDK
+            $account = $this->stellarSdk->accounts()->account($accountId);
+            
+            if (!$account) {
                 throw new Exception("Unable to retrieve account: {$accountId}");
             }
-
-            $account = json_decode($response, true);
-
+            
+            // Format balances in a consistent way
             $balances = [];
-
-            if (isset($account['balances'])) {
-                foreach ($account['balances'] as $balance) {
-                    if ($balance['asset_type'] === 'native') {
-                        $balances[] = [
-                            'asset' => 'XLM',
-                            'balance' => $balance['balance'],
-                            'asset_type' => 'native'
-                        ];
-                    } else {
-                        $balances[] = [
-                            'asset' => $balance['asset_code'],
-                            'issuer' => $balance['asset_issuer'],
-                            'balance' => $balance['balance'],
-                            'asset_type' => $balance['asset_type']
-                        ];
-                    }
+            
+            foreach ($account->getBalances() as $balance) {
+                if ($balance->getAssetType() === 'native') {
+                    $balances[] = [
+                        'asset' => 'XLM',
+                        'balance' => $balance->getBalance(),
+                        'asset_type' => 'native'
+                    ];
+                } else {
+                    $balances[] = [
+                        'asset' => $balance->getAssetCode(),
+                        'issuer' => $balance->getAssetIssuer(),
+                        'balance' => $balance->getBalance(),
+                        'asset_type' => $balance->getAssetType()
+                    ];
                 }
             }
-
+            
+            // Return formatted account info
             return [
                 'success' => true,
                 'account_id' => $accountId,
                 'balances' => $balances,
-                'sequence' => $account['sequence'] ?? null,
-                'last_modified_time' => $account['last_modified_time'] ?? null,
-                'subentry_count' => $account['subentry_count'] ?? 0,
-                'home_domain' => $account['home_domain'] ?? null
+                'sequence' => $account->getSequence(),
+                'last_modified_time' => $account->getLastModifiedTime(),
+                'subentry_count' => $account->getSubentryCount(),
+                'home_domain' => $account->getHomeDomain()
             ];
         } catch (\Exception $e) {
             $this->lastError = $e->getMessage();
@@ -1216,6 +1401,72 @@ class TransactionProcessor extends Collection {
                 'success' => false,
                 'error' => $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Ensures a campaign has an associated wallet
+     * If no wallet exists, creates one and updates the campaign
+     * @param array $campaign The campaign document
+     * @return array|bool The wallet document if successful, false otherwise
+     */
+    private function ensureCampaignHasWallet($campaign) {
+        try {
+            $campaignId = (string)$campaign['_id'];
+            
+            error_log("TransactionProcessor: Ensuring campaign has wallet for ID: " . $campaignId);
+            
+            // First check if the campaign already has a walletId
+            if (isset($campaign['walletId']) && !empty($campaign['walletId'])) {
+                $db = new Database();
+                $walletsCollection = $db->getCollection('wallets');
+                $wallet = $walletsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['walletId'])]);
+                
+                if ($wallet) {
+                    error_log("TransactionProcessor: Campaign already has wallet ID: " . $campaign['walletId']);
+                    return $wallet;
+                }
+                
+                error_log("TransactionProcessor: Campaign has walletId but wallet not found: " . $campaign['walletId']);
+            }
+            
+            // Use the Wallet class to create the wallet
+            error_log("TransactionProcessor: Creating new wallet for campaign: " . $campaignId);
+            $wallet = new Wallet();
+            $result = $wallet->createCampaignWallet(['campaignId' => $campaignId]);
+            
+            if (is_array($result) && isset($result['success']) && $result['success']) {
+                // Get the wallet from the database to return the full document
+                $db = new Database();
+                $walletsCollection = $db->getCollection('wallets');
+                
+                try {
+                    $walletId = $result['wallet']['id'] ?? null;
+                    if (!$walletId) {
+                        error_log("TransactionProcessor: Wallet ID not found in result: " . json_encode($result));
+                        return false;
+                    }
+                    
+                    $walletDoc = $walletsCollection->findOne(['_id' => new MongoDB\BSON\ObjectId($walletId)]);
+                    
+                    if (!$walletDoc) {
+                        error_log("TransactionProcessor: Wallet not found after creation for ID: " . $walletId);
+                        return false;
+                    }
+                    
+                    error_log("TransactionProcessor: Successfully created and fetched wallet: " . $walletId);
+                    return $walletDoc;
+                } catch (\Exception $e) {
+                    error_log("TransactionProcessor: Error fetching created wallet: " . $e->getMessage());
+                    return false;
+                }
+            }
+            
+            error_log("TransactionProcessor: Failed to create wallet for campaign: " . ($result['error'] ?? "Unknown error"));
+            return false;
+        } catch (Exception $e) {
+            error_log("TransactionProcessor: Error creating wallet for campaign: " . $e->getMessage());
+            return false;
         }
     }
 

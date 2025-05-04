@@ -26,6 +26,7 @@ class Transaction {
         
         // Initialize blockchain transaction controller
         $this->blockchainController = new BlockchainTransactionController($this->useTestnet);
+        error_log("In Transaction");
     }
     
     /**
@@ -49,18 +50,27 @@ class Transaction {
                 }
             }
             
-            // Process the donation using TransactionProcessor
-            $result = $this->processor->processDonation([
-                'donorId' => $data['donorId'],
-                'campaignId' => $data['campaignId'],
-                'amount' => $data['amount'],
-                'sourceSecret' => $data['sourceSecret'] ?? null,
+            // Process the donation using TransactionProcessor - directly pass the data
+            // Log the data for debugging
+            error_log("Transaction processDonation data: " . json_encode($data));
+            
+            // Create the parameter array with required fields
+            $params = [
+                'donorId' => $data['donorId'] ?? $data['userId'] ?? null, // Accept either donorId or userId
+                'campaignId' => $data['campaignId'] ?? null,
+                'amount' => $data['amount'] ?? null,
                 'isAnonymous' => !empty($data['isAnonymous']),
                 'message' => $data['message'] ?? '',
                 'recurring' => !empty($data['recurring']),
                 'frequency' => $data['frequency'] ?? 'monthly',
                 'walletId' => $data['walletId'] ?? null
-            ]);
+            ];
+            
+            // Log the actual parameters being sent
+            error_log("Sending to TransactionProcessor: " . json_encode($params));
+            
+            // Process the donation
+            $result = $this->processor->processDonation($params);
             
             // Return the result
             return $result;
@@ -231,7 +241,7 @@ class Transaction {
      * 
      * @return array Request data
      */
-    private function getRequestData() {
+    protected function getRequestData() {
         // Check if this is a POST request with JSON data
         $inputJSON = file_get_contents('php://input');
         $input = json_decode($inputJSON, true);
@@ -241,7 +251,7 @@ class Transaction {
             return $input;
         }
         
-        // Otherwise, use $_POST or $_GET
-        return $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : $_GET;
+        // Otherwise, use $_POST or $_GET (safely checking REQUEST_METHOD)
+        return isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : $_GET;
     }
 }
