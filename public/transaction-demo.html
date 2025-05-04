@@ -57,7 +57,7 @@
         <b>Welcome!</b> This page lets you test all major blockchain transaction types supported by the Give Hub API.<br>
         <ul>
             <li>All forms interact directly with the API.</li>
-            <li><b>Donor</b> and <b>Campaign</b> dropdowns are auto-populated from the live database.</li>
+            <li><b>User</b> and <b>Campaign</b> dropdowns are auto-populated from the live database.</li>
             <li>If a dropdown fails to load, you can enter an ID manually.</li>
             <li>Use <b>testnet</b> keys and IDs for safety.</li>
             <li>Results and errors will be shown below each form.</li>
@@ -69,26 +69,27 @@
         <button class="tab-btn" data-tab="recurring-tab">Recurring Donation</button>
         <button class="tab-btn" data-tab="escrow-tab">Milestone Escrow Creation</button>
         <button class="tab-btn" data-tab="release-tab">Milestone Fund Release</button>
+        <button class="tab-btn" data-tab="debug-tab">Debug Tools</button>
     </div>
 
     <div id="donation-tab" class="tab-section">
         <div class="section">
             <h2>One-Time Donation</h2>
             <div class="instructions">
-                <b>Send a one-time donation</b> from a donor to a campaign. Select a donor and campaign, enter the amount (in XLM), and provide the donor's Stellar secret key to sign the transaction.<br>
-                <span class="field-tip">Donor ID: Select a donor from the dropdown. If unavailable, enter the donor's unique ID.</span><br>
+                <b>Send a one-time donation</b> from a user to a campaign. Select a user and campaign, enter the amount (in XLM), and provide the user's Stellar secret key to sign the transaction.<br>
+                <span class="field-tip">User ID: Select a user from the dropdown. If unavailable, enter the user's unique ID.</span><br>
                 <span class="field-tip">Campaign ID: Select a campaign from the dropdown. If unavailable, enter the campaign's unique ID.</span><br>
-                <span class="field-tip">Source Secret: The Stellar secret key for the donor's wallet (testnet only).</span><br>
+                <span class="field-tip">Source Secret: The Stellar secret key for the user's wallet (testnet only).</span><br>
                 <span class="field-tip">Anonymous: If checked, the donation will be recorded as anonymous.</span>
             </div>
             <form id="donation-form">
-                <label>Donor ID: <select name="donorId" id="donor-select-1" required><option value="">Loading...</option></select></label>
-                <label>Wallet: <select name="walletId" id="wallet-select-1" required><option value="">Select donor first...</option></select></label>
+                <label>User ID: <select name="userId" id="donor-select-1" required><option value="">Loading...</option></select></label>
+                <label>Wallet: <select name="walletId" id="wallet-select-1" required><option value="">Select user first...</option></select></label>
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-1" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
                 <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
                 <label>Message: <input type="text" name="message"></label>
-                <input type="hidden" name="sourceSecret" id="donation-source-secret">
+                <!-- No longer need sourceSecret as we'll use walletId -->
                 <button type="submit">Submit Donation</button>
             </form>
             <div id="donation-result"></div>
@@ -99,15 +100,15 @@
         <div class="section">
             <h2>Recurring Donation</h2>
             <div class="instructions">
-                <b>Set up a recurring donation</b> from a donor to a campaign. The donation will repeat at the selected frequency.<br>
+                <b>Set up a recurring donation</b> from a user to a campaign. The donation will repeat at the selected frequency.<br>
                 <span class="field-tip">Frequency: Choose how often the donation should repeat (monthly, weekly, etc.).</span>
             </div>
             <form id="recurring-form">
-                <label>Donor ID: <select name="donorId" id="donor-select-2" required><option value="">Loading...</option></select></label>
-                <label>Wallet: <select name="walletId" id="wallet-select-2" required><option value="">Select donor first...</option></select></label>
+                <label>User ID: <select name="userId" id="donor-select-2" required><option value="">Loading...</option></select></label>
+                <label>Wallet: <select name="walletId" id="wallet-select-2" required><option value="">Select user first...</option></select></label>
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-2" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
-                <input type="hidden" name="sourceSecret" id="recurring-source-secret">
+                <!-- No longer need sourceSecret as we'll use walletId -->
                 <label>Anonymous? <input type="checkbox" name="isAnonymous"></label>
                 <label>Message: <input type="text" name="message"></label>
                 <label>Frequency:
@@ -171,11 +172,42 @@
             <form id="release-form">
                 <label>Campaign ID: <select name="campaignId" id="campaign-select-4" required><option value="">Loading...</option></select></label>
                 <label>Milestone ID: <input type="text" name="milestoneId" required></label>
-                <label>Authorized By (User ID): <select name="authorizedBy" id="donor-select-3" required><option value="">Loading...</option></select></label>
+                <label>Authorized By: <select name="authorizedBy" id="donor-select-3" required><option value="">Loading...</option></select></label>
                 <label>Amount (XLM): <input type="text" name="amount" required></label>
                 <button type="submit">Release Funds</button>
             </form>
             <div id="release-result"></div>
+        </div>
+    </div>
+
+    <div id="debug-tab" class="tab-section" style="display:none">
+        <div class="section">
+            <h2>Database Debug Tools</h2>
+            <div class="instructions">
+                <b>Use these tools to debug database issues</b> including campaign lookups and wallet problems.<br>
+                <span class="field-tip">Enter the ID of a campaign or wallet to verify it exists and view its details.</span>
+            </div>
+            
+            <h3>Campaign Lookup</h3>
+            <form id="campaign-lookup-form">
+                <label>Campaign ID: <input type="text" name="campaignId" required></label>
+                <button type="submit">Lookup Campaign</button>
+            </form>
+            <div id="campaign-lookup-result"></div>
+            
+            <h3>Campaign Wallet Status</h3>
+            <form id="campaign-wallet-form">
+                <label>Campaign ID: <input type="text" name="campaignId" required></label>
+                <button type="submit">Check Wallet Status</button>
+            </form>
+            <div id="campaign-wallet-result"></div>
+            
+            <h3>Wallet Lookup</h3>
+            <form id="wallet-lookup-form">
+                <label>Wallet ID: <input type="text" name="walletId" required></label>
+                <button type="submit">Lookup Wallet</button>
+            </form>
+            <div id="wallet-lookup-result"></div>
         </div>
     </div>
 </div>
@@ -229,114 +261,33 @@ async function fetchAndPopulateSelect(url, selectIds, labelField, valueField, fa
     }
 }
 
-// Populate donor and campaign selects on page load
+// Populate user and campaign selects on page load
 document.addEventListener('DOMContentLoaded', function() {
-    fetchAndPopulateSelect('/api.php/donors', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'name', '_id', 'Enter Donor ID');
+    // Load users with donor role instead of donors
+    fetchAndPopulateSelect('/api.php/user', ['donor-select-1', 'donor-select-2', 'donor-select-3'], 'username', '_id', 'Enter User ID');
     fetchAndPopulateSelect('/api.php/campaign', ['campaign-select-1', 'campaign-select-2', 'campaign-select-3', 'campaign-select-4'], 'title', '_id', 'Enter Campaign ID');
 
-    // Populate wallet select and auto-fill Source Secret
-    function setupWalletSelection(donorSelectId, walletSelectId, secretInputSelector) {
-        const donorSelect = document.getElementById(donorSelectId);
+    // Populate wallet select for the user
+    function setupWalletSelection(userSelectId, walletSelectId) {
+        const userSelect = document.getElementById(userSelectId);
         const walletSelect = document.getElementById(walletSelectId);
-        const secretInput = document.querySelector(secretInputSelector);
         
-        if (!donorSelect || !walletSelect || !secretInput) return;
+        if (!userSelect || !walletSelect) return;
         
-        donorSelect.addEventListener('change', async function() {
-            const donorId = donorSelect.value;
+        userSelect.addEventListener('change', async function() {
+            const userId = userSelect.value;
             walletSelect.innerHTML = '<option value="">Loading wallets...</option>';
-            secretInput.value = ""; // Clear secret first
             
-            if (!donorId) {
-                walletSelect.innerHTML = '<option value="">Select donor first...</option>';
+            if (!userId) {
+                walletSelect.innerHTML = '<option value="">Select user first...</option>';
                 return;
             }
 
             // Display diagnostic information in wallet dropdown
-            walletSelect.innerHTML = '<option value="">Checking donor ID...</option>';
+            walletSelect.innerHTML = '<option value="">Checking user wallets...</option>';
             
             try {
-                // Step 1: Try to get direct donor document to check for userId
-                let userId = null;
-                let donorHasUserId = false;
-                
-                try {
-                    // Try to get donor directly from database
-                    const donorRes = await fetch(`/api.php/donors?id=${encodeURIComponent(donorId)}`);
-                    const donorData = await donorRes.json();
-                    
-                    if (donorData && donorData.userId) {
-                        userId = donorData.userId;
-                        donorHasUserId = true;
-                        console.log(`Found userId ${userId} in donor document`);
-                    }
-                } catch (e) {
-                    console.log("Could not get direct donor document, trying alternatives");
-                }
-                
-                // Step 2: If not found, try getting donor details through API method
-                if (!userId) {
-                    try {
-                        const donorDetailsRes = await fetch(`/api.php/donor/getDonorDetails?id=${encodeURIComponent(donorId)}`);
-                        const donorDetails = await donorDetailsRes.json();
-                        
-                        if (donorDetails && donorDetails.donor && donorDetails.donor.userId) {
-                            userId = donorDetails.donor.userId;
-                            donorHasUserId = true;
-                            console.log(`Found userId in donor details: ${userId}`);
-                        }
-                    } catch (e) {
-                        console.log("Could not get donor details");
-                    }
-                }
-                
-                // Step 3: If still not found, check if donor ID itself is a user ID
-                if (!userId) {
-                    try {
-                        const userRes = await fetch(`/api.php/user?id=${encodeURIComponent(donorId)}`);
-                        const userData = await userRes.json();
-                        
-                        if (userData && userData.success) {
-                            userId = donorId;
-                            console.log("Donor ID is itself a valid user ID");
-                        }
-                    } catch (e) {
-                        console.log("Donor ID is not a valid user ID");
-                    }
-                }
-                
-                // Step 4: If we still don't have a userId, use the donorId as a last resort
-                if (!userId) {
-                    userId = donorId;
-                    console.log("Using donor ID as user ID (fallback)");
-                    walletSelect.innerHTML = '<option value="">Warning: No user account found</option>';
-                    
-                    // Add instructional option
-                    const noUserOption = document.createElement('option');
-                    noUserOption.value = "";
-                    noUserOption.disabled = true;
-                    noUserOption.textContent = "Run link_donors_to_users.php script first";
-                    walletSelect.appendChild(noUserOption);
-                    
-                    // Add option to create wallet anyway
-                    const createAnyway = document.createElement('option');
-                    createAnyway.value = "create_new";
-                    createAnyway.textContent = "➕ Create wallet anyway (may not work)";
-                    walletSelect.appendChild(createAnyway);
-                    
-                    walletSelect.onchange = function() {
-                        if (walletSelect.value === "create_new") {
-                            createNewWallet(userId, walletSelect, secretInput);
-                        }
-                    };
-                    
-                    return;
-                }
-                
-                // Step 5: Now that we have a userId, get the wallets
-                walletSelect.innerHTML = '<option value="">Getting wallets for user...</option>';
-                console.log(`Fetching wallets for userId: ${userId}`);
-                
+                // Directly fetch wallets for the user
                 const walletsRes = await fetch(`/api.php/wallets/getUserWallets?userId=${encodeURIComponent(userId)}`);
                 const walletsJson = await walletsRes.json();
                 
@@ -346,15 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         walletSelect.innerHTML += `<option value="${wallet.id}" data-secret="${wallet.secretKey || ''}">${wallet.label || wallet.publicKey.substr(0, 10)}... (Balance: ${wallet.balance} XLM)</option>`;
                     });
                     
-                    // Add event listener to wallet select to set secret when wallet is selected
-                    walletSelect.onchange = function() {
-                        const selectedOption = walletSelect.options[walletSelect.selectedIndex];
-                        if (selectedOption && selectedOption.dataset.secret) {
-                            secretInput.value = selectedOption.dataset.secret;
-                        } else {
-                            secretInput.value = "";
-                        }
-                    };
+                    // No need to set sourceSecret anymore as we'll use walletId directly
                 } else {
                     walletSelect.innerHTML = '<option value="">No wallets found</option>';
                     // Add option to create a wallet
@@ -365,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     walletSelect.onchange = function() {
                         if (walletSelect.value === "create_new") {
-                            createNewWallet(userId, walletSelect, secretInput);
+                            createNewWallet(userId, walletSelect);
                         }
                     };
                 }
@@ -382,14 +325,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 walletSelect.onchange = function() {
                     if (walletSelect.value === "retry") {
                         // Trigger the change event again to retry
-                        donorSelect.dispatchEvent(new Event('change'));
+                        userSelect.dispatchEvent(new Event('change'));
                     }
                 };
             }
         });
         
         // Function to create a new wallet
-        async function createNewWallet(userId, walletSelect, secretInput) {
+        async function createNewWallet(userId, walletSelect) {
             try {
                 walletSelect.disabled = true;
                 walletSelect.innerHTML = '<option value="">Creating wallet...</option>';
@@ -403,8 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const createJson = await createRes.json();
                 
                 if (createJson.success && createJson.wallet) {
-                    walletSelect.innerHTML = `<option value="${createJson.wallet.id}" selected data-secret="${createJson.wallet.secretKey || ''}">${createJson.wallet.label || createJson.wallet.publicKey.substr(0, 10)}... (New)</option>`;
-                    secretInput.value = createJson.wallet.secretKey || '';
+                    walletSelect.innerHTML = `<option value="${createJson.wallet.id}" selected>${createJson.wallet.label || createJson.wallet.publicKey.substr(0, 10)}... (New)</option>`;
                     
                     // Add funding status option
                     const fundingOption = document.createElement('option');
@@ -455,8 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    setupWalletSelection('donor-select-1', 'wallet-select-1', '#donation-source-secret');
-    setupWalletSelection('donor-select-2', 'wallet-select-2', '#recurring-source-secret');
+    setupWalletSelection('donor-select-1', 'wallet-select-1');
+    setupWalletSelection('donor-select-2', 'wallet-select-2');
 });
 
 async function postForm(url, data, resultDiv) {
@@ -489,7 +431,297 @@ document.getElementById('donation-form').onsubmit = function(e) {
     document.getElementById('donation-result').innerHTML = 
         '<div class="instructions">Processing donation... Please wait.</div>';
     
+    // If the API expects donorId but we're passing userId, add a donorId parameter
+    // This is for backwards compatibility with the existing API
+    if (data.userId && !data.donorId) {
+        data.donorId = data.userId;
+    }
+    
+    // Log the data being sent to help with debugging
+    console.log('Donation data being sent:', data);
+    
     postForm('/api.php/transaction/processDonation', data, document.getElementById('donation-result'));
+};
+
+// Debug Tools - Campaign Lookup
+document.getElementById('campaign-lookup-form').onsubmit = function(e) {
+    e.preventDefault();
+    const campaignId = this.campaignId.value.trim();
+    const resultDiv = document.getElementById('campaign-lookup-result');
+    
+    resultDiv.innerHTML = '<div class="instructions">Looking up campaign... Please wait.</div>';
+    
+    fetch(`/api.php/campaign?id=${encodeURIComponent(campaignId)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data._id) {
+                resultDiv.innerHTML = '<div class="result"><h3>Campaign Found:</h3><pre>' + 
+                    JSON.stringify(data, null, 2) + '</pre></div>';
+            } else {
+                resultDiv.innerHTML = '<div class="error"><h3>Campaign Not Found</h3><p>The campaign with ID ' + 
+                    campaignId + ' could not be found. Try checking for leading/trailing spaces.</p></div>';
+                
+                // Try a broader search as fallback
+                fetch('/api.php/campaign')
+                    .then(response => response.json())
+                    .then(allData => {
+                        if (Array.isArray(allData) && allData.length > 0) {
+                            resultDiv.innerHTML += '<div class="result"><h3>Available Campaigns:</h3><pre>' + 
+                                JSON.stringify(allData.slice(0, 3).map(c => ({_id: c._id, title: c.title})), null, 2) + 
+                                '</pre></div>';
+                        }
+                    })
+                    .catch(err => console.error("Error fetching all campaigns:", err));
+            }
+        })
+        .catch(error => {
+            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+        });
+};
+
+// Debug Tools - Campaign Wallet Status
+document.getElementById('campaign-wallet-form').onsubmit = function(e) {
+    e.preventDefault();
+    const campaignId = this.campaignId.value.trim();
+    const resultDiv = document.getElementById('campaign-wallet-result');
+    
+    resultDiv.innerHTML = '<div class="instructions">Checking campaign wallet status... Please wait.</div>';
+    
+    // Use our new Wallet API to get campaign wallet details
+    fetch(`/api.php/wallet/getCampaignWallet?campaignId=${encodeURIComponent(campaignId)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                let errorHtml = '<div class="error"><h3>Campaign Wallet Error</h3>';
+                errorHtml += `<p>${data.error}</p>`;
+                
+                // If the campaign doesn't have a wallet, offer to create one
+                if (data.error === 'Campaign does not have a wallet' && data.createUrl) {
+                    errorHtml += `<p>Would you like to create a wallet for this campaign?</p>`;
+                    errorHtml += `<button id="create-wallet-btn" data-campaign-id="${campaignId}">Create Wallet</button>`;
+                } else if (data.error === 'Campaign not found') {
+                    errorHtml += `<p>Check the campaign ID and try again.</p>`;
+                }
+                
+                errorHtml += '</div>';
+                resultDiv.innerHTML = errorHtml;
+                
+                // Add event listener for wallet creation button if present
+                const createWalletBtn = document.getElementById('create-wallet-btn');
+                if (createWalletBtn) {
+                    createWalletBtn.addEventListener('click', function() {
+                        createWalletBtn.disabled = true;
+                        createWalletBtn.textContent = 'Creating wallet...';
+                        
+                        fetch(`/api.php/wallet/createCampaignWallet`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ campaignId: campaignId })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                resultDiv.innerHTML = '<div class="result"><h3>Campaign Wallet Created Successfully</h3>' +
+                                    `<p>Campaign now has a wallet with ID: ${result.wallet.id}</p>` +
+                                    `<p>Public Key: ${result.wallet.publicKey}</p>` +
+                                    `<p>Would you like to fund this wallet on the testnet?</p>` +
+                                    `<button id="fund-wallet-btn" data-campaign-id="${campaignId}">Fund Wallet</button>` +
+                                    '</div>';
+                                
+                                // Add event listener for funding button
+                                const fundWalletBtn = document.getElementById('fund-wallet-btn');
+                                if (fundWalletBtn) {
+                                    fundWalletBtn.addEventListener('click', function() {
+                                        fundWalletBtn.disabled = true;
+                                        fundWalletBtn.textContent = 'Funding wallet...';
+                                        
+                                        fetch(`/api.php/wallet/fundCampaignWallet`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ campaignId: campaignId })
+                                        })
+                                        .then(response => response.json())
+                                        .then(fundResult => {
+                                            if (fundResult.success) {
+                                                resultDiv.innerHTML = '<div class="result"><h3>Campaign Wallet Funded Successfully</h3>' +
+                                                    `<p>Wallet balance: ${fundResult.wallet.balance} XLM</p>` +
+                                                    `<pre>${JSON.stringify(fundResult, null, 2)}</pre>` +
+                                                    '</div>';
+                                            } else {
+                                                resultDiv.innerHTML = '<div class="error"><h3>Error Funding Wallet</h3>' +
+                                                    `<p>${fundResult.error}</p>` +
+                                                    '</div>';
+                                            }
+                                        })
+                                        .catch(error => {
+                                            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+                                        });
+                                    });
+                                }
+                            } else {
+                                resultDiv.innerHTML = '<div class="error"><h3>Error Creating Wallet</h3>' +
+                                    `<p>${result.error}</p>` +
+                                    '</div>';
+                            }
+                        })
+                        .catch(error => {
+                            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+                        });
+                    });
+                }
+            } else {
+                // Show wallet details if successful
+                let walletInfo = '<div class="result"><h3>Campaign Wallet Status:</h3>';
+                walletInfo += `<p>✅ Campaign has a wallet</p>`;
+                walletInfo += `<p>Wallet ID: ${data.wallet.id}</p>`;
+                walletInfo += `<p>Stellar Address: ${data.wallet.publicKey}</p>`;
+                walletInfo += `<p>Balance: ${data.wallet.balance} XLM</p>`;
+                walletInfo += `<p>Created: ${data.wallet.createdAt}</p>`;
+                
+                // Add additional wallet details
+                walletInfo += `<h4>Full Wallet Details:</h4>`;
+                walletInfo += `<pre>${JSON.stringify(data.wallet, null, 2)}</pre>`;
+                
+                // Add funding option if balance is 0
+                if (data.wallet.balance === '0') {
+                    walletInfo += `<p>The wallet has a zero balance. Would you like to fund it on the testnet?</p>`;
+                    walletInfo += `<button id="fund-empty-wallet-btn" data-campaign-id="${campaignId}">Fund Wallet</button>`;
+                }
+                
+                walletInfo += '</div>';
+                resultDiv.innerHTML = walletInfo;
+                
+                // Add event listener for funding button if present
+                const fundEmptyWalletBtn = document.getElementById('fund-empty-wallet-btn');
+                if (fundEmptyWalletBtn) {
+                    fundEmptyWalletBtn.addEventListener('click', function() {
+                        fundEmptyWalletBtn.disabled = true;
+                        fundEmptyWalletBtn.textContent = 'Funding wallet...';
+                        
+                        fetch(`/api.php/wallet/fundCampaignWallet`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ campaignId: campaignId })
+                        })
+                        .then(response => response.json())
+                        .then(fundResult => {
+                            if (fundResult.success) {
+                                resultDiv.innerHTML = '<div class="result"><h3>Campaign Wallet Funded Successfully</h3>' +
+                                    `<p>Wallet balance: ${fundResult.wallet.balance} XLM</p>` +
+                                    `<pre>${JSON.stringify(fundResult, null, 2)}</pre>` +
+                                    '</div>';
+                            } else {
+                                resultDiv.innerHTML = '<div class="error"><h3>Error Funding Wallet</h3>' +
+                                    `<p>${fundResult.error}</p>` +
+                                    '</div>';
+                            }
+                        })
+                        .catch(error => {
+                            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+                        });
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+        });
+};
+
+// Debug Tools - Wallet Lookup
+document.getElementById('wallet-lookup-form').onsubmit = function(e) {
+    e.preventDefault();
+    const walletId = this.walletId.value.trim();
+    const resultDiv = document.getElementById('wallet-lookup-result');
+    
+    resultDiv.innerHTML = '<div class="instructions">Looking up wallet... Please wait.</div>';
+    
+    fetch(`/api.php/wallet/getWalletDetails?walletId=${encodeURIComponent(walletId)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.success && data.wallet) {
+                // For security, mask the secret key if present
+                if (data.wallet.secretKey) {
+                    data.wallet.secretKey = '*'.repeat(10) + data.wallet.secretKey.substring(data.wallet.secretKey.length - 5);
+                }
+                
+                let walletInfo = '<div class="result"><h3>Wallet Found:</h3>';
+                
+                // Add basic info
+                walletInfo += `<p>Wallet ID: ${data.wallet.id}</p>`;
+                walletInfo += `<p>Public Key: ${data.wallet.publicKey}</p>`;
+                walletInfo += `<p>Balance: ${data.wallet.balance} XLM</p>`;
+                walletInfo += `<p>Type: ${data.wallet.type}</p>`;
+                
+                // If it's a campaign wallet, show campaign info
+                if (data.wallet.campaignId) {
+                    walletInfo += `<p>Campaign ID: ${data.wallet.campaignId}</p>`;
+                    if (data.wallet.campaign) {
+                        walletInfo += `<p>Campaign Title: ${data.wallet.campaign.title}</p>`;
+                        walletInfo += `<p>Funding Status: ${data.wallet.campaign.fundingRaised} / ${data.wallet.campaign.fundingTarget}</p>`;
+                    }
+                }
+                
+                // If it's a user wallet, show user info
+                if (data.wallet.userId) {
+                    walletInfo += `<p>User ID: ${data.wallet.userId}</p>`;
+                    if (data.wallet.user) {
+                        walletInfo += `<p>User: ${data.wallet.user.username} (${data.wallet.user.email})</p>`;
+                    }
+                }
+                
+                // Add funding option if balance is 0 and it's a campaign wallet
+                if (data.wallet.balance === '0' && data.wallet.type === 'campaign' && data.wallet.campaignId) {
+                    walletInfo += `<p>This campaign wallet has a zero balance. Would you like to fund it on the testnet?</p>`;
+                    walletInfo += `<button id="fund-lookup-wallet-btn" data-campaign-id="${data.wallet.campaignId}">Fund Wallet</button>`;
+                }
+                
+                // Add full wallet details
+                walletInfo += `<h4>Full Wallet Details:</h4>`;
+                walletInfo += `<pre>${JSON.stringify(data.wallet, null, 2)}</pre>`;
+                walletInfo += '</div>';
+                
+                resultDiv.innerHTML = walletInfo;
+                
+                // Add event listener for funding button if present
+                const fundLookupWalletBtn = document.getElementById('fund-lookup-wallet-btn');
+                if (fundLookupWalletBtn) {
+                    fundLookupWalletBtn.addEventListener('click', function() {
+                        fundLookupWalletBtn.disabled = true;
+                        fundLookupWalletBtn.textContent = 'Funding wallet...';
+                        
+                        const campaignId = fundLookupWalletBtn.getAttribute('data-campaign-id');
+                        fetch(`/api.php/wallet/fundCampaignWallet`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ campaignId: campaignId })
+                        })
+                        .then(response => response.json())
+                        .then(fundResult => {
+                            if (fundResult.success) {
+                                resultDiv.innerHTML = '<div class="result"><h3>Campaign Wallet Funded Successfully</h3>' +
+                                    `<p>Wallet balance: ${fundResult.wallet.balance} XLM</p>` +
+                                    `<pre>${JSON.stringify(fundResult, null, 2)}</pre>` +
+                                    '</div>';
+                            } else {
+                                resultDiv.innerHTML = '<div class="error"><h3>Error Funding Wallet</h3>' +
+                                    `<p>${fundResult.error}</p>` +
+                                    '</div>';
+                            }
+                        })
+                        .catch(error => {
+                            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+                        });
+                    });
+                }
+            } else {
+                resultDiv.innerHTML = '<div class="error"><h3>Wallet Not Found or Error</h3><pre>' + 
+                    JSON.stringify(data, null, 2) + '</pre></div>';
+            }
+        })
+        .catch(error => {
+            resultDiv.innerHTML = '<div class="error"><h3>Error:</h3><pre>' + error.message + '</pre></div>';
+        });
 };
 
 // Recurring Donation
@@ -502,6 +734,12 @@ document.getElementById('recurring-form').onsubmit = function(e) {
     // Add helpful message for debugging
     document.getElementById('recurring-result').innerHTML = 
         '<div class="instructions">Processing recurring donation... Please wait.</div>';
+    
+    // If the API expects donorId but we're passing userId, add a donorId parameter
+    // This is for backwards compatibility with the existing API
+    if (data.userId && !data.donorId) {
+        data.donorId = data.userId;
+    }
     
     postForm('/api.php/transaction/processDonation', data, document.getElementById('recurring-result'));
 };
