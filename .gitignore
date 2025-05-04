@@ -38,5 +38,9 @@ givehub.sql
 mongo-dump.tgz
 src/.htaccess
 uploads
-
+src/
+repomix*
 **/.claude/settings.local.json
+.repomix*
+.cursor
+CLAUDE.md
