@@ -6,6 +6,163 @@
     <title>Admin Wallet Management - The Give Hub</title>
     <link rel="stylesheet" href="/assets/css/admin.css">
     <link rel="stylesheet" href="/css/wallet-styles.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .wallet-view {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1024px) {
+            .wallet-view {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .wallet-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        
+        .wallet-detail {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: none;
+        }
+        
+        .wallet-detail.active {
+            display: block;
+        }
+        
+        .wallet-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .wallet-item.selected {
+            background: #e3f2fd;
+            border-left: 3px solid #2196F3;
+        }
+        
+        .wallet-type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+        
+        .wallet-type-user {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .wallet-type-campaign {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .transaction-table th, .transaction-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .transaction-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .transaction-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .no-transactions {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .send-funds-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .memo-counter {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
@@ -29,12 +186,22 @@
         
         <!-- Search Box -->
         <div class="search-box">
-            <input type="text" id="search" placeholder="Search by public key or user ID...">
+            <input type="text" id="search" placeholder="Search by public key, user ID, or campaign ID...">
         </div>
         
-        <!-- Wallet Grid -->
-        <div id="wallet-grid" class="wallet-grid">
-            <!-- Wallets will be dynamically inserted here -->
+        <!-- Wallet List and Detail View -->
+        <div class="wallet-view">
+            <!-- Wallet List -->
+            <div class="wallet-list" id="wallet-list">
+                <!-- Wallet items will be inserted here -->
+                <div class="loading">Loading wallets...</div>
+            </div>
+            
+            <!-- Wallet Detail -->
+            <div class="wallet-detail" id="wallet-detail">
+                <h2>Wallet Details</h2>
+                <p>Select a wallet to view details.</p>
+            </div>
         </div>
         
         <!-- Pagination -->
@@ -49,30 +216,116 @@
         let totalPages = 1;
         let isLoading = false;
         let searchTimeout = null;
+        let selectedWallet = null;
+        let currentTransactions = [];
+        let walletDetailContent = '';
         
         // Templates
-        const walletTemplate = (wallet) => `
-            <div class="wallet-card">
-                <div class="wallet-header">
-                    <div class="balance">
-                        ${parseFloat(wallet.balance).toFixed(7)} XLM
-                    </div>
-                    <div>
-                        <button onclick="fundTestnetAccount('${wallet.publicKey}')" class="button">Fund</button>
-                        <a href="/admin/transactions.html?userId=${wallet.user ? wallet.user.id : ''}" class="button">Transactions</a>
-                    </div>
+        const walletItemTemplate = (wallet, isSelected) => `
+            <div class="wallet-item ${isSelected ? 'selected' : ''}" 
+                 data-wallet-id="${wallet.id}" 
+                 onclick="selectWallet('${wallet.id}')">
+                <div>
+                    <span>${wallet.label || (wallet.type === 'campaign' ? 'Campaign Wallet' : 'User Wallet')}</span>
+                    <span class="wallet-type-badge wallet-type-${wallet.type || 'user'}">${wallet.type || 'user'}</span>
                 </div>
-                
-                <div class="user-info">
-                    <div><strong>User:</strong> ${wallet.user ? wallet.user.name : 'N/A'}</div>
-                    <div><strong>Email:</strong> ${wallet.user ? wallet.user.email : 'N/A'}</div>
-                    <div><strong>Created:</strong> ${new Date(wallet.createdAt).toLocaleString()}</div>
-                </div>
-                
-                <div class="address" title="Click to copy">
-                    ${wallet.publicKey}
-                </div>
+                <div class="balance">${parseFloat(wallet.balance).toFixed(2)} XLM</div>
             </div>
+        `;
+        
+        const walletDetailTemplate = (wallet) => `
+            <div class="wallet-header">
+                <h2>${wallet.label || (wallet.type === 'campaign' ? 'Campaign Wallet' : 'User Wallet')}</h2>
+                <div class="wallet-type-badge wallet-type-${wallet.type || 'user'}">${wallet.type || 'user'}</div>
+            </div>
+            
+            <div class="balance">${parseFloat(wallet.balance).toFixed(7)} XLM</div>
+            
+            <div class="section-title">Wallet Information</div>
+            <div class="info-grid">
+                <div class="info-label">Public Key:</div>
+                <div class="address" title="Click to copy" onclick="copyToClipboard('${wallet.publicKey}')">${wallet.publicKey}</div>
+                
+                <div class="info-label">Network:</div>
+                <div>${wallet.network || 'testnet'}</div>
+                
+                <div class="info-label">Status:</div>
+                <div>${wallet.status || 'active'}</div>
+                
+                <div class="info-label">Created:</div>
+                <div>${wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'Unknown'}</div>
+                
+                <div class="info-label">Last Accessed:</div>
+                <div>${wallet.lastAccessed ? new Date(wallet.lastAccessed).toLocaleString() : 'Unknown'}</div>
+                
+                ${wallet.type === 'campaign' && wallet.campaign ? `
+                    <div class="info-label">Campaign:</div>
+                    <div>${wallet.campaign.title || 'Unknown Campaign'}</div>
+                    
+                    <div class="info-label">Campaign Status:</div>
+                    <div>${wallet.campaign.status || 'unknown'}</div>
+                    
+                    <div class="info-label">Funding Target:</div>
+                    <div>$${parseFloat(wallet.campaign.fundingTarget || 0).toFixed(2)}</div>
+                    
+                    <div class="info-label">Funding Raised:</div>
+                    <div>$${parseFloat(wallet.campaign.fundingRaised || 0).toFixed(2)}</div>
+                ` : ''}
+                
+                ${wallet.type !== 'campaign' && wallet.user ? `
+                    <div class="info-label">User:</div>
+                    <div>${wallet.user.email || 'Unknown User'}</div>
+                ` : ''}
+            </div>
+            
+            <div class="wallet-actions">
+                <button onclick="fundTestnetAccount('${wallet.publicKey}')" class="button">Fund Account</button>
+                <button onclick="showTransactions('${wallet.id}')" class="button">View Transactions</button>
+            </div>
+            
+            <div id="transactions-section" class="section-title">Recent Transactions</div>
+            <div id="transactions-container">
+                <div class="loading">Loading transactions...</div>
+            </div>
+            
+            <div class="send-funds-section">
+                <div class="section-title">Send Funds</div>
+                <form id="send-payment-form" onsubmit="sendPayment(event)">
+                    <input type="hidden" id="source-wallet-id" value="${wallet.id}" data-wallet-id="${wallet.id}">
+                    
+                    <div class="form-group">
+                        <label for="destination-address">Destination Address</label>
+                        <input type="text" id="destination-address" class="form-control" 
+                               placeholder="G..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Amount (XLM)</label>
+                        <input type="number" id="amount" class="form-control" 
+                               step="0.0000001" min="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="memo">Memo (Optional)</label>
+                        <textarea id="memo" class="form-control" 
+                                  placeholder="Add a memo to this transaction..." 
+                                  maxlength="28" rows="3"></textarea>
+                        <div class="memo-counter"><span id="memo-count">0</span>/28</div>
+                    </div>
+                    
+                    <button type="submit" class="button" id="send-payment-button">Send Payment</button>
+                </form>
+            </div>
+        `;
+        
+        const transactionTemplate = (transaction) => `
+            <tr>
+                <td>${new Date(transaction.createdAt).toLocaleString()}</td>
+                <td title="${transaction.hash}">${transaction.hash.substring(0, 8)}...</td>
+                <td>${transaction.successful ? 'Success' : 'Failed'}</td>
+                <td>${transaction.fee} XLM</td>
+                <td>${transaction.memo || '-'}</td>
+            </tr>
         `;
         
         // Helper functions
@@ -116,13 +369,47 @@
             pagination.innerHTML = html;
         }
         
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('Copied to clipboard!', 'success');
+            });
+        }
+        
+        // Wallet selection
+        function selectWallet(walletId) {
+            // If a wallet was previously selected, remove the selection
+            const previousSelected = document.querySelector('.wallet-item.selected');
+            if (previousSelected) {
+                previousSelected.classList.remove('selected');
+            }
+            
+            // Mark the new selected wallet
+            const walletItem = document.querySelector(`.wallet-item[data-wallet-id="${walletId}"]`);
+            if (walletItem) {
+                walletItem.classList.add('selected');
+            }
+            
+            // Get the wallet detail panel
+            const walletDetail = document.getElementById('wallet-detail');
+            
+            // Show loading state
+            walletDetail.innerHTML = '<div class="loading">Loading wallet details...</div>';
+            walletDetail.classList.add('active');
+            
+            // Fetch and display wallet details
+            fetchWalletDetails(walletId);
+            
+            // Update the selected wallet
+            selectedWallet = walletId;
+        }
+        
         // API calls
         async function loadWallets(page = 1, search = '') {
             try {
                 if (isLoading) return;
                 setLoading(true);
                 
-                const response = await fetch('/api/wallets/getAllWallets', {
+                const response = await fetch('/api.php/wallets/getAllWallets', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -130,7 +417,7 @@
                     body: JSON.stringify({
                         isAdmin: true, // This should be validated server-side
                         page: page,
-                        limit: 10,
+                        limit: 20,
                         search: search
                     })
                 });
@@ -138,9 +425,23 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Update wallet grid
-                    const walletGrid = document.getElementById('wallet-grid');
-                    walletGrid.innerHTML = data.wallets.map(walletTemplate).join('');
+                    // Update wallet list
+                    const walletList = document.getElementById('wallet-list');
+                    walletList.innerHTML = data.wallets.map(wallet => 
+                        walletItemTemplate(wallet, wallet.id === selectedWallet)
+                    ).join('');
+                    
+                    // If a wallet was previously selected, reselect it
+                    if (selectedWallet) {
+                        const walletItem = document.querySelector(`.wallet-item[data-wallet-id="${selectedWallet}"]`);
+                        if (walletItem) {
+                            walletItem.classList.add('selected');
+                        } else {
+                            // If the selected wallet is no longer in the list, clear the detail view
+                            document.getElementById('wallet-detail').classList.remove('active');
+                            selectedWallet = null;
+                        }
+                    }
                     
                     // Update pagination
                     currentPage = data.pagination.page;
@@ -150,28 +451,175 @@
                     // Update stats
                     updateStats(data);
                     
-                    // Set up copy functionality
-                    document.querySelectorAll('.address').forEach(addressDiv => {
-                        addressDiv.addEventListener('click', function() {
-                            navigator.clipboard.writeText(this.textContent.trim()).then(() => {
-                                showMessage('Address copied to clipboard!', 'success');
-                            });
-                        });
-                    });
                 } else {
                     showMessage(data.error, 'error');
                 }
             } catch (error) {
+                console.error('Error loading wallets:', error);
                 showMessage('Failed to load wallets', 'error');
             } finally {
                 setLoading(false);
             }
         }
         
+        async function fetchWalletDetails(walletId) {
+            try {
+                console.log('Fetching details for wallet:', walletId);
+                const response = await fetch('/api.php/wallets/getWalletDetails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        walletId: walletId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Debug wallet data
+                    console.log('Wallet details:', data.wallet);
+                    
+                    // Make sure we have a valid wallet ID
+                    if (!data.wallet.id) {
+                        console.error('Wallet ID is missing in the response');
+                        data.wallet.id = walletId; // Use the ID we requested with as a fallback
+                    }
+                    
+                    // Render wallet details
+                    const walletDetail = document.getElementById('wallet-detail');
+                    walletDetail.innerHTML = walletDetailTemplate(data.wallet);
+                    walletDetail.classList.add('active');
+                    
+                    // Verify the source wallet ID is set correctly
+                    const sourceWalletIdField = document.getElementById('source-wallet-id');
+                    if (sourceWalletIdField) {
+                        console.log('Source wallet ID in form:', sourceWalletIdField.value);
+                        // Make absolutely sure the wallet ID is set correctly
+                        if (sourceWalletIdField.value !== data.wallet.id) {
+                            console.warn('Correcting mismatched wallet ID');
+                            sourceWalletIdField.value = data.wallet.id;
+                        }
+                    }
+                    
+                    // Set up memo counter
+                    const memoTextarea = document.getElementById('memo');
+                    const memoCount = document.getElementById('memo-count');
+                    
+                    if (memoTextarea && memoCount) {
+                        memoTextarea.addEventListener('input', function() {
+                            memoCount.textContent = this.value.length;
+                        });
+                    }
+                    
+                    // Load transactions
+                    showTransactions(walletId);
+                    
+                } else {
+                    showMessage(data.error, 'error');
+                    document.getElementById('wallet-detail').classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error fetching wallet details:', error);
+                showMessage('Failed to load wallet details', 'error');
+                document.getElementById('wallet-detail').classList.remove('active');
+            }
+        }
+        
+        async function showTransactions(walletId) {
+            try {
+                const transactionsContainer = document.getElementById('transactions-container');
+                if (!transactionsContainer) return;
+                
+                transactionsContainer.innerHTML = '<div class="loading">Loading transactions...</div>';
+                
+                // Determine the type of wallet (user or campaign)
+                const walletDetailElem = document.getElementById('wallet-detail');
+                const isUserWallet = walletDetailElem.querySelector('.wallet-type-user') !== null;
+                let endpoint, params;
+                
+                if (isUserWallet) {
+                    // For user wallets, we need the userId
+                    endpoint = '/api.php/wallets/getTransactions';
+                    params = {
+                        walletId: walletId
+                    };
+                    
+                    // Try to extract userId from the wallet details
+                    const userIdLabel = walletDetailElem.querySelector('.info-grid .info-label:contains("User")');
+                    if (userIdLabel && userIdLabel.nextElementSibling) {
+                        const userId = userIdLabel.nextElementSibling.textContent.trim();
+                        if (userId !== 'Unknown User') {
+                            params.userId = userId;
+                        }
+                    }
+                } else {
+                    // For campaign wallets, we use wallet ID
+                    endpoint = '/api.php/wallets/getTransactions';
+                    params = {
+                        walletId: walletId
+                    };
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTransactions = data.transactions || [];
+                    
+                    if (currentTransactions.length === 0) {
+                        transactionsContainer.innerHTML = `
+                            <div class="no-transactions">
+                                No transactions found for this wallet.
+                            </div>
+                        `;
+                    } else {
+                        transactionsContainer.innerHTML = `
+                            <table class="transaction-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Transaction Hash</th>
+                                        <th>Status</th>
+                                        <th>Fee</th>
+                                        <th>Memo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${currentTransactions.map(transactionTemplate).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                    }
+                } else {
+                    transactionsContainer.innerHTML = `
+                        <div class="no-transactions">
+                            Error loading transactions: ${data.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactions-container').innerHTML = `
+                    <div class="no-transactions">
+                        Error loading transactions. Please try again.
+                    </div>
+                `;
+            }
+        }
+        
         async function fundTestnetAccount(publicKey) {
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/fundTestnetAccount', {
+                const response = await fetch('/api.php/wallets/fundTestnetAccount', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -185,14 +633,106 @@
                 
                 if (data.success) {
                     showMessage('Account funded successfully!', 'success');
+                    
+                    // Refresh the current wallet view if we have a selected wallet
+                    if (selectedWallet) {
+                        fetchWalletDetails(selectedWallet);
+                    }
+                    
+                    // Reload the wallet list to update balances
                     loadWallets(currentPage, document.getElementById('search').value);
                 } else {
-                    showMessage(data.error, 'error');
+                    showMessage(data.error || 'Failed to fund account', 'error');
                 }
             } catch (error) {
+                console.error('Error funding account:', error);
                 showMessage('Failed to fund account', 'error');
             } finally {
                 setLoading(false);
+            }
+        }
+        
+        async function sendPayment(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const sourceWalletId = document.getElementById('source-wallet-id').value;
+            const destinationAddress = document.getElementById('destination-address').value;
+            const amount = document.getElementById('amount').value;
+            const memo = document.getElementById('memo').value;
+            
+            // Validate form data
+            if (!sourceWalletId) {
+                showMessage('Source wallet ID is missing', 'error');
+                return;
+            }
+            
+            if (!destinationAddress) {
+                showMessage('Destination address is required', 'error');
+                return;
+            }
+            
+            if (!amount || parseFloat(amount) <= 0) {
+                showMessage('Valid amount is required', 'error');
+                return;
+            }
+            
+            // Debug info
+            console.log('Sending payment with wallet ID:', sourceWalletId);
+            
+            // Disable the send button
+            const sendButton = document.getElementById('send-payment-button');
+            sendButton.disabled = true;
+            sendButton.textContent = 'Sending...';
+            
+            try {
+                setLoading(true);
+                
+                // Make sure we're using the correct parameter name expected by the API
+                const requestData = {
+                    sourceWalletId: sourceWalletId, // This should be the wallet ID, not user ID
+                    destinationAddress: destinationAddress,
+                    amount: amount
+                };
+                
+                // Only add memo if it's not empty
+                if (memo && memo.trim() !== '') {
+                    requestData.memo = memo;
+                }
+                
+                const response = await fetch('/api.php/wallets/sendPayment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Payment sent successfully!', 'success');
+                    
+                    // Clear the form
+                    document.getElementById('destination-address').value = '';
+                    document.getElementById('amount').value = '';
+                    document.getElementById('memo').value = '';
+                    document.getElementById('memo-count').textContent = '0';
+                    
+                    // Refresh wallet details and transactions
+                    fetchWalletDetails(sourceWalletId);
+                } else {
+                    // Show detailed error for debugging
+                    console.error('Payment error:', data);
+                    showMessage(data.error || 'Failed to send payment', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending payment:', error);
+                showMessage('Failed to send payment', 'error');
+            } finally {
+                setLoading(false);
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send Payment';
             }
         }
         
@@ -204,6 +744,11 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Add contains selector for jQuery-like functionality
+            Element.prototype.contains = function(text) {
+                return this.textContent.indexOf(text) > -1;
+            };
+            
             // Load initial data
             loadWallets();
             
@@ -218,4 +763,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
