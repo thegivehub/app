@@ -28,28 +28,56 @@ class StellarPayment extends HTMLElement {
         }
     }
     
-    async loadWallet(walletId) {
+    async loadWallet(walletIdOrUserId) {
         try {
-            // Use the proper API endpoint
-            const response = await fetch(`/api.php/wallets/getUserWallet?userId=${walletId}`);
+            console.log('Loading wallet with ID/UserID:', walletIdOrUserId);
+            
+            // First, try to load the wallet directly by wallet ID
+            const response = await fetch('/api.php/wallets/getWalletDetails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    walletId: walletIdOrUserId
+                })
+            });
+            
             const data = await response.json();
             
-            if (data && data._id) {
-                // Single wallet object returned
-                this.wallet = {
-                    publicKey: data.publicKey,
-                    balance: data.balance || '0.0000000',
-                    network: data.network || this.isTestnet ? 'testnet' : 'public'
-                };
-                console.log('Payment component loaded wallet:', this.wallet);
-                this.render();
-            } else if (data && data.success && data.wallet) {
-                // Success response with wallet object
+            if (data && data.success && data.wallet) {
+                // Success - we found the wallet by its ID
                 this.wallet = data.wallet;
-                console.log('Payment component loaded wallet:', this.wallet);
+                // Store the actual wallet ID for payment
+                this._walletId = data.wallet.id;
+                console.log('Payment component loaded wallet directly:', this.wallet);
+                this.render();
+                return;
+            }
+            
+            // If we're here, it means the ID might be a userId, not a walletId
+            // Try to get the user's default wallet
+            const userWalletResponse = await fetch(`/api.php/wallets/getUserWallet`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: walletIdOrUserId
+                })
+            });
+            
+            const userWalletData = await userWalletResponse.json();
+            
+            if (userWalletData && userWalletData.success && userWalletData.wallet) {
+                // Found the user's wallet
+                this.wallet = userWalletData.wallet;
+                // Store the actual wallet ID for payment
+                this._walletId = userWalletData.wallet.id;
+                console.log('Payment component loaded wallet via user ID:', this.wallet);
                 this.render();
             } else {
-                this.showError(data.error || 'Failed to load wallet');
+                this.showError(userWalletData.error || 'Failed to load wallet');
             }
         } catch (error) {
             console.error('Error loading wallet:', error);
@@ -73,9 +101,20 @@ class StellarPayment extends HTMLElement {
                 throw new Error('No wallet loaded');
             }
             
+            // Use the wallet ID we saved during loading (not the attribute)
+            // This ensures we're using the actual wallet ID, not potentially a user ID
+            const sourceWalletId = this._walletId || this.wallet.id;
+            
+            if (!sourceWalletId) {
+                console.error('Missing wallet ID:', this.wallet);
+                throw new Error('Missing wallet ID. Unable to send payment.');
+            }
+            
+            console.log('Sending payment from wallet ID:', sourceWalletId);
+            
             // Use the proper API endpoint
             let formData = {
-                sourceWalletId: this.getAttribute('wallet-id'),
+                sourceWalletId: sourceWalletId,
                 destinationAddress,
                 amount,
                 memo,

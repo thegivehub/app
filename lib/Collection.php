@@ -22,7 +22,7 @@ use Firebase\JWT\Key;
  */
 abstract class Collection {
     /** @var MongoCollection */
-    protected $collection;
+    public $collection;
     
     /** @var Database */
     protected $db;

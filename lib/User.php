@@ -181,6 +181,65 @@ class User extends Collection {
         return $user;
     }
     
+    /**
+     * API: Get user by ID
+     * Endpoint: /api/user/getUserById
+     * @param array $params Request parameters with userId
+     * @return array User details or error
+     */
+    public function getUserById($params) {
+        try {
+            // Validate required parameters
+            if (!isset($params['userId'])) {
+                return [
+                    'success' => false,
+                    'error' => 'User ID is required'
+                ];
+            }
+            
+            $userId = $params['userId'];
+            
+            // Convert string ID to MongoDB ObjectId if needed
+            if (is_string($userId)) {
+                $userId = new MongoDB\BSON\ObjectId($userId);
+            }
+            
+            // Get user from database
+            $user = $this->collection->findOne(['_id' => $userId]);
+            
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'error' => 'User not found'
+                ];
+            }
+            
+            // Format user data for response
+            $formattedUser = [
+                'id' => (string)$user['_id'],
+                'email' => $user['email'] ?? 'N/A',
+                'name' => isset($user['personalInfo']) ? 
+                    ($user['personalInfo']['firstName'] . ' ' . $user['personalInfo']['lastName']) : 
+                    ($user['displayName'] ?? 'N/A'),
+                'username' => $user['username'] ?? 'N/A',
+                'status' => $user['status'] ?? 'N/A',
+                'roles' => $user['roles'] ?? ['user'],
+                'createdAt' => isset($user['createdAt']) && is_object($user['createdAt']) ? 
+                    $user['createdAt']->toDateTime()->format('c') : null
+            ];
+            
+            return [
+                'success' => true,
+                'user' => $formattedUser
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
     public function register($data) {
         try {
             // Existing validation code...

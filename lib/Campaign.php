@@ -221,7 +221,7 @@ class Campaign {
         } else {
             // Default limit to 20 records if not specified
             if (!isset($options['limit'])) {
-                $options['limit'] = 20;
+                $options['limit'] = 40;
             }
             // Default to page 1 if not specified
             if (!isset($options['page'])) {

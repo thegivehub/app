@@ -7,7 +7,7 @@ require_once __DIR__ . '/Collection.php';
  * Handles donor-related database operations
  */
 class Donor extends Collection {
-    protected $collection;
+    public $collection;
 
     public function __construct() {
         parent::__construct();

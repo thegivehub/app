@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Check if app.api is available for authenticated requests
             if (window.app && window.app.api) {
                 // Use the fetchWithAuth helper
-                const data = await window.app.api.fetchWithAuth(`/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt`);
+                const data = await window.app.api.fetchWithAuth(`/campaigns?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt&filter=%7B"status"%3A"active"%7D`);
                 
                 // Update total items if provided in response
                 if (data.total !== undefined) {
