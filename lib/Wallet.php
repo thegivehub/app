@@ -27,8 +27,7 @@ class Wallet extends Collection {
      */
     public function __construct() {
         $this->collectionName = 'wallets';
-        parent::__construct();
-        
+        parent::__construct('wallets');
         $useTestnet = true;
         $this->isTestnet = $useTestnet;
         $this->horizonUrl = $useTestnet 
@@ -65,7 +64,7 @@ class Wallet extends Collection {
             
             // Generate new Stellar keypair
             $keypair = KeyPair::random();
-            $publicKey = $keypair->getAccountId();
+            $publicKey = $keypair->getPublicKey();
             $secretKey = $keypair->getSecretSeed();
             
             // Set default flag if this is the first wallet
@@ -616,7 +615,7 @@ class Wallet extends Collection {
                     'error' => 'Valid amount is required'
                 ];
             }
-            
+
             // Get source wallet
             $sourceWallet = $this->collection->findOne([
                 '_id' => new MongoDB\BSON\ObjectId($params['sourceWalletId'])
@@ -677,11 +676,11 @@ class Wallet extends Collection {
             // Load the source account
             $sourceAccount = $this->stellarServer->accounts()->account($sourceAccountId);
             
-            // Create transaction builder
-            $server = new \Soneso\StellarSDK\Server($this->horizonUrl);
-            $transaction = (new \Soneso\StellarSDK\Transaction\TransactionBuilder($sourceAccount))
+            // Create transaction builder using the StellarSDK instead of direct Server class
+            // The Server class was moved in the new Soneso SDK
+            $transaction = (new \Soneso\StellarSDK\TransactionBuilder($sourceAccount))
                 ->addOperation(
-                    \Soneso\StellarSDK\Operation\PaymentOperationBuilder::forNativeAsset(
+                    \Soneso\StellarSDK\PaymentOperationBuilder::forNativeAsset(
                         $params['destinationAddress'],
                         (string)$amount
                     )
@@ -689,16 +688,16 @@ class Wallet extends Collection {
             
             // Add memo if provided
             if (isset($params['memo']) && !empty($params['memo'])) {
-                $memo = new \Soneso\StellarSDK\Memo\MemoText($params['memo']);
+                $memo = \Soneso\StellarSDK\Memo::text($params['memo']);
                 $transaction = $transaction->addMemo($memo);
             }
             
             // Build and sign transaction
             $transaction = $transaction->build();
-            $transaction->sign($sourceKeyPair, $this->network);
+            $transaction->sign($sourceKeyPair, $this->network === 'TESTNET' ? \Soneso\StellarSDK\Network::testnet() : \Soneso\StellarSDK\Network::public());
             
             // Submit transaction
-            $response = $server->submitTransaction($transaction);
+            $response = $this->stellarServer->submitTransaction($transaction);
             
             // Create transaction record
             $transactionRecord = [
@@ -739,9 +738,23 @@ class Wallet extends Collection {
             ];
             
         } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            $trace = $e->getTraceAsString();
+            
+            // Log the detailed error for debugging
+            error_log("Payment error: " . $errorMessage);
+            error_log("Stack trace: " . $trace);
+            
+            // Return a more detailed error response
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $errorMessage,
+                'details' => [
+                    'errorType' => get_class($e),
+                    'sourceWalletId' => $params['sourceWalletId'] ?? 'not provided',
+                    'destinationAddress' => $params['destinationAddress'] ?? 'not provided',
+                    'amountRequested' => $params['amount'] ?? 'not provided'
+                ]
             ];
         }
     }
