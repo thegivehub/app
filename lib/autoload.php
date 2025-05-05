@@ -15,28 +15,31 @@ function sendJson($code, $data, $exit = true) {
     }
 }
 
+if (!function_exists("logMessage")) {
 /**
  * Logs message with timestamp and optional context
  * @param string $message Log message
  * @param array $context Additional context data
  * @param string $level Log level (debug, info, error, etc)
  */
-function logMessage($message, array $context = [], $level = 'info') {
-    $timestamp = date('Y-m-d H:i:s');
-    $contextJson = empty($context) ? '' : json_encode($context);
-    $logEntry = "[{$timestamp}] [{$level}] {$message} {$contextJson}\n";
-    
-    // You can adjust the log path as needed
-    $logFile = "logs/" . date('Y-m-d') . ".log";
-    
-    // Ensure logs directory exists
-    $logDir = dirname($logFile);
-    if (!is_dir($logDir)) {
-        mkdir($logDir, 0755, true);
+    function logMessage($message, array $context = [], $level = 'info') {
+        $timestamp = date('Y-m-d H:i:s');
+        $contextJson = empty($context) ? '' : json_encode($context);
+        $logEntry = "[{$timestamp}] [{$level}] {$message} {$contextJson}\n";
+        
+        // You can adjust the log path as needed
+        $logFile = "logs/" . date('Y-m-d') . ".log";
+        
+        // Ensure logs directory exists
+        $logDir = dirname($logFile);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        error_log($logEntry, 3, $logFile);
     }
-    
-    error_log($logEntry, 3, $logFile);
 }
+
 // Require Composer's autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
