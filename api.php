@@ -779,7 +779,11 @@ switch ($method) {
         if (isset($_GET['limit'])) {
             $options['limit'] = (int)$_GET['limit'];
         }
-        
+
+        if (isset($_GET['filter'])) {
+            $options['filter'] = json_decode($_GET['filter'], true);
+        }
+
         if ($id) {
             $result = $instance->read($id);
         } else {
