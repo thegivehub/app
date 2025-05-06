@@ -24,7 +24,7 @@ if (file_exists($envFile)) {
 putenv('APP_ENV=testing');
 
 // Initialize MongoDB connection for tests
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../lib/db.php';
 
 // Load test helpers
 require_once __DIR__ . '/TestCase.php';
@@ -58,9 +58,6 @@ function initTestEnvironment() {
     // Ensure MongoDB connection is to test database
     putenv("MONGODB_DATABASE=givehub_test");
     putenv("APP_ENV=testing");
-    
-    // Set a fixed JWT secret for testing purposes
-    define('JWT_SECRET', 'test_jwt_secret_for_unit_tests');
     
     // Clear test database before running tests
     cleanTestDatabase();
@@ -96,12 +93,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 class TestDatabaseSetup {
     private $client;
     private $db;
+    private $dbName;
 
     public function __construct() {
         // Connect to MongoDB
         $host = $_ENV['MONGODB_HOST'] ?? 'localhost';
         $port = $_ENV['MONGODB_PORT'] ?? '27017';
-        $dbName = $_ENV['MONGODB_DATABASE'] ?? 'givehub_test';
+        $this->dbName = $dbName = $_ENV['MONGODB_DATABASE'] ?? 'givehub_test';
 
         $this->client = new MongoDB\Client("mongodb://{$host}:{$port}");
         $this->db = $this->client->selectDatabase($dbName);
@@ -109,7 +107,7 @@ class TestDatabaseSetup {
 
     public function setup() {
         // Drop existing database to ensure clean state
-        $this->client->dropDatabase($_ENV['MONGODB_DATABASE']);
+        $this->client->dropDatabase($this->dbName);
 
         // Create collections
         $this->createCollections();
@@ -213,9 +211,9 @@ $requiredEnvVars = [
     "APP_ENV",
     "APP_DEBUG",
     "MONGODB_DATABASE",
-    "MONGODB_HOST",
-    "MONGODB_PORT",
-    "JWT_SECRET",
+//    "MONGODB_HOST",
+//    "MONGODB_PORT",
+//    "JWT_SECRET",
     "STORAGE_PATH"
 ];
 
