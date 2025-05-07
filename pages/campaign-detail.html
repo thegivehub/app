@@ -794,10 +794,11 @@
             $('#campaign-description').textContent = data.description || "Campaign Description";
             $('#campaign-location').textContent = data.location?.region || "Unknown";
             if(data.funding){
-                $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount, data.funding.currency);
-                $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount, data.funding.currency);
-                $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount);
+                $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount ?? data.fundingGoal ?? 0, data.funding.currency ?? 'USD');
+                $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount ?? 0, data.funding.currency ?? 'USD');
+                $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount ?? 0);
             }else{
+                $('#campaign-goal').textContent = app.utils.formatCurrency(data.fundingGoal ?? 0, 'USD');
                 console.log('Funding data not available.');
             }
 
