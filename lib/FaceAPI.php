@@ -6,7 +6,7 @@
  * API providers. By default, it uses AWS Rekognition, but can be configured to use
  * Azure Face API, Google Cloud Vision, or a custom provider.
  */
-class FaceRecognitionClient {
+class Face {
     // API provider configs
     private $provider;
     private $config;
