@@ -528,7 +528,8 @@
             // First check if user is authenticated
             const token = localStorage.getItem('accessToken');
             if (!token) {
-              window.location.href = '/pages/login.html';
+              // window.location.href = '/pages/login.html';
+              console.log("No token in init");
               return;
             }
 
@@ -822,7 +823,8 @@
 
               // If token is invalid/missing, redirect to login
               if (error.message.includes('No authentication token')) {
-                window.location.href = '/pages/login.html';
+                // window.location.href = '/pages/login.html';
+                console.error("No token in loadUserData");
               }
             }
           },
