@@ -255,6 +255,7 @@ class Auth {
             ]);
 
             if (!$user) {
+                $badLogin = 'User does not exist';
                 throw new Exception($badLogin);
             }
 
@@ -347,10 +348,6 @@ class Auth {
                     ['$set' => ['profile.avatar' => $filename]]
                 );
 
-                if (!$result->getModifiedCount()) {
-                    // Don't throw an error as the user might not exist yet
-                    // The avatar will be associated when they complete registration
-                }
             }
 
             return [

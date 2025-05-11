@@ -1,7 +1,7 @@
 <?php
 class Preferences extends Collection {
     protected $auth;
-    protected $collection;
+    public $collection;
 
     public function __construct() {
         parent::__construct();
