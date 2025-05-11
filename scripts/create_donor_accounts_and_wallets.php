@@ -179,9 +179,10 @@ class DonorAccountsCreator {
                 'verified' => true,
                 'twoFactorEnabled' => false
             ],
-            'profile' => [
+            'personalInfo' => [
                 'firstName' => $firstName,
                 'lastName' => $lastName,
+                'email' => $donor['email'],
                 'displayName' => $donor['name'],
                 'avatar' => null,
                 'bio' => '',
@@ -229,7 +230,7 @@ class DonorAccountsCreator {
     private function createAndFundWallet($userId) {
         // Generate a new Stellar keypair
         $keypair = Keypair::random();
-        $publicKey = $keypair->getPublicKey();
+        $publicKey = $keypair->getAccountId();
         $secretKey = $keypair->getSecretSeed();
         
         echo "  Generating new Stellar wallet for user " . $userId . "\n";

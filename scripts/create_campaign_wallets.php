@@ -8,7 +8,7 @@
 
 require_once __DIR__ . '/../lib/db.php';
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../lib/Collection.php';
+require_once __DIR__ . '/../lib/MongoCollection.php';
 require_once __DIR__ . '/../lib/Wallet.php';
 
 // Main script execution
@@ -27,7 +27,8 @@ function createCampaignWalletDirectly($campaignId, $campaignTitle) {
         
         // Create wallet record
         $db = new Database();
-        $walletsCollection = $db->getCollection('wallets');
+        // $walletsCollection = $db->getCollection('wallets');
+        $collection = (new MongoDB\Client)->givehub->wallets;
         
         $walletData = [
             'publicKey' => $publicKey,
@@ -42,7 +43,7 @@ function createCampaignWalletDirectly($campaignId, $campaignTitle) {
         ];
         
         try {
-            $result = $walletsCollection->insertOne($walletData);
+            $result = $collection->insertOne($walletData);
             // Debug output
             echo "  Insert Result Type: " . gettype($result) . "\n";
             if (is_object($result)) {

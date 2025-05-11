@@ -10,8 +10,10 @@
 
 require_once __DIR__ . '/../lib/db.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../lib/Collection.php';
+require_once __DIR__ . '/../lib/Wallet.php';
 
-use ZuluCrypto\StellarSdk\Keypair;
+use Soneso\StellarSDK\Crypto\KeyPair;
 
 class WalletGenerator {
     private $db;
@@ -112,13 +114,15 @@ class WalletGenerator {
      */
     private function createAndFundWallet($user) {
         // Generate new keypair
-        $keypair = Keypair::newFromRandom();
-        $publicKey = $keypair->getPublicKey();
-        $secretKey = $keypair->getSecret();
+        $keypair = KeyPair::random();
+        $publicKey = $keypair->getAccountId();
+        $secretKey = $keypair->getSecretSeed();
         
         echo "Generated keypair for user " . $user['_id'] . "\n";
         echo "Public Key: " . $publicKey . "\n";
-        
+
+        sleep(2);
+
         // Fund account using Friendbot
         $result = $this->fundTestnetAccount($publicKey);
         if (!$result['success']) {
