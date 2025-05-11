@@ -2,9 +2,10 @@
     "name": "thegivehub/app",
     "description": "The Give Hub crowdfunding platform",
     "type": "project",
+    "license": "MIT",
     "require": {
         "php": ">=7.4",
-        "mongodb/mongodb": "^1.15",
+        "mongodb/mongodb": "^1.15.0",
         "firebase/php-jwt": "^6.0",
         "ext-mongodb": "*",
         "ext-json": "*",
