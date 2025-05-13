@@ -28,56 +28,73 @@ Welcome to **The Give Hub**! This platform enables crowdfunding for social cause
 
 Follow these steps to set up the project on your local machine:
 
-### Prerequisites
-
-1. **PHP 8+** installed on your machine.
-2. **Composer**: Dependency manager for PHP.
-3. **MySQL**: Database for storing campaign and user data.
-4. **MongoDB**: For additional data storage.
-5. **Web Server**: Apache or Nginx.
-
 ### Steps
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/thegivehub/app.git
-   cd app
-   ```
+### 🚀 Getting Started (Local Development)
 
-2. **Install Dependencies**:
-   ```bash
-   composer install
-   ```
+#### 1. Install Docker and Docker Compose
 
-3. **Set Up Environment Variables**:
-   - Duplicate the `.env.example` file and rename it to `.env`.
-   - Configure the following variables:
-     ```env
-     DB_HOST=127.0.0.1
-     DB_PORT=3306
-     DB_DATABASE=your_database_name
-     DB_USERNAME=your_database_user
-     DB_PASSWORD=your_database_password
+Make sure you have Docker and Docker Compose installed.
+You can find installation instructions here: [https://docs.docker.com/get-docker](https://docs.docker.com/get-docker)
 
-     MONGODB_URI=mongodb://localhost:27017
-     MONGODB_DATABASE=your_mongodb_database_name
+#### 2. Create Upload Directories
 
-     STELLAR_NETWORK=public
-     SOROBAN_ENDPOINT=https://soroban.example.com
-     ```
+Create the necessary upload directories for the project in the project directory:
 
-4. **Run Database Migrations**:
-   ```bash
-   php artisan migrate
-   ```
+```bash
+mkdir -p uploads/documents
+mkdir -p uploads/selfies
+chmod -R 777 uploads
+```
 
-5. **Start the Server**:
-   ```bash
-   php -S localhost:8000 -t public
-   ```
+#### 3. Build and Start the Containers
 
-6. **Access the App**:
-   Open [http://localhost:8000](http://localhost:8000) in your browser.
+```bash
+sudo docker compose build
+sudo docker compose up
+```
+
+#### 4. Manually Create a User
+
+Because the registration flow requires email verification (which won't work in local development), you’ll need to manually insert a test user into the database.
+
+**Step A – Generate a Password Hash**
+
+Open a PHP interactive shell:
+
+```bash
+php -a
+```
+
+Then run:
+
+```php
+echo password_hash('test1234', PASSWORD_DEFAULT);
+```
+
+Copy the resulting hash string.
+
+**Step B – Insert a User into MongoDB**
+
+Use the hash you copied in place of `$HASH` below:
+
+```bash
+sudo docker exec -it app-mongo-1 mongosh givehub --eval '
+  db.users.insertOne({
+    email: "test@example.com",
+    username: "test",
+    auth: {
+      passwordHash: "$HASH"
+    }
+  });
+'
+```
+
+> **Note:** Replace `$HASH` with your actual hash string. Be sure to keep the quotes around it.
+
+#### 5. Access the Application
+
+Visit [http://localhost:4420](http://localhost:4420) in your browser.
 
 ---
 
