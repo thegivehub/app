@@ -9,21 +9,20 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     libcurl4-openssl-dev \
     pkg-config \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install zip
+# Install required PHP extensions
+RUN docker-php-ext-install zip pcntl
 
-# Install MongoDB extension (more verbose to catch errors)
-RUN pecl channel-update pecl.php.net && \
-    pecl install mongodb && \
+# Install MongoDB extension via PECL and enable it
+RUN pecl install mongodb-1.15.0 && \
     docker-php-ext-enable mongodb
 
-# Verify MongoDB extension is installed
+# Verify MongoDB extension
 RUN php -m | grep -q mongodb || (echo "MongoDB extension failed to install" && exit 1)
-
-# Display PHP info for debugging
-RUN php -i | grep mongo
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -31,32 +30,33 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files first for better caching
+# Copy MongoDB test script
+COPY test-mongodb.php /var/www/html/test-mongodb.php
+
+# Copy composer files
 COPY composer.json composer.lock* ./
 
-# Install composer dependencies
+# Install composer dependencies (no dev, no scripts, no autoloader)
 RUN composer install --no-scripts --no-autoloader --no-dev
 
-# Copy application files
+# Copy the rest of the app
 COPY . /var/www/html/
 
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize
 
-# Set proper permissions
+# Apache & file permissions
+RUN a2enmod rewrite
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod +x /var/www/html/docker-entrypoint.sh
 RUN git config --global --add safe.directory /var/www/html
 
-# Configure Apache
-RUN a2enmod rewrite
-RUN sed -i 's!/var/www/html!/var/www/html/!g' /etc/apache2/sites-available/000-default.conf
-
-# Create PHP info file for troubleshooting
+# PHP info file for debugging (optional)
 RUN echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
 
-# Expose port 80
+# Expose port
 EXPOSE 80
 
-# Set the entrypoint script
+# Entrypoint
 ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
+
