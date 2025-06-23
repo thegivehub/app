@@ -122,12 +122,19 @@ const AdminCampaignReview = {
         const notification = document.getElementById('notification');
         const notificationMessage = document.getElementById('notification-message');
         const notificationActions = document.getElementById('notification-actions');
+        const notificationClose = document.getElementById('notification-close');
         
+        // Reset notification state
         notification.className = 'notification';
         notification.classList.add(type);
         notification.classList.add('show');
         
-        notificationMessage.textContent = message;
+        // Set message content - support HTML or text
+        if (options.allowHTML) {
+            notificationMessage.innerHTML = message;
+        } else {
+            notificationMessage.textContent = message;
+        }
         
         // Add action buttons if provided
         if (options.actions) {
@@ -135,7 +142,13 @@ const AdminCampaignReview = {
             options.actions.forEach(action => {
                 const button = document.createElement('button');
                 button.textContent = action.label;
-                button.addEventListener('click', action.handler);
+                button.className = action.class || '';
+                button.addEventListener('click', (e) => {
+                    action.handler(e);
+                    if (action.dismiss) {
+                        notification.classList.remove('show');
+                    }
+                });
                 notificationActions.appendChild(button);
             });
             notificationActions.style.display = 'flex';
@@ -143,16 +156,26 @@ const AdminCampaignReview = {
             notificationActions.style.display = 'none';
         }
         
-        // Auto-hide only if not persistent
-        if (!options.persistent) {
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, options.duration || 5000);
+        // Handle close button
+        if (options.dismissible !== false) {
+            notificationClose.style.display = 'block';
+            notificationClose.onclick = () => notification.classList.remove('show');
+        } else {
+            notificationClose.style.display = 'none';
         }
         
-        // Return dismiss function
-        return () => {
-            notification.classList.remove('show');
+        // Auto-hide only if not persistent
+        if (!options.persistent) {
+            const duration = options.duration || (type === 'error' ? 10000 : 5000);
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+        
+        // Return dismiss function and notification element
+        return {
+            dismiss: () => notification.classList.remove('show'),
+            element: notification
         };
     },
 

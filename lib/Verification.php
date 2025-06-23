@@ -255,6 +255,9 @@ class Verification extends Collection {
      */
     public function review($id, $data) {
         try {
+            // Track notification state
+            $notifications = [];
+            
             // Check input data format from admin interface
             if (!isset($data['decision']) && !isset($data['notes'])) {
                 // Try different format from admin-campaign-review.js
@@ -345,10 +348,37 @@ class Verification extends Collection {
                 error_log("Failed to create audit log: " . $e->getMessage());
             }
             
+            // Add notification for the admin
+            $notifications[] = [
+                'type' => 'admin',
+                'message' => "Verification {$decision}: " . ($notes ? substr($notes, 0, 100) : 'No notes'),
+                'userId' => $adminId,
+                'verificationId' => $id,
+                'timestamp' => new MongoDB\BSON\UTCDateTime()
+            ];
+            
+            // Add notification for the user if approved/rejected
+            if (in_array($decision, ['APPROVED', 'REJECTED'])) {
+                $notifications[] = [
+                    'type' => 'user',
+                    'message' => "Your verification was {$decision}" . 
+                                ($notes ? ": " . substr($notes, 0, 100) : ''),
+                    'userId' => $verification['userId'],
+                    'verificationId' => $id,
+                    'timestamp' => new MongoDB\BSON\UTCDateTime()
+                ];
+            }
+            
+            // Save notifications if any
+            if (!empty($notifications)) {
+                $this->db->notifications->insertMany($notifications);
+            }
+            
             return [
                 'success' => true,
                 'message' => 'Verification review processed successfully',
-                'status' => $decision
+                'status' => $decision,
+                'notifications' => count($notifications)
             ];
         } catch (Exception $e) {
             error_log("Error reviewing verification: " . $e->getMessage());
