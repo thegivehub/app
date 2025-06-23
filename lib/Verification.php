@@ -1130,11 +1130,45 @@ class Verification extends Collection {
                 'country' => $data['country'] ?? $verification['personalInfo']['country'] ?? null
             ];
             
-            // Validate required fields
-            $requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'address', 'city', 'state', 'postalCode', 'country'];
-            foreach ($requiredFields as $field) {
+            // Enhanced validation with more fields and stricter checks
+            $requiredFields = [
+                'firstName' => ['type' => 'string', 'min' => 2, 'max' => 50],
+                'lastName' => ['type' => 'string', 'min' => 2, 'max' => 50],
+                'dateOfBirth' => ['type' => 'date'],
+                'address' => ['type' => 'string', 'min' => 5, 'max' => 100],
+                'city' => ['type' => 'string', 'min' => 2, 'max' => 50],
+                'state' => ['type' => 'string', 'min' => 2, 'max' => 50],
+                'postalCode' => ['type' => 'string', 'pattern' => '/^[0-9a-zA-Z\- ]+$/'],
+                'country' => ['type' => 'string', 'min' => 2, 'max' => 2]
+            ];
+            
+            foreach ($requiredFields as $field => $rules) {
                 if (empty($personalInfo[$field])) {
                     throw new Exception("Required field missing: $field");
+                }
+                
+                // Type checking
+                if ($rules['type'] === 'string' && !is_string($personalInfo[$field])) {
+                    throw new Exception("$field must be a string");
+                }
+                
+                // Length validation
+                if (isset($rules['min']) && strlen($personalInfo[$field]) < $rules['min']) {
+                    throw new Exception("$field must be at least {$rules['min']} characters");
+                }
+                
+                if (isset($rules['max']) && strlen($personalInfo[$field]) > $rules['max']) {
+                    throw new Exception("$field must be no more than {$rules['max']} characters");
+                }
+                
+                // Pattern matching
+                if (isset($rules['pattern']) && !preg_match($rules['pattern'], $personalInfo[$field])) {
+                    throw new Exception("$field format is invalid");
+                }
+                
+                // Date validation
+                if ($rules['type'] === 'date' && !strtotime($personalInfo[$field])) {
+                    throw new Exception("$field must be a valid date");
                 }
             }
             
