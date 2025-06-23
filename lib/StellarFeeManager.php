@@ -267,28 +267,62 @@ class StellarFeeManager {
      * @param object $innerTransaction Original transaction to bump
      * @return FeeBumpTransaction Fee bump transaction
      */
-    public function createMultiSigTransaction($sourceSecrets, $innerTransaction, $threshold = 2) {
+    public function createMultiSigTransaction($sourceSecrets, $innerTransaction, $threshold = 2, $signers = []) {
         try {
-            // Get a high priority fee as we're bumping an existing transaction
-            $bumpFee = $this->getRecommendedFee(['priorityLevel' => 'high', 'forceRefresh' => true]);
+            // Get a high priority fee for multi-sig transactions
+            $fee = $this->getRecommendedFee(['priorityLevel' => 'high', 'forceRefresh' => true]);
             
-            $this->log("Creating fee bump transaction with fee: $bumpFee stroops");
+            $this->log("Creating multi-sig transaction with fee: $fee stroops");
             
-            // Create keypair from the secret
-            $sourceKeypair = Keypair::fromSeed($sourceSecret);
+            // Create keypairs from all source secrets
+            $sourceKeypairs = [];
+            foreach ((array)$sourceSecrets as $secret) {
+                $sourceKeypairs[] = Keypair::fromSeed($secret);
+            }
             
-            // Build fee bump transaction
-            $feeBumpTxBuilder = new FeeBumpTransactionBuilder($innerTransaction);
-            $feeBumpTxBuilder->setBaseFee($bumpFee);
-            $feeBumpTxBuilder->setFeeAccount($sourceKeypair->getAccountId());
+            // Get the source account ID from first keypair
+            $sourceAccountId = $sourceKeypairs[0]->getAccountId();
+            
+            // Create transaction builder
+            $builder = new TransactionBuilder($sourceAccountId);
+            $builder->setBaseFee($fee);
+            
+            // Add operations from inner transaction if provided
+            if ($innerTransaction) {
+                foreach ($innerTransaction->getOperations() as $op) {
+                    $builder->addOperation($op);
+                }
+            }
+            
+            // Set time bounds if provided in inner transaction
+            if ($innerTransaction && $innerTransaction->getTimeBounds()) {
+                $builder->setTimeBounds(
+                    $innerTransaction->getTimeBounds()->getMinTime(),
+                    $innerTransaction->getTimeBounds()->getMaxTime()
+                );
+            }
+            
+            // Add signers if provided
+            if (!empty($signers)) {
+                foreach ($signers as $signer) {
+                    $builder->addSigner($signer['key'], $signer['weight']);
+                }
+            }
+            
+            // Set threshold if provided
+            if ($threshold > 0) {
+                $builder->setThreshold($threshold);
+            }
             
             // Build the transaction
-            $feeBumpTransaction = $feeBumpTxBuilder->build();
+            $transaction = $builder->build();
             
-            // Sign the transaction
-            $feeBumpTransaction->sign($sourceKeypair, $this->network);
+            // Sign with all source keypairs
+            foreach ($sourceKeypairs as $keypair) {
+                $transaction->sign($keypair, $this->network);
+            }
             
-            return $feeBumpTransaction;
+            return $transaction;
         } catch (\Exception $error) {
             $this->log('Error creating fee bump transaction', $error->getMessage());
             throw $error;
@@ -302,6 +336,34 @@ class StellarFeeManager {
      * @param array $options Optional parameters (same as getRecommendedFee)
      * @return int Estimated total fee in stroops
      */
+    /**
+     * Validate signers array structure
+     * 
+     * @param array $signers Array of signers to validate
+     * @return bool True if valid, false otherwise
+     */
+    public function validateSigners($signers) {
+        if (!is_array($signers)) {
+            return false;
+        }
+        
+        foreach ($signers as $signer) {
+            if (!isset($signer['key']) || !isset($signer['weight'])) {
+                return false;
+            }
+            
+            if (!is_string($signer['key']) || !preg_match('/^G[A-Z0-9]{55}$/', $signer['key'])) {
+                return false;
+            }
+            
+            if (!is_int($signer['weight']) || $signer['weight'] < 0 || $signer['weight'] > 255) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
     public function estimateTransactionFee($operationCount, $options = []) {
         $baseFee = $this->getRecommendedFee($options);
         return $baseFee * max(1, $operationCount);
@@ -336,6 +398,43 @@ class StellarFeeManager {
      * 
      * @return array Fee statistics for reporting
      */
+    /**
+     * Get signer weights from an account
+     * 
+     * @param string $accountId Stellar account ID
+     * @return array Array of signers with their weights
+     */
+    public function getAccountSigners($accountId) {
+        try {
+            $account = $this->stellarServer->getAccount($accountId);
+            $signers = [];
+            
+            foreach ($account->getSigners() as $signer) {
+                $signers[] = [
+                    'key' => $signer->getKey(),
+                    'weight' => $signer->getWeight(),
+                    'type' => $signer->getType()
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'signers' => $signers,
+                'thresholds' => [
+                    'low' => $account->getThresholds()->getLowThreshold(),
+                    'medium' => $account->getThresholds()->getMediumThreshold(),
+                    'high' => $account->getThresholds()->getHighThreshold()
+                ]
+            ];
+        } catch (\Exception $error) {
+            $this->log('Error getting account signers', $error->getMessage());
+            return [
+                'success' => false,
+                'error' => $error->getMessage()
+            ];
+        }
+    }
+
     public function getFeeStatistics() {
         $feeStats = $this->getFeeStats(true);
         $congestion = $this->analyzeCongestion($feeStats);
