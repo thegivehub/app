@@ -267,7 +267,7 @@ class StellarFeeManager {
      * @param object $innerTransaction Original transaction to bump
      * @return FeeBumpTransaction Fee bump transaction
      */
-    public function createFeeBumpTransaction($sourceSecret, $innerTransaction) {
+    public function createMultiSigTransaction($sourceSecrets, $innerTransaction, $threshold = 2) {
         try {
             // Get a high priority fee as we're bumping an existing transaction
             $bumpFee = $this->getRecommendedFee(['priorityLevel' => 'high', 'forceRefresh' => true]);

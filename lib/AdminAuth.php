@@ -50,6 +50,13 @@ class AdminAuth {
      */
     public function verifyAdminToken() {
         if (!$this->adminToken) {
+            $this->logSecurityEvent('missing_token');
+            return false;
+        }
+        
+        // Rate limiting check
+        if ($this->isRateLimited()) {
+            $this->logSecurityEvent('rate_limit_exceeded');
             return false;
         }
         

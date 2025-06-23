@@ -118,9 +118,10 @@ const AdminCampaignReview = {
     },
 
     // Show notification
-    showNotification(message, type = 'success') {
+    showNotification(message, type = 'success', options = {}) {
         const notification = document.getElementById('notification');
         const notificationMessage = document.getElementById('notification-message');
+        const notificationActions = document.getElementById('notification-actions');
         
         notification.className = 'notification';
         notification.classList.add(type);
@@ -128,10 +129,31 @@ const AdminCampaignReview = {
         
         notificationMessage.textContent = message;
         
-        // Hide notification after 3 seconds
-        setTimeout(() => {
+        // Add action buttons if provided
+        if (options.actions) {
+            notificationActions.innerHTML = '';
+            options.actions.forEach(action => {
+                const button = document.createElement('button');
+                button.textContent = action.label;
+                button.addEventListener('click', action.handler);
+                notificationActions.appendChild(button);
+            });
+            notificationActions.style.display = 'flex';
+        } else {
+            notificationActions.style.display = 'none';
+        }
+        
+        // Auto-hide only if not persistent
+        if (!options.persistent) {
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, options.duration || 5000);
+        }
+        
+        // Return dismiss function
+        return () => {
             notification.classList.remove('show');
-        }, 3000);
+        };
     },
 
     // Load campaigns from API (first page)
