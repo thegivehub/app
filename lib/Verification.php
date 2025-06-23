@@ -11,6 +11,19 @@ class Verification extends Collection {
     protected $collectionName = 'verifications';
     protected $auth;
     
+    // Workflow states
+    const STATE_INITIAL = 'initial';
+    const STATE_DOCUMENT_UPLOAD = 'document_upload';
+    const STATE_SELFIE_UPLOAD = 'selfie_upload';
+    const STATE_REVIEW = 'review';
+    const STATE_COMPLETE = 'complete';
+    
+    // Approval steps
+    const STEP_DOCUMENT_VERIFICATION = 'document_verification';
+    const STEP_FACE_MATCH = 'face_match';
+    const STEP_LIVENESS_CHECK = 'liveness_check';
+    const STEP_ADMIN_REVIEW = 'admin_review';
+    
     public function __construct() {
         parent::__construct();
         $this->auth = new Auth();
@@ -253,6 +266,140 @@ class Verification extends Collection {
      * @param array $data Review data (decision, notes)
      * @return array Result of review operation
      */
+    /**
+     * Get the current workflow state for a verification
+     */
+    public function getWorkflowState($verificationId) {
+        try {
+            $verification = $this->read($verificationId);
+            if (!$verification) {
+                throw new Exception('Verification not found');
+            }
+            
+            return [
+                'success' => true,
+                'state' => $verification['workflow']['state'] ?? self::STATE_INITIAL,
+                'currentStep' => $verification['workflow']['currentStep'] ?? null,
+                'completedSteps' => $verification['workflow']['completedSteps'] ?? [],
+                'nextSteps' => $this->getNextSteps($verification)
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Determine next possible steps based on current state
+     */
+    private function getNextSteps($verification) {
+        $state = $verification['workflow']['state'] ?? self::STATE_INITIAL;
+        $completed = $verification['workflow']['completedSteps'] ?? [];
+        
+        $nextSteps = [];
+        
+        switch ($state) {
+            case self::STATE_INITIAL:
+                $nextSteps[] = self::STEP_DOCUMENT_VERIFICATION;
+                break;
+                
+            case self::STATE_DOCUMENT_UPLOAD:
+                if (in_array(self::STEP_DOCUMENT_VERIFICATION, $completed)) {
+                    $nextSteps[] = self::STEP_FACE_MATCH;
+                    $nextSteps[] = self::STEP_LIVENESS_CHECK;
+                }
+                break;
+                
+            case self::STATE_SELFIE_UPLOAD:
+                if (in_array(self::STEP_FACE_MATCH, $completed) && 
+                    in_array(self::STEP_LIVENESS_CHECK, $completed)) {
+                    $nextSteps[] = self::STEP_ADMIN_REVIEW;
+                }
+                break;
+                
+            case self::STATE_REVIEW:
+                // No next steps - waiting for admin action
+                break;
+                
+            case self::STATE_COMPLETE:
+                // Verification complete
+                break;
+        }
+        
+        return $nextSteps;
+    }
+    
+    /**
+     * Advance the workflow to the next state
+     */
+    public function advanceWorkflow($verificationId, $step) {
+        try {
+            $verification = $this->read($verificationId);
+            if (!$verification) {
+                throw new Exception('Verification not found');
+            }
+            
+            $currentState = $verification['workflow']['state'] ?? self::STATE_INITIAL;
+            $completedSteps = $verification['workflow']['completedSteps'] ?? [];
+            
+            // Validate the step can be taken
+            $nextSteps = $this->getNextSteps($verification);
+            if (!in_array($step, $nextSteps)) {
+                throw new Exception('Invalid workflow step');
+            }
+            
+            // Mark step as completed
+            $completedSteps[] = $step;
+            
+            // Determine new state
+            $newState = $currentState;
+            switch ($step) {
+                case self::STEP_DOCUMENT_VERIFICATION:
+                    $newState = self::STATE_DOCUMENT_UPLOAD;
+                    break;
+                    
+                case self::STEP_FACE_MATCH:
+                case self::STEP_LIVENESS_CHECK:
+                    if (in_array(self::STEP_FACE_MATCH, $completedSteps) && 
+                        in_array(self::STEP_LIVENESS_CHECK, $completedSteps)) {
+                        $newState = self::STATE_REVIEW;
+                    } else {
+                        $newState = self::STATE_SELFIE_UPLOAD;
+                    }
+                    break;
+                    
+                case self::STEP_ADMIN_REVIEW:
+                    $newState = self::STATE_COMPLETE;
+                    break;
+            }
+            
+            // Update verification
+            $update = [
+                'workflow' => [
+                    'state' => $newState,
+                    'currentStep' => $step,
+                    'completedSteps' => $completedSteps,
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                ]
+            ];
+            
+            $result = $this->update($verificationId, ['$set' => $update]);
+            
+            return [
+                'success' => true,
+                'newState' => $newState,
+                'completedSteps' => $completedSteps
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
     public function review($id, $data) {
         try {
             // Track notification state
@@ -374,11 +521,17 @@ class Verification extends Collection {
                 $this->db->notifications->insertMany($notifications);
             }
             
+            // Complete the workflow if approved/rejected
+            if (in_array($decision, ['APPROVED', 'REJECTED'])) {
+                $this->advanceWorkflow($id, self::STEP_ADMIN_REVIEW);
+            }
+            
             return [
                 'success' => true,
                 'message' => 'Verification review processed successfully',
                 'status' => $decision,
-                'notifications' => count($notifications)
+                'notifications' => count($notifications),
+                'workflowCompleted' => $decision === 'APPROVED'
             ];
         } catch (Exception $e) {
             error_log("Error reviewing verification: " . $e->getMessage());
@@ -461,6 +614,13 @@ class Verification extends Collection {
             $verification = [
                 'userId' => new MongoDB\BSON\ObjectId($userId),
                 'status' => 'INITIATED',
+                'workflow' => [
+                    'state' => self::STATE_INITIAL,
+                    'currentStep' => null,
+                    'completedSteps' => [],
+                    'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                ],
                 
                 // Prepare personalInfo as a sub-object
                 'personalInfo' => [
