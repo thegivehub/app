@@ -207,6 +207,11 @@ class JumioService {
             
             // Send notification to user about verification result
             $this->notifyUser($userId, $verificationResult, $payload);
+
+            // Recalculate user's risk score after verification update
+            require_once __DIR__ . '/RiskScoringService.php';
+            $riskService = new RiskScoringService();
+            $riskService->calculateRiskScore((string)$userId);
             
             return [
                 'success' => true,
