@@ -166,6 +166,32 @@ class KycController {
     }
 
     /**
+     * Calculate and update the authenticated user's risk score
+     *
+     * @return array Result with score and level
+     */
+    public function updateRiskScore() {
+        try {
+            $userId = $this->getUserId();
+            if (!$userId) {
+                return $this->sendErrorResponse('Authentication required', 401);
+            }
+
+            require_once __DIR__ . '/RiskScoringService.php';
+            $service = new RiskScoringService();
+            $result = $service->calculateRiskScore($userId);
+
+            if ($result['success']) {
+                return $this->sendJsonResponse($result);
+            }
+
+            return $this->sendErrorResponse($result['error'] ?? 'Unable to calculate risk score');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Check if a user is verified (internal API)
      * 
      * @param string $userId User ID to check
