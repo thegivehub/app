@@ -769,8 +769,10 @@
                     }
                     
                     // Update progress bar based on new numbers
-                    const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
-                    $('#progress-bar-fill').style.width = `${progress}%`;
+                    if (app.data.funding && app.data.funding.goalAmount) {
+                        const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                        $('#progress-bar-fill').style.width = `${progress}%`;
+                    }
                     
                     // Update displayed amount
                     $('#campaign-raised').textContent = app.utils.formatCurrency(
@@ -813,8 +815,12 @@
             }
 
             // Progress Bar
-            const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
-            $('#progress-bar-fill').style.width = `${progress}%`;
+            if (data.funding && data.funding.goalAmount) {
+                const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
+                $('#progress-bar-fill').style.width = `${progress}%`;
+            } else {
+                $('#progress-bar-fill').style.width = '0%';
+            }
 
             // Set campaign ID for the donate button web component
             const donateBtn = document.getElementById('donate-btn');
@@ -906,13 +912,15 @@
             // Animate progress bar on load
             const progressBar = $('#progress-bar-fill');
             if (progressBar) {
-                progressBar.style.transition = 'none';
-                progressBar.style.width = '0%';
-                setTimeout(() => {
-                    progressBar.style.transition = 'width 1s ease-in-out';
-                    const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
-                    progressBar.style.width = `${progress}%`;
-                }, 100);
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    setTimeout(() => {
+                        progressBar.style.transition = 'width 1s ease-in-out';
+                        if (app.data.funding && app.data.funding.goalAmount) {
+                            const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                            progressBar.style.width = `${progress}%`;
+                        }
+                    }, 100);
             }
 
             // Animate stats counting up
