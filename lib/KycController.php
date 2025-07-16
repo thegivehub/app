@@ -166,6 +166,40 @@ class KycController {
     }
 
     /**
+     * Generate compliance report with risk statistics (admin only)
+     *
+     * @return array Report data
+     */
+    public function generateComplianceReport() {
+        try {
+            $adminId = $this->getUserId();
+            if (!$adminId || !$this->isAdmin($adminId)) {
+                return $this->sendErrorResponse('Admin access required', 403);
+            }
+
+            $filters = [];
+            if ($_GET) {
+                if (isset($_GET['startDate'])) {
+                    $filters['startDate'] = $_GET['startDate'];
+                }
+                if (isset($_GET['endDate'])) {
+                    $filters['endDate'] = $_GET['endDate'];
+                }
+            }
+
+            $result = $this->jumioService->generateComplianceReport($filters);
+
+            if ($result['success']) {
+                return $this->sendJsonResponse($result);
+            }
+
+            return $this->sendErrorResponse($result['error'] ?? 'Failed to generate compliance report');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+
+    /**
      * Calculate and update the authenticated user's risk score
      *
      * @return array Result with score and level

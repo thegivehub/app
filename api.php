@@ -265,6 +265,12 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
             }
             break;
 
+        case 'compliance':
+            if ($method === 'GET') {
+                $kycController->generateComplianceReport();
+                exit;
+            }
+            break;
         case 'risk-score':
             if ($method === 'POST') {
                 $kycController->updateRiskScore();

@@ -461,6 +461,73 @@ class JumioService {
     }
 
     /**
+     * Generate compliance report aggregating KYC and risk data
+     *
+     * @param array $filters Optional date range filters
+     * @return array Report data
+     */
+    public function generateComplianceReport($filters = []) {
+        try {
+            $query = [];
+
+            if (isset($filters['startDate'])) {
+                $start = new DateTime($filters['startDate']);
+                $query['createdAt']['$gte'] = new MongoDB\BSON\UTCDateTime($start->getTimestamp() * 1000);
+            }
+
+            if (isset($filters['endDate'])) {
+                $end = new DateTime($filters['endDate']);
+                $end->setTime(23, 59, 59);
+                $query['createdAt']['$lte'] = new MongoDB\BSON\UTCDateTime($end->getTimestamp() * 1000);
+            }
+
+            // Fetch verification records within the window
+            $verifications = $this->kycCollection->find($query);
+
+            $statusCounts = [
+                'APPROVED' => 0,
+                'REJECTED' => 0,
+                'PENDING' => 0,
+                'ERROR' => 0,
+                'EXPIRED' => 0
+            ];
+
+            foreach ($verifications as $verification) {
+                $result = $verification['verificationResult'] ?? 'PENDING';
+                if (isset($statusCounts[$result])) {
+                    $statusCounts[$result]++;
+                }
+            }
+
+            // Aggregate risk levels
+            $users = $this->db->getCollection('users');
+            $riskCounts = [
+                'high' => $users->count(['riskLevel' => 'high']),
+                'medium' => $users->count(['riskLevel' => 'medium']),
+                'low' => $users->count(['riskLevel' => 'low'])
+            ];
+
+            $highRiskUsers = $users->find(
+                ['riskLevel' => 'high'],
+                ['projection' => ['email' => 1, 'displayName' => 1, 'riskScore' => 1]]
+            );
+
+            return [
+                'success' => true,
+                'statusCounts' => $statusCounts,
+                'riskCounts' => $riskCounts,
+                'highRiskUsers' => $highRiskUsers
+            ];
+        } catch (Exception $e) {
+            error_log('Compliance report generation error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Make an API request to Jumio
      * 
      * @param string $endpoint API endpoint
