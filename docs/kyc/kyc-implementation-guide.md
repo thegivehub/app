@@ -73,6 +73,7 @@ Create a new collection in MongoDB called `kyc_verifications` to store verificat
 - **POST /api/kyc/admin-override**: Admin override for verification status
 - **GET /api/kyc/report**: Generate report of verification data
 - **GET /api/kyc/compliance**: Generate compliance report with risk statistics
+- **POST /api/kyc/risk-score**: Calculate and update the authenticated user's risk score
 
 ## 6. Testing the Integration
 
