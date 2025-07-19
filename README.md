@@ -202,3 +202,13 @@ The changelog follows this structure:
 - Group related changes together
 - Update the changelog as part of your development process, not just before releases
 
+
+## Running Tests
+
+Use `scripts/setup-tests.sh` to install PHP extensions, vendor dependencies, and launch a temporary MongoDB server. After the script completes, run:
+
+```bash
+php8.3 vendor/bin/phpunit --configuration phpunit.xml
+```
+
+This ensures PHPUnit runs with the required extensions and a local database.
