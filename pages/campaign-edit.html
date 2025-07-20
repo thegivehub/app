@@ -2308,6 +2308,8 @@ Thanks for considering,
             this.renderMediaGallery();
             this.closeModal('media-modal');
             this.utils.showNotification('Media item saved successfully');
+            // Persist media changes without leaving the editor
+            this.saveCampaign(false);
         },
         
         deleteItem(type, index) {
@@ -2329,8 +2331,10 @@ Thanks for considering,
                     this.renderMediaGallery();
                     break;
             }
-            
+
             this.utils.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+            // Persist deletion immediately
+            this.saveCampaign(false);
         },
         
         async saveCampaign(redirect = true) {
