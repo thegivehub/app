@@ -53,4 +53,14 @@ class Database {
     public function getCollection($name) {
         return new MongoCollection($this->db->selectCollection($name));
     }
+
+    /**
+     * Provide dynamic property access for collections.
+     * This avoids deprecated dynamic properties in PHP 8.2+ by
+     * returning a MongoCollection instance for the requested name.
+     */
+    public function __get(string $name)
+    {
+        return $this->getCollection($name);
+    }
 }
