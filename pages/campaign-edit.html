@@ -2361,6 +2361,9 @@ Thanks for considering,
                 }
             };
 
+            // _id cannot be modified during update
+            delete updatedCampaign._id;
+
             console.log(updatedCampaign);
 
             console.log(this.data);

@@ -15,10 +15,13 @@ MONGO_VERSION=7.0.4
 MONGO_URL="https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-${MONGO_VERSION}.tgz"
 TMP_DIR=/tmp/mongodb
 mkdir -p "$TMP_DIR"
-if [ ! -f "$TMP_DIR/mongod" ]; then
+if [ ! -f "$TMP_DIR/bin/mongod" ]; then
     curl -L "$MONGO_URL" -o /tmp/mongodb.tgz
-    mkdir -p "$TMP_DIR/bin"
+    mkdir -p "$TMP_DIR"
     tar -xzf /tmp/mongodb.tgz -C "$TMP_DIR" --strip-components=1
 fi
 mkdir -p /tmp/mongo-data
-"$TMP_DIR/bin/mongod" --dbpath /tmp/mongo-data --logpath /tmp/mongodb.log --fork
+"$TMP_DIR/bin/mongod" --dbpath /tmp/mongo-data --logpath /tmp/mongodb.log --fork --bind_ip 127.0.0.1
+
+# wait for MongoDB to start
+sleep 5
