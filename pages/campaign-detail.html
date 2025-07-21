@@ -942,10 +942,11 @@
             }
             const itemsHtml = milestones.map(m => {
                 const date = m.scheduledDate ? `<span class="timeline-date">${app.utils.formatDate(m.scheduledDate)}</span>` : '';
+                const amount = m.amount ? `<span class="timeline-date">${app.utils.formatCurrency(m.amount)}</span>` : '';
                 return `
                     <div class="timeline-item">
                         <h4>${m.title}</h4>
-                        ${date}
+                        ${[date, amount].filter(Boolean).join(' ')}
                         <p class="text-gray-600">${m.description || ''}</p>
                     </div>
                 `;

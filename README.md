@@ -12,6 +12,7 @@ Welcome to **The Give Hub**! This platform enables crowdfunding for social cause
 - **Global Accessibility**: Empowering donors worldwide to make a difference.
 - **Secure Donations**: Robust PHP backend ensures reliability and security.
 - **Milestone Timelines**: Visual timeline on campaign pages to show upcoming and completed milestones.
+- **Milestone Budgets**: Allocate funds per milestone with validation against the campaign goal.
 
 ---
 

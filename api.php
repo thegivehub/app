@@ -272,7 +272,7 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
             }
             break;
 
-      case 'risk-score':
+        case 'risk-score':
             if ($method === 'POST') {
                 $kycController->updateRiskScore();
                 exit;
