@@ -264,6 +264,20 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
                 exit;
             }
             break;
+
+        case 'compliance':
+            if ($method === 'GET') {
+                $kycController->generateComplianceReport();
+                exit;
+            }
+            break;
+
+        case 'risk-score':
+            if ($method === 'POST') {
+                $kycController->updateRiskScore();
+                exit;
+            }
+            break;
             
         default:
             http_response_code(404);
