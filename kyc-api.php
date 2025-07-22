@@ -74,6 +74,26 @@ try {
             }
             $kycController->generateReport();
             break;
+
+        case 'compliance':
+            // GET /api/kyc/compliance - Generate compliance report
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $kycController->generateComplianceReport();
+            break;
+
+        case 'risk-score':
+            // POST /api/kyc/risk-score - Calculate and update risk score
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $kycController->updateRiskScore();
+            break;
             
         default:
             // Route not found

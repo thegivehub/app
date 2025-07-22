@@ -25,13 +25,8 @@ EOT;
     
     public function sendEmail($to, $subject, $tpl, $obj) {
         $message= file_get_contents($tpl);
-        $message = preg_replace_callback("/\%\%(.+?)\%\%/", function($m) {
-            global $obj;
-            if (isset($obj->{$m[1]})) {
-                return $obj->{$m[1]};
-            } else {
-                return "";
-            }
+        $message = preg_replace_callback("/\%\%(.+?)\%\%/", function($m) use ($obj) {
+            return $obj->{$m[1]} ?? '';
         });
         
         $msg = <<<EOT
@@ -44,11 +39,28 @@ Bcc: cdr@netoasis.net
 EOT;
 
         $msg = escapeshellarg($msg);
-        $cmd = "echo {$msg} |  /usr/sbin/exim -i -f\"The Give Hub Support <support@thegivehub.com>\" {$email}";
+        $cmd = "echo {$msg} |  /usr/sbin/exim -i -f\"The Give Hub Support <support@thegivehub.com>\" {$to}";
         $send = `$cmd`;
 
         file_put_contents(__DIR__."/x.log", $cmd."\n---\n".$msg."\n---\n", FILE_APPEND);
 
         // print $send;
+    }
+
+    public function sendNotification($to, $subject, $message) {
+        $msg = <<<EOT
+To: {$to}
+From: The Give Hub <support@thegivehub.com>
+Subject: {$subject}
+Bcc: cdr@netoasis.net
+
+{$message}
+EOT;
+
+        $msg = escapeshellarg($msg);
+        $cmd = "echo {$msg} |  /usr/sbin/exim -i -f\"The Give Hub <support@thegivehub.com>\" {$to}";
+        $send = `$cmd`;
+
+        file_put_contents(__DIR__."/x.log", $cmd."\n---\n".$msg."\n---\n", FILE_APPEND);
     }
 }

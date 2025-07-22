@@ -72,6 +72,8 @@ Create a new collection in MongoDB called `kyc_verifications` to store verificat
 - **GET /api/kyc/status**: Get verification status for current user
 - **POST /api/kyc/admin-override**: Admin override for verification status
 - **GET /api/kyc/report**: Generate report of verification data
+- **GET /api/kyc/compliance**: Generate compliance report with risk statistics
+- **POST /api/kyc/risk-score**: Calculate and update the authenticated user's risk score
 
 ## 6. Testing the Integration
 
@@ -151,7 +153,7 @@ Before going to production:
 ### 10.1 Additional Features
 
 - Implement document upload for manual verification as a fallback
-- Add email notifications for verification state changes
+- Email notifications are sent for verification state changes
 - Create verification reminders for incomplete verifications
 - Build detailed analytics dashboards for conversion tracking
 
@@ -159,7 +161,7 @@ Before going to production:
 
 - Connect verification status with user privileges in your app
 - Integrate with fraud detection systems
-- Add compliance reporting features
+- Add compliance reporting features via `/api/kyc/compliance`
 - Link with account approval workflows
 
 ## 11. Maintenance
