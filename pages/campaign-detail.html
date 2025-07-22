@@ -264,6 +264,46 @@
             background-color: #fef9c3;
             color: #854d0e;
         }
+
+        /* Timeline styles */
+        .timeline {
+            position: relative;
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0.6rem;
+            width: 2px;
+            background: var(--gray-300);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.85rem;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .timeline-date {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
         .link {
             color: #339;
             text-decoration: none;
@@ -513,6 +553,7 @@
         <div class="card">
             <h2 class="section-title">Milestones</h2>
             <ul id="milestones" class="milestones"></ul>
+            <div id="timeline" class="timeline"></div>
         </div>
 
         <div class="card">
@@ -849,6 +890,7 @@
             const milestones = data.timeline?.milestones || [];
             if (milestones.length === 0) {
                 $('#milestones').innerHTML = '<li>No milestones available.</li>';
+                $('#timeline').innerHTML = '<p>No timeline data.</p>';
             } else {
                 const milestonesHtml = data.timeline.milestones.map(milestone => `
                     <li>
@@ -860,6 +902,7 @@
                     </li>
                 `).join('');
                 $('#milestones').innerHTML = milestonesHtml;
+                app.renderTimeline();
             }
 
             // Media Gallery
@@ -888,6 +931,27 @@
                 }
             }).join('');
             $('#media-gallery').innerHTML = mediaHtml;
+        },
+        renderTimeline() {
+            const milestones = app.data.timeline?.milestones || [];
+            const container = document.getElementById('timeline');
+            if (!container) return;
+            if (milestones.length === 0) {
+                container.innerHTML = '<p>No timeline data.</p>';
+                return;
+            }
+            const itemsHtml = milestones.map(m => {
+                const date = m.scheduledDate ? `<span class="timeline-date">${app.utils.formatDate(m.scheduledDate)}</span>` : '';
+                const amount = m.amount ? `<span class="timeline-date">${app.utils.formatCurrency(m.amount)}</span>` : '';
+                return `
+                    <div class="timeline-item">
+                        <h4>${m.title}</h4>
+                        ${[date, amount].filter(Boolean).join(' ')}
+                        <p class="text-gray-600">${m.description || ''}</p>
+                    </div>
+                `;
+            }).join('');
+            container.innerHTML = itemsHtml;
         },
         renderMap(lat, lng, txt) {
             if (app.state.map) {
