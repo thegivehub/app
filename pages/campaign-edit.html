@@ -377,6 +377,16 @@
             flex: 1;
         }
 
+        .budget-summary {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .budget-warning {
+            color: var(--danger-color);
+        }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -1203,6 +1213,7 @@
                 </div>
             </h2>
             <ul id="milestones" class="milestones"></ul>
+            <div id="budget-summary" class="budget-summary"></div>
         </div>
 
         <div class="card">
@@ -2029,6 +2040,23 @@ Thanks for considering,
                 
                 milestonesContainer.appendChild(li);
             });
+
+            this.renderBudgetSummary();
+        },
+
+        renderBudgetSummary() {
+            const container = document.getElementById('budget-summary');
+            if (!container) return;
+            const goal = parseFloat($('#goal-amount').value || this.data.funding?.goalAmount || 0);
+            const total = (this.data.timeline?.milestones || []).reduce((s, m) => s + (parseFloat(m.amount) || 0), 0);
+            const remaining = goal - total;
+            let html = `Total budgeted: ${this.utils.formatCurrency(total)} / Goal: ${this.utils.formatCurrency(goal)}`;
+            if (remaining < 0) {
+                html += `<span class="budget-warning"> - Over by ${this.utils.formatCurrency(-remaining)}</span>`;
+            } else {
+                html += ` - Remaining ${this.utils.formatCurrency(remaining)}`;
+            }
+            container.innerHTML = html;
         },
         
         renderMediaGallery() {
@@ -2283,11 +2311,26 @@ Thanks for considering,
 
         saveMilestone() {
             const id = $('#milestone-id').value;
+            const amountVal = parseFloat($('#milestone-amount').value);
+            if (amountVal < 0) {
+                this.utils.showNotification('Amount must be non-negative', 'error');
+                return;
+            }
+            const dateVal = $('#milestone-date').value;
+            if (dateVal) {
+                const selected = new Date(dateVal);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                if (selected < today) {
+                    this.utils.showNotification('Scheduled date cannot be in the past', 'error');
+                    return;
+                }
+            }
             const newMilestone = {
                 title: $('#milestone-title').value,
                 description: $('#milestone-description').value,
-                amount: parseFloat($('#milestone-amount').value) || 0,
-                scheduledDate: $('#milestone-date').value ? new Date($('#milestone-date').value).toISOString() : null,
+                amount: isNaN(amountVal) ? 0 : amountVal,
+                scheduledDate: dateVal ? new Date(dateVal).toISOString() : null,
                 status: $('#milestone-status').value
             };
             
