@@ -166,6 +166,66 @@ class KycController {
     }
 
     /**
+     * Generate compliance report with risk statistics (admin only)
+     *
+     * @return array Report data
+     */
+    public function generateComplianceReport() {
+        try {
+            $adminId = $this->getUserId();
+            if (!$adminId || !$this->isAdmin($adminId)) {
+                return $this->sendErrorResponse('Admin access required', 403);
+            }
+
+            $filters = [];
+            if ($_GET) {
+                if (isset($_GET['startDate'])) {
+                    $filters['startDate'] = $_GET['startDate'];
+                }
+                if (isset($_GET['endDate'])) {
+                    $filters['endDate'] = $_GET['endDate'];
+                }
+            }
+
+            $result = $this->jumioService->generateComplianceReport($filters);
+
+            if ($result['success']) {
+                return $this->sendJsonResponse($result);
+            }
+
+            return $this->sendErrorResponse($result['error'] ?? 'Failed to generate compliance report');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Calculate and update the authenticated user's risk score
+     *
+     * @return array Result with score and level
+     */
+    public function updateRiskScore() {
+        try {
+            $userId = $this->getUserId();
+            if (!$userId) {
+                return $this->sendErrorResponse('Authentication required', 401);
+            }
+
+            require_once __DIR__ . '/RiskScoringService.php';
+            $service = new RiskScoringService();
+            $result = $service->calculateRiskScore($userId);
+
+            if ($result['success']) {
+                return $this->sendJsonResponse($result);
+            }
+
+            return $this->sendErrorResponse($result['error'] ?? 'Unable to calculate risk score');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Check if a user is verified (internal API)
      * 
      * @param string $userId User ID to check
