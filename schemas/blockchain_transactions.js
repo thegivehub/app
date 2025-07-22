@@ -119,6 +119,10 @@ db.createCollection("blockchain_transactions", {
           bsonType: "int",
           description: "Number of confirmations (for blockchains that use this concept)"
         },
+        multisig: {
+          bsonType: "bool",
+          description: "Whether the transaction requires multiple signatures"
+        },
         createdAt: {
           bsonType: "date",
           description: "When the transaction record was created"
