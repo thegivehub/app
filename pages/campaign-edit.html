@@ -1280,6 +1280,14 @@
                 <textarea id="milestone-description" required placeholder="Milestone description"></textarea>
             </div>
             <div class="form-group">
+                <label for="milestone-amount">Budget Amount (USD)</label>
+                <input type="number" id="milestone-amount" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="milestone-date">Scheduled Date</label>
+                <input type="date" id="milestone-date">
+            </div>
+            <div class="form-group">
                 <label for="milestone-status">Status</label>
                 <select id="milestone-status" required>
                     <option value="pending">Pending</option>
@@ -1720,6 +1728,14 @@ Thanks for considering,
                 }).format(amount);
             },
 
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            },
+
             getStatusClass(status) {
                 const statusMap = {
                     'active': 'status-active',
@@ -1976,9 +1992,16 @@ Thanks for considering,
                 const description = document.createElement('p');
                 description.className = 'text-gray-600 mt-2';
                 description.textContent = milestone.description;
-                
+
+                const info = document.createElement('p');
+                info.className = 'text-gray-600 mt-1';
+                const amt = milestone.amount ? this.utils.formatCurrency(milestone.amount) : '';
+                const date = milestone.scheduledDate ? this.utils.formatDate(milestone.scheduledDate) : '';
+                info.textContent = [amt, date].filter(Boolean).join(' | ');
+
                 itemContent.appendChild(titleRow);
                 itemContent.appendChild(description);
+                if (info.textContent) itemContent.appendChild(info);
                 
                 const itemActions = document.createElement('div');
                 itemActions.className = 'item-actions';
@@ -2179,15 +2202,21 @@ Thanks for considering,
                 // Edit existing milestone
                 title.textContent = 'Edit Milestone';
                 const milestone = this.data.timeline.milestones[index];
-                
+
                 $('#milestone-id').value = index;
                 $('#milestone-title').value = milestone.title;
                 $('#milestone-description').value = milestone.description;
+                $('#milestone-amount').value = milestone.amount || '';
+                if (milestone.scheduledDate) {
+                    $('#milestone-date').value = milestone.scheduledDate.split('T')[0];
+                }
                 $('#milestone-status').value = milestone.status;
             } else {
                 // Add new milestone
                 title.textContent = 'Add Milestone';
                 $('#milestone-id').value = '';
+                $('#milestone-amount').value = '';
+                $('#milestone-date').value = '';
             }
             
             this.openModal('milestone-modal');
@@ -2257,6 +2286,8 @@ Thanks for considering,
             const newMilestone = {
                 title: $('#milestone-title').value,
                 description: $('#milestone-description').value,
+                amount: parseFloat($('#milestone-amount').value) || 0,
+                scheduledDate: $('#milestone-date').value ? new Date($('#milestone-date').value).toISOString() : null,
                 status: $('#milestone-status').value
             };
             
@@ -2308,6 +2339,8 @@ Thanks for considering,
             this.renderMediaGallery();
             this.closeModal('media-modal');
             this.utils.showNotification('Media item saved successfully');
+            // Persist media changes without leaving the editor
+            this.saveCampaign(false);
         },
         
         deleteItem(type, index) {
@@ -2329,8 +2362,10 @@ Thanks for considering,
                     this.renderMediaGallery();
                     break;
             }
-            
+
             this.utils.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+            // Persist deletion immediately
+            this.saveCampaign(false);
         },
         
         async saveCampaign(redirect = true) {
@@ -2348,7 +2383,7 @@ Thanks for considering,
                         longitude: parseFloat($('#lng-input').value)
                     }
                 },
-                images:[],
+                images: this.data.images ?? [],
                 funding: {
                     ...this.data.funding,
                     goalAmount: parseFloat($('#goal-amount').value),
@@ -2356,6 +2391,15 @@ Thanks for considering,
                     raisedAmount: parseFloat($('#raised-amount').value)
                 }
             };
+
+            // _id cannot be modified during update
+            delete updatedCampaign._id;
+          
+            const totalBudget = (this.data.timeline?.milestones || []).reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
+            if (totalBudget > updatedCampaign.funding.goalAmount) {
+                this.utils.showNotification('Total milestone budgets exceed campaign goal', 'error');
+                return;
+            }
 
             console.log(updatedCampaign);
 

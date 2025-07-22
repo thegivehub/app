@@ -265,6 +265,13 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
             }
             break;
 
+        case 'compliance':
+            if ($method === 'GET') {
+                $kycController->generateComplianceReport();
+                exit;
+            }
+            break;
+
         case 'risk-score':
             if ($method === 'POST') {
                 $kycController->updateRiskScore();
@@ -808,10 +815,11 @@ switch ($method) {
             if ($data) {
                 $result = $instance->update($id, $data);
 
-                $out = ["result"=>$result, "newdata"=>$instance->get($id)];
+                $updated = $instance->get($id);
+                $out = ["result"=>$result, "newdata"=>$updated];
                 file_put_contents("logs/results.log", $id . ": ".json_encode($out)."\n", FILE_APPEND);
 
-                echo json_encode($result);
+                echo json_encode($updated);
                 exit;
             } else {
                 http_response_code(400);

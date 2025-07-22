@@ -44,3 +44,4 @@ repomix*
 .repomix*
 .cursor
 .aider*
+.phpunit.result.cache

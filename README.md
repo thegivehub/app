@@ -11,6 +11,10 @@ Welcome to **The Give Hub**! This platform enables crowdfunding for social cause
 - **High-Impact Campaigns**: Focus on critical community needs (e.g., wells, schools, electricity).
 - **Global Accessibility**: Empowering donors worldwide to make a difference.
 - **Secure Donations**: Robust PHP backend ensures reliability and security.
+- **Milestone Timelines**: Visual timeline on campaign pages to show upcoming and completed milestones.
+- **Milestone Budgets**: Allocate funds per milestone with validation against the campaign goal.
+- **Risk Scoring**: Automated evaluation of user risk level for compliance.
+- **Email Notifications**: Users receive updates when verification status changes.
 
 ---
 
@@ -202,3 +206,13 @@ The changelog follows this structure:
 - Group related changes together
 - Update the changelog as part of your development process, not just before releases
 
+
+## Running Tests
+
+Use `scripts/setup-tests.sh` to install PHP extensions, vendor dependencies, and launch a temporary MongoDB server. After the script completes, run:
+
+```bash
+php8.3 vendor/bin/phpunit --configuration phpunit.xml
+```
+
+This ensures PHPUnit runs with the required extensions and a local database.
