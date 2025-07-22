@@ -195,6 +195,7 @@
     const $ = str => document.querySelector(str);
     const $$ = str => document.querySelectorAll(str);
     const app = {
+        csrfToken: '',
         currentStep: 1,
         elements: {
             form: document.getElementById('registrationForm'),
@@ -209,13 +210,20 @@
             registerButton: document.getElementById('registerButton')
         },
 
-        init() {
+        async init() {
             let args = app.parseQuery();
             let keys = Object.keys(args);
             for (let key of keys) {
                 let val = args[key];
                 key = key.replace(/[\-_](\w)/g, function(m) { return m[1].toUpperCase(); });
                 $(`#${key}`).value = val;
+            }
+            try {
+                const res = await fetch('/csrf_token.php');
+                const data = await res.json();
+                this.csrfToken = data.token;
+            } catch (e) {
+                console.error('Failed to get CSRF token', e);
             }
             this.setupEventListeners();
             this.setupPasswordStrength();
@@ -568,7 +576,8 @@ async handleRegistration(e) {
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': this.csrfToken
             },
             body: JSON.stringify(registrationData)
         });
@@ -615,6 +624,9 @@ async handleAvatarUpload(event) {
 
         const response = await fetch('/api/auth/upload-avatar', {
             method: 'POST',
+            headers: {
+                'X-CSRF-Token': this.csrfToken
+            },
             body: formData
         });
 

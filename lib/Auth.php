@@ -25,8 +25,30 @@ class Auth {
             'verification_expire' => 3600,
             'upload_dir' => __DIR__ . '/../img/avatars',
             'avatar_max_size' => 5 * 1024 * 1024,
-            'dev_mode' => true  // Set to true to disable JWT expiration checks during development
+            'dev_mode' => false  // Token expiration enforced
         ];
+    }
+
+    private function sanitizeArray($arr) {
+        foreach ($arr as $k => $v) {
+            if (is_array($v)) {
+                $arr[$k] = $this->sanitizeArray($v);
+            } else {
+                $arr[$k] = filter_var($v, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_NO_ENCODE_QUOTES);
+            }
+        }
+        return $arr;
+    }
+
+    private function verifyCsrf() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $headers = getallheaders();
+        $token = $headers['X-CSRF-Token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new Exception('Invalid CSRF token');
+        }
     }
 
     /**
@@ -39,6 +61,8 @@ class Auth {
 
     public function register($data) {
         try {
+            $this->verifyCsrf();
+            $data = $this->sanitizeArray($data);
             // Debug incoming data
             error_log("Registration data: " . print_r($data, true));
 
@@ -252,6 +276,8 @@ class Auth {
 
     public function login($data) {
         try {
+            $this->verifyCsrf();
+            $data = $this->sanitizeArray($data);
             $badLogin = 'Invalid username or password';
             if (!isset($data['username']) || !isset($data['password'])) {
                 throw new Exception('Username and password required');
@@ -314,8 +340,9 @@ class Auth {
 
     public function uploadAvatar($data) {
         global $_FILES;
-        
+
         try {
+            $this->verifyCsrf();
             $file = $_FILES['avatar'];
             
             // Validate file

@@ -123,6 +123,8 @@ class AdminAuthController {
         }
         
         $data = json_decode(file_get_contents('php://input'), true);
+        $data['username'] = filter_var($data['username'] ?? '', FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_NO_ENCODE_QUOTES);
+        $data['password'] = filter_var($data['password'] ?? '', FILTER_UNSAFE_RAW, FILTER_FLAG_NO_ENCODE_QUOTES);
         
         if (!isset($data['username']) || !isset($data['password'])) {
             http_response_code(400); // Bad Request

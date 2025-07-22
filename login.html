@@ -74,6 +74,7 @@
 
     <script>
         const app = {
+            csrfToken: '',
             elements: {
                 form: document.getElementById('loginForm'),
                 username: document.getElementById('username'),
@@ -85,9 +86,16 @@
                 googleLogin: document.getElementById('googleLogin')
             },
 
-            init() {
+            async init() {
                 if (parent.location !== window.location) {
                     top.location.href = this.location.href;
+                }
+                try {
+                    const res = await fetch('/csrf_token.php');
+                    const data = await res.json();
+                    this.csrfToken = data.token;
+                } catch (e) {
+                    console.error('Failed to get CSRF token', e);
                 }
                 this.setupEventListeners();
             },
@@ -126,7 +134,8 @@
                     const response = await fetch('/api/auth/login', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': this.csrfToken
                         },
                         body: JSON.stringify({
                             username: this.elements.username.value,

@@ -25,6 +25,16 @@ function sendAPIJson($code, $data, $exit = true) {
     }
 }
 
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        foreach ($data as $k => $v) {
+            $data[$k] = sanitizeInput($v);
+        }
+        return $data;
+    }
+    return filter_var($data, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_NO_ENCODE_QUOTES);
+}
+
 /**
  * Logs message with timestamp and optional context
  * @param string $message Log message
@@ -160,10 +170,12 @@ $posted = json_decode($rawInput, true);
 error_log("Posted data: " . json_encode($posted));
 error_log("_REQUEST data: " . json_encode($_REQUEST));
 
+$posted = sanitizeInput($posted);
+
 // If JSON decode failed, check if it's form data
 if ($posted === null && $method === 'POST') {
     error_log("JSON decode failed, checking for form data");
-    $posted = $_POST;
+    $posted = sanitizeInput($_POST);
     error_log("Form data: " . json_encode($posted));
 }
 
