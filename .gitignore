@@ -45,3 +45,4 @@ repomix*
 .cursor
 CLAUDE.md
 .aider*
+.phpunit.result.cache

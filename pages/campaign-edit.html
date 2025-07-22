@@ -1653,7 +1653,7 @@ Thanks for considering,
         bindEvents() {
             // Edit mode buttons
             $('#edit-campaign-btn').addEventListener('click', () => this.toggleEditMode(true));
-            $('#save-campaign-btn').addEventListener('click', () => this.saveCampaign());
+            $('#save-campaign-btn').addEventListener('click', () => this.saveCampaign(true));
             $('#cancel-edit-btn').addEventListener('click', () => this.toggleEditMode(false));
 
             // Add item buttons
@@ -2277,8 +2277,10 @@ Thanks for considering,
             this.renderImpactMetrics();
             this.closeModal('metric-modal');
             this.utils.showNotification('Metric saved successfully');
+            // Persist changes to the server without leaving the page
+            this.saveCampaign(false);
         },
-        
+
         saveMilestone() {
             const id = $('#milestone-id').value;
             const newMilestone = {
@@ -2308,6 +2310,8 @@ Thanks for considering,
             this.renderMilestones();
             this.closeModal('milestone-modal');
             this.utils.showNotification('Milestone saved successfully');
+            // Persist changes to the server without leaving the page
+            this.saveCampaign(false);
         },
         
         saveMedia() {
@@ -2335,6 +2339,8 @@ Thanks for considering,
             this.renderMediaGallery();
             this.closeModal('media-modal');
             this.utils.showNotification('Media item saved successfully');
+            // Persist media changes without leaving the editor
+            this.saveCampaign(false);
         },
         
         deleteItem(type, index) {
@@ -2356,11 +2362,13 @@ Thanks for considering,
                     this.renderMediaGallery();
                     break;
             }
-            
+
             this.utils.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+            // Persist deletion immediately
+            this.saveCampaign(false);
         },
         
-        async saveCampaign() {
+        async saveCampaign(redirect = true) {
             // Collect form data
             console.log(this.data);
             const updatedCampaign = {
@@ -2375,7 +2383,7 @@ Thanks for considering,
                         longitude: parseFloat($('#lng-input').value)
                     }
                 },
-                images:[],
+                images: this.data.images ?? [],
                 funding: {
                     ...this.data.funding,
                     goalAmount: parseFloat($('#goal-amount').value),
@@ -2384,6 +2392,9 @@ Thanks for considering,
                 }
             };
 
+            // _id cannot be modified during update
+            delete updatedCampaign._id;
+          
             const totalBudget = (this.data.timeline?.milestones || []).reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
             if (totalBudget > updatedCampaign.funding.goalAmount) {
                 this.utils.showNotification('Total milestone budgets exceed campaign goal', 'error');
@@ -2413,11 +2424,11 @@ Thanks for considering,
             .then(data => {
                 console.log(data);
                 this.data = data;
-                this.toggleEditMode(false);
+                if (redirect) this.toggleEditMode(false);
                 this.utils.showNotification('Campaign updated successfully');
-                
+
                 // Update SEO data after campaign update
-                this.initSeoFromCampaign();
+                if (redirect) this.initSeoFromCampaign();
             })
             .catch(error => {
                 console.error('Error updating campaign:', error);
@@ -2426,7 +2437,9 @@ Thanks for considering,
                 console.log('Campaign updated');
                 console.log(passData);
                 this.state.loaded = true;
-                location.href='/pages/campaign-detail.html?id=' + passData._id;
+                if (redirect) {
+                    location.href='/pages/campaign-detail.html?id=' + passData._id;
+                }
             });
         },
         

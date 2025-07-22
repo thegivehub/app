@@ -256,8 +256,11 @@ class Campaign {
     }
 
     public function update($id, $data) {
+        // Ensure the _id field is never modified during updates
+        unset($data['_id']);
+
         $result = $this->collection->updateOne(
-            ['_id' => new MongoDB\BSON\ObjectId($id)], 
+            ['_id' => new MongoDB\BSON\ObjectId($id)],
             ['$set' => $data]
         );
         
