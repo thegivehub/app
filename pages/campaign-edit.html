@@ -2383,7 +2383,7 @@ Thanks for considering,
                         longitude: parseFloat($('#lng-input').value)
                     }
                 },
-                images:[],
+                images: this.data.images ?? [],
                 funding: {
                     ...this.data.funding,
                     goalAmount: parseFloat($('#goal-amount').value),

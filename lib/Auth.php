@@ -29,6 +29,14 @@ class Auth {
         ];
     }
 
+    /**
+     * Expose the MongoDB collection for users.
+     */
+    public function getUsersCollection(): MongoCollection
+    {
+        return $this->users;
+    }
+
     public function register($data) {
         try {
             // Debug incoming data
