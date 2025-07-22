@@ -699,17 +699,7 @@
             async function loadVerificationData() {
                 try {
                     const filters = getFilters();
-                    let url = '/api.php/admin/kyc/report';
-                    
-                    // Add filters to URL if present
-                    const params = [];
-                    if (filters.status) params.push(`status=${filters.status}`);
-                    if (filters.startDate) params.push(`startDate=${filters.startDate}`);
-                    if (filters.endDate) params.push(`endDate=${filters.endDate}`);
-                    
-                    if (params.length > 0) {
-                        url += '?' + params.join('&');
-                    }
+                    let url = '/api/kyc/pending';
                     
                     // Start loading indicator
                     verificationList.innerHTML = `<tr><td colspan="6" class="text-center">Loading verification data...</td></tr>`;
@@ -735,11 +725,9 @@
                     }
                     
                     const data = await response.json();
-                    
-                    // Update statistics
-                    updateStats(data.stats);
-                    
-                    // Display verifications
+
+                    updateStats({ pending_review: data.verifications.length });
+
                     displayVerifications(data.verifications);
                 } catch (error) {
                     console.error('Error loading verification data:', error);
@@ -758,7 +746,7 @@
                 statTotal.textContent = stats.total || 0;
                 statApproved.textContent = stats.approved || 0;
                 statRejected.textContent = stats.rejected || 0;
-                statPending.textContent = stats.pending || 0;
+                statPending.textContent = stats.pending_review || 0;
             }
 
             // Display verifications in the table
@@ -786,12 +774,13 @@
                             <td>${formatDate(v.updated)}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-sm btn-outline view-details" data-id="${v.id}">
+                                    <button class="btn btn-sm btn-outline view-details" data-id="${v._id}">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-primary override-btn" data-id="${v.id}" data-user="${v.userId}" data-username="${v.userName}" data-email="${v.email}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                    ${v.status === 'pending_review' ? `
+                                        <button class="btn btn-sm btn-success approve-btn" data-id="${v._id}">Approve</button>
+                                        <button class="btn btn-sm btn-danger reject-btn" data-id="${v._id}">Reject</button>
+                                    ` : ''}
                                 </div>
                             </td>
                         </tr>
@@ -811,9 +800,21 @@
                     });
                 });
                 
-                document.querySelectorAll('.view-details').forEach(btn => {
+               document.querySelectorAll('.view-details').forEach(btn => {
+                   btn.addEventListener('click', function() {
+                       viewVerificationDetails(this.getAttribute('data-id'));
+                   });
+               });
+
+                document.querySelectorAll('.approve-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        viewVerificationDetails(this.getAttribute('data-id'));
+                        reviewVerification(this.getAttribute('data-id'), 'approved');
+                    });
+                });
+
+                document.querySelectorAll('.reject-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        reviewVerification(this.getAttribute('data-id'), 'rejected');
                     });
                 });
             }
@@ -907,6 +908,31 @@
                     }
                 } catch (error) {
                     console.error('Override error:', error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
+
+            async function reviewVerification(id, decision) {
+                try {
+                    const adminToken = window.parent.localStorage.getItem('adminToken');
+                    if (!adminToken) {
+                        throw new Error('Authentication token missing');
+                    }
+
+                    const response = await fetch('/api/kyc/review', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ verificationId: id, decision })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update verification');
+
+                    loadVerificationData();
+                } catch (error) {
+                    console.error('Review error:', error);
                     alert(`Error: ${error.message}`);
                 }
             }

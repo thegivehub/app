@@ -17,6 +17,11 @@ class Verification extends Collection {
     const STATE_SELFIE_UPLOAD = 'selfie_upload';
     const STATE_REVIEW = 'review';
     const STATE_COMPLETE = 'complete';
+
+    // Review statuses
+    const STATUS_PENDING_REVIEW = 'pending_review';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
     
     // Approval steps
     const STEP_DOCUMENT_VERIFICATION = 'document_verification';
@@ -562,9 +567,9 @@ class Verification extends Collection {
             
             // Initialize default stats
             $stats = [
-                'pending' => 0,
-                'approved' => 0,
-                'rejected' => 0
+                self::STATUS_PENDING_REVIEW => 0,
+                self::STATUS_APPROVED => 0,
+                self::STATUS_REJECTED => 0
             ];
 
             // Update stats with actual counts
@@ -579,9 +584,9 @@ class Verification extends Collection {
         } catch (Exception $e) {
             error_log("Error getting verification stats: " . $e->getMessage());
             return [
-                'pending' => 0,
-                'approved' => 0,
-                'rejected' => 0
+                self::STATUS_PENDING_REVIEW => 0,
+                self::STATUS_APPROVED => 0,
+                self::STATUS_REJECTED => 0
             ];
         }
     }

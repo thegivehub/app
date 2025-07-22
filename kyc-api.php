@@ -54,6 +54,26 @@ try {
             }
             $kycController->handleWebhook();
             break;
+
+        case 'pending':
+            // GET /api/kyc/pending - List verifications awaiting review
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $kycController->listPending();
+            break;
+
+        case 'review':
+            // POST /api/kyc/review - Approve or reject a verification
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $kycController->reviewVerification();
+            break;
             
         case 'admin-override':
             // POST /api/kyc/admin-override - Admin override for verification

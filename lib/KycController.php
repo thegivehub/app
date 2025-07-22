@@ -2,14 +2,17 @@
 // lib/KycController.php
 require_once __DIR__ . '/JumioService.php';
 require_once __DIR__ . '/Auth.php';
+require_once __DIR__ . '/Verification.php';
 
 class KycController {
     private $jumioService;
     private $auth;
+    private $verification;
 
     public function __construct() {
         $this->jumioService = new JumioService();
         $this->auth = new Auth();
+        $this->verification = new Verification();
     }
 
     /**
@@ -220,6 +223,74 @@ class KycController {
             }
 
             return $this->sendErrorResponse($result['error'] ?? 'Unable to calculate risk score');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * List verifications pending admin review
+     */
+    public function listPending() {
+        try {
+            $adminId = $this->getUserId();
+            if (!$adminId || !$this->isAdmin($adminId)) {
+                return $this->sendErrorResponse('Admin access required', 403);
+            }
+
+            $cursor = $this->verification->getCollection()->find(
+                ['status' => Verification::STATUS_PENDING_REVIEW],
+                ['sort' => ['createdAt' => -1]]
+            );
+
+            $items = [];
+            foreach ($cursor as $doc) {
+                $doc = json_decode(json_encode($doc), true);
+                $doc['_id'] = (string) $doc['_id'];
+                if (isset($doc['userId']) && $doc['userId'] instanceof MongoDB\BSON\ObjectId) {
+                    $doc['userId'] = (string) $doc['userId'];
+                }
+                $items[] = $doc;
+            }
+
+            return $this->sendJsonResponse(['success' => true, 'verifications' => $items]);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Approve or reject a verification
+     */
+    public function reviewVerification() {
+        try {
+            $adminId = $this->getUserId();
+            if (!$adminId || !$this->isAdmin($adminId)) {
+                return $this->sendErrorResponse('Admin access required', 403);
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || !isset($data['verificationId']) || !isset($data['decision'])) {
+                return $this->sendErrorResponse('Missing required fields', 400);
+            }
+
+            $decision = strtolower($data['decision']);
+            if (!in_array($decision, [Verification::STATUS_APPROVED, Verification::STATUS_REJECTED])) {
+                return $this->sendErrorResponse('Invalid decision', 400);
+            }
+
+            $update = [
+                'status' => $decision,
+                'reviewedAt' => new MongoDB\BSON\UTCDateTime(),
+                'reviewedBy' => new MongoDB\BSON\ObjectId($adminId)
+            ];
+
+            $this->verification->getCollection()->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($data['verificationId'])],
+                ['$set' => $update]
+            );
+
+            return $this->sendJsonResponse(['success' => true]);
         } catch (Exception $e) {
             return $this->sendErrorResponse($e->getMessage(), 500);
         }
