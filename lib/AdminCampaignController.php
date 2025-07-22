@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Auth.php';
+require_once __DIR__ . '/NotificationService.php';
 
 class AdminCampaignController {
     private $collection;
@@ -297,8 +298,19 @@ class AdminCampaignController {
             ];
             
             $notifications->insertOne($notification);
-            
-            // In a real app, you would also send an email here
+
+            // Dispatch external alerts
+            $users = $db->getCollection('users');
+            $creator = $users->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['creatorId'])]);
+            $email = $creator['email'] ?? '';
+            $phone = $creator['personalInfo']['phone'] ?? '';
+            $notifier = new NotificationService();
+            $notifier->send(
+                'Campaign Approved',
+                "Your campaign '{$campaign['title']}' is now live!",
+                array_filter([$email]),
+                array_filter([$phone])
+            );
         } catch (Exception $e) {
             error_log("Error sending approval notification: " . $e->getMessage());
         }
@@ -327,8 +339,19 @@ class AdminCampaignController {
             ];
             
             $notifications->insertOne($notification);
-            
-            // In a real app, you would also send an email here
+
+            // Dispatch external alerts
+            $users = $db->getCollection('users');
+            $creator = $users->findOne(['_id' => new MongoDB\BSON\ObjectId($campaign['creatorId'])]);
+            $email = $creator['email'] ?? '';
+            $phone = $creator['personalInfo']['phone'] ?? '';
+            $notifier = new NotificationService();
+            $notifier->send(
+                'Campaign Rejected',
+                "Your campaign '{$campaign['title']}' requires changes. Feedback: {$feedback}",
+                array_filter([$email]),
+                array_filter([$phone])
+            );
         } catch (Exception $e) {
             error_log("Error sending rejection notification: " . $e->getMessage());
         }
