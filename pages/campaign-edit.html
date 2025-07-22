@@ -2392,6 +2392,9 @@ Thanks for considering,
                 }
             };
 
+            // _id cannot be modified during update
+            delete updatedCampaign._id;
+          
             const totalBudget = (this.data.timeline?.milestones || []).reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
             if (totalBudget > updatedCampaign.funding.goalAmount) {
                 this.utils.showNotification('Total milestone budgets exceed campaign goal', 'error');
