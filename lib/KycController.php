@@ -202,7 +202,7 @@ class KycController {
      */
     private function isAdmin($userId) {
         try {
-            $user = $this->auth->db->users->findOne([
+            $user = $this->auth->getUsersCollection()->findOne([
                 '_id' => new MongoDB\BSON\ObjectId($userId)
             ]);
             
