@@ -16,12 +16,27 @@ class KycController {
     }
 
     /**
+     * Basic CSRF token validation used for POST endpoints.
+     */
+    private function verifyCsrf() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $headers = getallheaders();
+        $token = $headers['X-CSRF-Token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new Exception('Invalid CSRF token');
+        }
+    }
+
+    /**
      * Initialize KYC verification for the current user
      * 
      * @return array Response with redirect URL
      */
     public function initiateVerification() {
         try {
+            $this->verifyCsrf();
             // Get user ID from token
             $userId = $this->getUserId();
             if (!$userId) {
@@ -109,6 +124,7 @@ class KycController {
      */
     public function adminOverride() {
         try {
+            $this->verifyCsrf();
             // Check admin permissions
             $adminId = $this->getUserId();
             if (!$adminId || !$this->isAdmin($adminId)) {
@@ -214,6 +230,7 @@ class KycController {
      */
     public function performLivenessCheck() {
         try {
+            $this->verifyCsrf();
             $userId = $this->getUserId();
             if (!$userId) {
                 return $this->sendErrorResponse('Authentication required', 401);
@@ -245,6 +262,7 @@ class KycController {
      */
     public function updateRiskScore() {
         try {
+            $this->verifyCsrf();
             $userId = $this->getUserId();
             if (!$userId) {
                 return $this->sendErrorResponse('Authentication required', 401);
@@ -300,6 +318,7 @@ class KycController {
      */
     public function reviewVerification() {
         try {
+            $this->verifyCsrf();
             $adminId = $this->getUserId();
             if (!$adminId || !$this->isAdmin($adminId)) {
                 return $this->sendErrorResponse('Admin access required', 403);
