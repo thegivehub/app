@@ -84,7 +84,9 @@
                                 <div class="step-divider"></div>
                                 <div class="step-indicator" data-step="3">Selfie</div>
                                 <div class="step-divider"></div>
-                                <div class="step-indicator" data-step="4">Review</div>
+                                <div class="step-indicator" data-step="4">Liveness</div>
+                                <div class="step-divider"></div>
+                                <div class="step-indicator" data-step="5">Review</div>
                             </div>
 
                             <div class="step-content active" data-step="1">
@@ -185,11 +187,32 @@
                                 </div>
                                 <div class="button-group">
                                     <button type="button" id="backToDocument" class="btn btn-secondary">Back</button>
-                                    <button type="button" id="nextToReview" class="btn btn-primary" disabled>Continue</button>
+                                    <button type="button" id="nextToLiveness" class="btn btn-primary" disabled>Continue</button>
                                 </div>
                             </div>
 
                             <div class="step-content" data-step="4">
+                                <h3>Liveness Check</h3>
+                                <div class="liveness-container">
+                                    <video id="livenessVideo" autoplay playsinline></video>
+                                    <button type="button" id="captureLiveness" class="btn btn-primary">Record Video</button>
+                                </div>
+                                <div class="upload-alternative">
+                                    <p>Or upload a video:</p>
+                                    <input type="file" id="livenessInput" accept="video/*" style="display: none;">
+                                    <button type="button" id="livenessUpload" class="btn btn-outline-primary">Upload Video</button>
+                                </div>
+                                <div id="livenessPreview" class="preview-container" style="display: none;">
+                                    <video src="" controls></video>
+                                    <button type="button" id="removeLiveness" class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" id="backToSelfie" class="btn btn-secondary">Back</button>
+                                    <button type="button" id="nextToReview" class="btn btn-primary" disabled>Continue</button>
+                                </div>
+                            </div>
+
+                            <div class="step-content" data-step="5">
                                 <h3>Review Information</h3>
                                 <div class="review-section">
                                     <div class="review-item">

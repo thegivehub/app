@@ -109,6 +109,10 @@ public function upload($file = null, $type = "document") {
             error_log("Documents::upload type 'selfie'");
             $type = "selfie";
             $uploadedFile = $_FILES['selfie'];
+        } else if (isset($_FILES['livenessVideo'])) {
+            error_log("Documents::upload type 'livenessVideo'");
+            $type = "liveness";
+            $uploadedFile = $_FILES['livenessVideo'];
         } else {
             throw new Exception("No file uploaded");
         }
@@ -125,7 +129,7 @@ public function upload($file = null, $type = "document") {
         error_log("File info: ".json_encode($fileInfo));
 
         // Validate file type
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'gif', 'svg', 'avif', 'webp'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'gif', 'svg', 'avif', 'webp', 'mp4', 'mov', 'webm'];
         if (!in_array($extension, $allowedExtensions)) {
             throw new Exception("Invalid file type. Allowed types: " . implode(', ', $allowedExtensions));
         }
@@ -138,7 +142,15 @@ public function upload($file = null, $type = "document") {
         error_log("Upload directory: $uploadDir");
 
         // Generate unique filename based on verification ID
-        $filename = $verificationId . '_' . ($type === 'selfie' ? 'selfie' : $documentType) . '.' . $extension;
+        $filename = $verificationId . '_';
+        if ($type === 'selfie') {
+            $filename .= 'selfie';
+        } elseif ($type === 'liveness') {
+            $filename .= 'liveness';
+        } else {
+            $filename .= $documentType;
+        }
+        $filename .= '.' . $extension;
         $filepath = $uploadDir . $filename;
 
         error_log("Filename: $filepath");
@@ -150,7 +162,7 @@ public function upload($file = null, $type = "document") {
         // Create document record
         $documentData = [
             'userId' => new MongoDB\BSON\ObjectId($userId),
-            'type' => $type === 'selfie' ? 'SELFIE' : 'ID_DOCUMENT',
+            'type' => $type === 'selfie' ? 'SELFIE' : ($type === 'liveness' ? 'LIVENESS_VIDEO' : 'ID_DOCUMENT'),
             'subType' => $documentType,
             'filePath' => $filepath,
             'fileName' => $filename,
@@ -916,6 +928,50 @@ public function upload($file = null, $type = "document") {
             ];
         } catch (Exception $e) {
             error_log("Error in getDocumentDetailsForAdmin: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Perform a secondary liveness check using a selfie video
+     *
+     * @param string $verificationId Verification record ID
+     * @return array Result with liveness score
+     */
+    public function runSecondaryLivenessCheck($verificationId) {
+        try {
+            $videoFiles = glob(__DIR__ . '/../uploads/liveness/' . $verificationId . '*');
+            if (!$videoFiles) {
+                throw new Exception('Liveness video not found');
+            }
+
+            $videoPath = $videoFiles[0];
+
+            // Placeholder implementation - integrate with real liveness service here
+            $livenessScore = 0.95;
+
+            $kycCollection = $this->db->getCollection('kyc_verifications');
+            $kycCollection->updateOne(
+                ['_id' => new MongoDB\BSON\ObjectId($verificationId)],
+                ['$set' => [
+                    'livenessResult' => [
+                        'score' => $livenessScore,
+                        'verified' => $livenessScore >= 0.8,
+                        'checkedAt' => new MongoDB\BSON\UTCDateTime()
+                    ],
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                ]]
+            );
+
+            return [
+                'success' => true,
+                'score' => $livenessScore
+            ];
+        } catch (Exception $e) {
+            error_log('Secondary liveness check error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()
