@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Create Milestone</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .container { max-width: 600px; margin: 2rem auto; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        label { display:block; margin-top:1rem; }
+        input, textarea, select { width:100%; padding:0.5rem; margin-top:0.25rem; }
+        .actions { margin-top:1rem; display:flex; gap:1rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Create Milestone</h2>
+    <form id="milestone-form">
+        <label for="title">Title</label>
+        <input type="text" id="title" required>
+        <label for="description">Description</label>
+        <textarea id="description" required></textarea>
+        <label for="amount">Budget Amount (USD)</label>
+        <input type="number" id="amount" min="0" step="0.01" required>
+        <label for="date">Scheduled Date</label>
+        <input type="date" id="date">
+        <label for="status">Status</label>
+        <select id="status">
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+        </select>
+        <div class="actions">
+            <button type="submit">Save</button>
+            <button type="button" onclick="history.back()">Cancel</button>
+        </div>
+    </form>
+</div>
+<script>
+(function(){
+    const form = document.getElementById('milestone-form');
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('amount').value);
+        if(isNaN(amount) || amount < 0){
+            alert('Amount must be non-negative');
+            return;
+        }
+        const dateVal = document.getElementById('date').value;
+        if(dateVal){
+            const d = new Date(dateVal);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            if(d < today){
+                alert('Scheduled date cannot be in the past');
+                return;
+            }
+        }
+        const milestone = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            amount: amount,
+            scheduledDate: dateVal ? new Date(dateVal).toISOString() : null,
+            status: document.getElementById('status').value
+        };
+        console.log('Milestone data', milestone);
+        alert('Milestone validated. Implement API call as needed.');
+    });
+})();
+</script>
+</body>
+</html>
