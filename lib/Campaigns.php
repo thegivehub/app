@@ -261,8 +261,11 @@ class Campaigns extends Collection {
     }
 
     public function update($id, $data) {
+        // Prevent modification of the document _id
+        unset($data['_id']);
+
         $result = $this->collection->updateOne(
-            ['_id' => new MongoDB\BSON\ObjectId($id)], 
+            ['_id' => new MongoDB\BSON\ObjectId($id)],
             ['$set' => $data]
         );
         

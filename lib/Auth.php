@@ -5,15 +5,18 @@ use Firebase\JWT\Key;
 
 require_once "db.php";
 require_once "Mailer.php";
+require_once "MongoCollection.php";
 
 class Auth {
     public $db;
     private $mail;
+    /** @var MongoCollection */
+    private $users;
     public $config;
 
     public function __construct() {
         $this->db = new Database();
-        $this->db->users = $this->db->getCollection('users');
+        $this->users = $this->db->getCollection('users');
         $this->mail = new Mailer();
         
         $this->config = [
@@ -40,7 +43,7 @@ class Auth {
             }
 
             // Check for existing user
-            $existingUser = $this->db->users->findOne([
+            $existingUser = $this->users->findOne([
                 'email' => $data['email']
             ]);
 
@@ -86,7 +89,7 @@ class Auth {
                 if ($existingUser['status'] === 'pending' || !isset($existingUser['auth']['verified']) || !$existingUser['auth']['verified']) {
                     $userData['updatedAt'] = new MongoDB\BSON\UTCDateTime(); // Add timestamp for update
                     
-                    $result = $this->db->users->updateOne(
+                    $result = $this->users->updateOne(
                         ['email' => $data['email']],
                         [
                             '$set' => $userData
@@ -104,7 +107,7 @@ class Auth {
                 }
             } else {
                 // New user
-                $result = $this->db->users->insertOne($userData);
+                $result = $this->users->insertOne($userData);
 
                 if (!$result['success']) {
                     throw new Exception($result['error'] ?? 'Failed to create user');
@@ -155,7 +158,7 @@ class Auth {
 
             file_put_contents("verify.log", date("Ymdhis") . "\nCREATING NEW RECORD\n-------\n".json_encode($userData)."\n", FILE_APPEND);
 
-            $result = $this->db->users->updateOne(
+            $result = $this->users->updateOne(
                 ['email' => $data['email']],
                 [
                     '$set' => $updateData,
@@ -194,7 +197,7 @@ class Auth {
             }
 
             // Find user with matching code
-            $user = $this->db->users->findOne([
+            $user = $this->users->findOne([
                 'email' => $data['email'],
                 'auth.verificationCode' => (int)$data['code'],
                 'auth.verificationExpires' => [
@@ -207,7 +210,7 @@ class Auth {
             }
 
             // Update user status
-            $result = $this->db->users->updateOne(
+            $result = $this->users->updateOne(
                 ['_id' => $user['_id']],
                 [
                     '$set' => [
@@ -247,7 +250,7 @@ class Auth {
             }
 
             // Find user
-            $user = $this->db->users->findOne([
+            $user = $this->users->findOne([
                 '$or' => [
                     ['email' => $data['username']],
                     ['username' => $data['username']]
@@ -273,7 +276,7 @@ class Auth {
             $tokens = $this->generateTokens($user['_id']);
 
             // Update last login
-            $this->db->users->updateOne(
+            $this->users->updateOne(
                 ['_id' => $user['_id']],
                 [
                     '$set' => [
@@ -343,7 +346,7 @@ class Auth {
 
             // Update user if email is provided
             if (isset($data['email'])) {
-                $result = $this->db->users->updateOne(
+                $result = $this->users->updateOne(
                     ['email' => $data['email']],
                     ['$set' => ['profile.avatar' => $filename]]
                 );
@@ -585,7 +588,7 @@ class Auth {
 
     public function getCurrentUser() {
         $userId = $this->getUserIdFromToken();
-        return $this->db->users->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
+        return $this->users->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
     }
 
     public function isAuthenticated() {
@@ -613,7 +616,7 @@ class Auth {
             }
 
             // Find user with matching code
-            $user = $this->db->users->findOne([
+            $user = $this->users->findOne([
                 'email' => $data['email'],
                 'auth.verificationCode' => (int)$data['code'],
                 'auth.verificationExpires' => [
@@ -626,7 +629,7 @@ class Auth {
             }
 
             // Update user status
-            $result = $this->db->users->updateOne(
+            $result = $this->users->updateOne(
                 ['_id' => $user['_id']],
                 [
                     '$set' => [
