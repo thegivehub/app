@@ -243,6 +243,20 @@ if ($endpoint === 'kyc' || (isset($pathParts) && $pathParts[0] === 'kyc')) {
                 exit;
             }
             break;
+
+        case 'pending':
+            if ($method === 'GET') {
+                $kycController->listPending();
+                exit;
+            }
+            break;
+
+        case 'review':
+            if ($method === 'POST') {
+                $kycController->reviewVerification();
+                exit;
+            }
+            break;
             
         case 'status':
             if ($method === 'GET') {
