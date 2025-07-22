@@ -18,3 +18,12 @@ define('UPLOAD_DIR', __DIR__ . '/../img/avatars');
 // API URLs
 define('API_DOCS_URL', 'https://docs.thegivehub.com');
 define('DEV_PORTAL_URL', 'https://developers.thegivehub.com');
+
+// Notification service credentials
+define('TWILIO_SID', getenv('TWILIO_SID') ?: '');
+define('TWILIO_TOKEN', getenv('TWILIO_TOKEN') ?: '');
+define('SMS_FROM', getenv('SMS_FROM') ?: '');
+define('SLACK_WEBHOOK_URL', getenv('SLACK_WEBHOOK_URL') ?: '');
+// Default admin contacts for notifications
+define('ADMIN_EMAILS', getenv('ADMIN_EMAILS') ?: '');
+define('ADMIN_PHONES', getenv('ADMIN_PHONES') ?: '');

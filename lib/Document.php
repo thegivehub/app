@@ -3,6 +3,7 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Auth.php';
 require_once __DIR__ . '/DocumentUploader.php';
+require_once __DIR__ . '/NotificationService.php';
 
 class Document {
     private $db;
@@ -459,6 +460,18 @@ class Document {
                 $document['type'],
                 $status
             );
+
+            // Dispatch notification about verification result
+            try {
+                $notifier = new NotificationService();
+                $subject = 'Document Verification ' . ucfirst($status);
+                $message = "Your {$document['type']} document has been {$status}.";
+                $emails = [$document['userEmail'] ?? ''];
+                $phones = [$document['userPhone'] ?? ''];
+                $notifier->send($subject, $message, array_filter($emails), array_filter($phones));
+            } catch (Exception $e) {
+                error_log('Notification error: ' . $e->getMessage());
+            }
             
             return [
                 'success' => true,

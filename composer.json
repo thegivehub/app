@@ -14,7 +14,8 @@
         "phpseclib/bcmath_compat": "^2.0",
         "square/square": "^40.0",
         "aws/aws-sdk-php": "^3.337",
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.5",
+        "twilio/sdk": "^6"
     },
     "autoload": {
         "classmap": [
