@@ -153,7 +153,7 @@ Before going to production:
 ### 10.1 Additional Features
 
 - Implement document upload for manual verification as a fallback
-- Add email notifications for verification state changes
+- Email notifications are sent for verification state changes
 - Create verification reminders for incomplete verifications
 - Build detailed analytics dashboards for conversion tracking
 

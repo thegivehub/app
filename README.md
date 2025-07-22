@@ -13,6 +13,8 @@ Welcome to **The Give Hub**! This platform enables crowdfunding for social cause
 - **Secure Donations**: Robust PHP backend ensures reliability and security.
 - **Milestone Timelines**: Visual timeline on campaign pages to show upcoming and completed milestones.
 - **Milestone Budgets**: Allocate funds per milestone with validation against the campaign goal.
+- **Risk Scoring**: Automated evaluation of user risk level for compliance.
+- **Email Notifications**: Users receive updates when verification status changes.
 
 ---
 

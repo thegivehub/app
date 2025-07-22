@@ -616,13 +616,16 @@ class JumioService {
             if (!$user || empty($user['email'])) {
                 return;
             }
-            
-            // If you have a notification service, you can call it here
-            // For now, let's just log the notification
-            $message = "KYC verification {$result} for user {$user['email']}";
-            error_log($message);
-            
-            // TODO: Implement actual notification logic (email, push notification, etc.)
+
+            $subject = 'KYC Verification Update';
+            $message = "Your verification status is: {$result}.";
+            if (!empty($data['message'])) {
+                $message .= "\n\n" . $data['message'];
+            }
+
+            require_once __DIR__ . '/Mailer.php';
+            $mailer = new Mailer();
+            $mailer->sendNotification($user['email'], $subject, $message);
         } catch (Exception $e) {
             error_log('Error sending notification: ' . $e->getMessage());
         }
