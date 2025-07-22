@@ -242,66 +242,19 @@ class User extends Collection {
     
     public function register($data) {
         try {
-            // Existing validation code...
-            
-            // Validate address if provided
-            if (isset($data['address']) && is_array($data['address'])) {
-                require_once __DIR__ . '/AddressValidator.php';
-                $validator = new AddressValidator();
-                
-                $addressResult = $validator->validate($data['address']);
-                
-                if (!$addressResult['valid']) {
-                    return [
-                        'success' => false,
-                        'error' => 'Invalid address: ' . implode(', ', array_values($addressResult['errors'] ?? ['Address validation failed']))
-                    ];
-                }
-                
-                // Use normalized address
-                $data['address'] = $addressResult['normalized'];
+            $result = $this->auth->register($data);
+            if (!$result['success']) {
+                return $result;
             }
-            
-            // Continue with existing registration logic...
-            // but make sure to include address in the user data structure
 
-            // Example user data structure with address
-            $userData = [
-                'email' => $data['email'],
-                'username' => $data['username'],
-                'type' => $data['type'] ?? 'donor',
-                'status' => 'pending',
-                'personalInfo' => [
-                    'firstName' => $data['firstName'] ?? '',
-                    'lastName' => $data['lastName'] ?? '',
-                    'email' => $data['email'],
-                    'language' => $data['personalInfo']['language'] ?? 'en',
-                    // Add address to personalInfo
-                    'address' => $data['address'] ?? null
-                ],
-                'auth' => [
-                    'passwordHash' => password_hash($data['password'], PASSWORD_DEFAULT),
-                    'verificationCode' => $verificationCode,
-                    'verificationExpires' => $verificationExpires,
-                    'verified' => false,
-                    'twoFactorEnabled' => false,
-                    'lastLogin' => new MongoDB\BSON\UTCDateTime()
-                ],
-                'profile' => array_merge([
-                    'avatar' => null,
-                    'bio' => '',
-                    'preferences' => [
-                        'emailNotifications' => true,
-                        'currency' => 'USD'
-                    ]
-                ], $data['profile'] ?? []),
-                'roles' => ['user'],
-                'createdAt' => new MongoDB\BSON\UTCDateTime(),
-                'updatedAt' => new MongoDB\BSON\UTCDateTime()
+            $userId = $result['userId'];
+            $user = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
+
+            return [
+                'success' => true,
+                'id' => $userId,
+                'user' => $user
             ];
-            
-            // Continue with user creation and return success response...
-            
         } catch (Exception $e) {
             error_log("Registration error: " . $e->getMessage());
             return [
