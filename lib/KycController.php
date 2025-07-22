@@ -84,8 +84,15 @@ class KycController {
             }
 
             $result = $this->jumioService->getVerificationStatus($userId);
-            
+
             if ($result['success']) {
+                $kycCollection = (new Database())->getCollection('kyc_verifications');
+                $record = $kycCollection->findOne([
+                    'userId' => new MongoDB\BSON\ObjectId($userId)
+                ], ['sort' => ['createdAt' => -1]]);
+                if ($record && isset($record['livenessResult'])) {
+                    $result['livenessResult'] = $record['livenessResult'];
+                }
                 return $this->sendJsonResponse($result);
             } else {
                 return $this->sendErrorResponse($result['error'] ?? 'Failed to get verification status');
@@ -199,6 +206,35 @@ class KycController {
             return $this->sendErrorResponse($result['error'] ?? 'Failed to generate compliance report');
         } catch (Exception $e) {
             return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Trigger secondary liveness check for the current user
+     */
+    public function performLivenessCheck() {
+        try {
+            $userId = $this->getUserId();
+            if (!$userId) {
+                return $this->sendErrorResponse('Authentication required', 401);
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $verificationId = $data['verificationId'] ?? null;
+            if (!$verificationId) {
+                return $this->sendErrorResponse('Missing verificationId', 400);
+            }
+
+            $documents = new Documents();
+            $result = $documents->runSecondaryLivenessCheck($verificationId);
+
+            if ($result['success']) {
+                return $this->sendJsonResponse($result);
+            }
+
+            return $this->sendErrorResponse($result['error'] ?? 'Liveness check failed');
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
         }
     }
 

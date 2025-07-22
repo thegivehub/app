@@ -105,6 +105,16 @@ try {
             $kycController->generateComplianceReport();
             break;
 
+        case 'liveness':
+            // POST /api/kyc/liveness - Perform secondary liveness check
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $kycController->performLivenessCheck();
+            break;
+
         case 'risk-score':
             // POST /api/kyc/risk-score - Calculate and update risk score
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
