@@ -2,6 +2,7 @@ const CACHE_NAME = 'givehub-cache-v1';
 const OFFLINE_URLS = [
     '/',
     '/index.html',
+    '/offline.html',
     '/app.js',
     '/style.css',
     '/img/white-logo.svg'
@@ -22,6 +23,12 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => caches.match('/offline.html'))
+        );
+        return;
+    }
     event.respondWith(
         caches.match(event.request).then(resp => resp || fetch(event.request))
     );
