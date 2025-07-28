@@ -53,7 +53,7 @@ $coreClasses = [
     'Auth', 'Campaign', 'Collection', 'Donation', 'DonationProcessor', 'Document', 
     'DocumentUploader', 'Donor', 'Impactmetrics', 'Mailer', 'Notification', 
     'Organization', 'Transaction', 'TransactionProcessor', 'Update', 'User', 
-    'Verify', 'Wallet', 'Wallets', 'Crypto'
+    'Verify', 'Wallet', 'Wallets', 'Crypto', 'Cache'
 ];
 
 // Preload core classes

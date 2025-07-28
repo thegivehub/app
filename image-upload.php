@@ -121,8 +121,12 @@ if (!empty($objectId)) {
         $db = new Database("givehub");
         $collection = $db->getCollection($collectionName);
         
-        // Find the existing object
-        $object = $collection->findOne(['_id' => new MongoDB\BSON\ObjectId($objectId)]);
+        // Find the existing object with caching to reduce database load
+        $object = $collection->findOneCached(
+            ['_id' => new MongoDB\BSON\ObjectId($objectId)],
+            [],
+            120
+        );
         
         if ($object) {
             $updateData = [];
