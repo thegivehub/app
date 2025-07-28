@@ -12,10 +12,6 @@
         <p>Please check your internet connection and try again.</p>
         <p><a href="/" onclick="location.reload()">Reload Page</a></p>
     </div>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js').catch(err => console.error('Service worker registration failed', err));
-        }
-    </script>
+    <script src="/register-sw.js"></script>
 </body>
 </html>
