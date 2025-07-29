@@ -1,5 +1,7 @@
 <?php
+require_once __DIR__ . '/lib/autoload.php';
 require_once __DIR__ . '/lib/db.php';
+Profiler::start('image-upload');
 
 // Set headers for CORS and JSON response
 header('Access-Control-Allow-Origin: *');
@@ -163,3 +165,4 @@ echo json_encode([
     'filename' => $filename,
     'objectType' => $objectType
 ]);
+Profiler::end('image-upload');
