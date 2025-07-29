@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/Cache.php';
+
 class MongoCollection {
     private $collection;
 
@@ -234,6 +236,19 @@ class MongoCollection {
             error_log("MongoDB findOne error: " . $e->getMessage());
             return null;
         }
+    }
+
+    public function findOneCached($filter = [], $options = [], $ttl = 60) {
+        $key = spl_object_hash($this->collection) . ':' . md5(json_encode($filter) . json_encode($options));
+        $cached = Cache::get($key);
+        if ($cached !== null) {
+            return $cached;
+        }
+        $result = $this->findOne($filter, $options);
+        if ($result !== null) {
+            Cache::set($key, $result, $ttl);
+        }
+        return $result;
     }
 
     public function find($filter = [], $options = []) {

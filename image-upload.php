@@ -1,5 +1,7 @@
 <?php
+require_once __DIR__ . '/lib/autoload.php';
 require_once __DIR__ . '/lib/db.php';
+Profiler::start('image-upload');
 
 // Set headers for CORS and JSON response
 header('Access-Control-Allow-Origin: *');
@@ -121,8 +123,12 @@ if (!empty($objectId)) {
         $db = new Database("givehub");
         $collection = $db->getCollection($collectionName);
         
-        // Find the existing object
-        $object = $collection->findOne(['_id' => new MongoDB\BSON\ObjectId($objectId)]);
+        // Find the existing object with caching to reduce database load
+        $object = $collection->findOneCached(
+            ['_id' => new MongoDB\BSON\ObjectId($objectId)],
+            [],
+            120
+        );
         
         if ($object) {
             $updateData = [];
@@ -159,3 +165,4 @@ echo json_encode([
     'filename' => $filename,
     'objectType' => $objectType
 ]);
+Profiler::end('image-upload');
