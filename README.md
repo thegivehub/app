@@ -216,3 +216,12 @@ php8.3 vendor/bin/phpunit --configuration phpunit.xml
 ```
 
 This ensures PHPUnit runs with the required extensions and a local database.
+
+## Performance Monitoring
+
+Basic profiling and load testing tools are included:
+
+- `lib/Profiler.php` records execution times in `logs/performance.log`.
+- `npm run loadtest` runs a simple load test using the `autocannon` library.
+
+See `docs/performance-monitoring.md` for details.
