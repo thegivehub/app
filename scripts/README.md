@@ -99,3 +99,14 @@ If you encounter issues with "Invalid base64 image format" errors:
 2. Check if your images actually use the standard base64 format: `data:image/jpeg;base64,/9j/...`
 3. If your database contains URLs instead of base64 data, the script will now automatically detect and keep them
 4. For invalid data, you can manually update records after migration 
+## Task Management
+
+The `update_unfinished_tasks.sh` script helps reconcile the project tracker with the repository history. It fetches tasks from the remote API, searches commit messages for matching task names, and updates each task's notes with the commit hash. If an unfinished task has a matching commit, it is automatically marked as completed.
+
+Run the script from the repository root:
+
+```bash
+bash scripts/update_unfinished_tasks.sh
+```
+
+Ensure you have network access to `project.thegivehub.com` and appropriate permissions before running.
