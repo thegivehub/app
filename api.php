@@ -7,6 +7,13 @@ require_once __DIR__ . '/lib/AdminCampaignController.php';
 require_once __DIR__ . '/lib/AdminUserController.php';
 require_once __DIR__ . '/lib/AdminDashboardController.php';
 require_once __DIR__ . '/lib/AdminReportsController.php';
+require_once __DIR__ . '/lib/Security.php';
+
+Security::sendHeaders();
+if (!Security::rateLimit($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_URI'], 100, 60)) {
+    header('Retry-After: 60');
+    sendAPIJson(429, ['error' => 'Rate limit exceeded']);
+}
 
 
 /**
