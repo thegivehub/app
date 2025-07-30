@@ -225,3 +225,10 @@ Basic profiling and load testing tools are included:
 - `npm run loadtest` runs a simple load test using the `autocannon` library.
 
 See `docs/performance-monitoring.md` for details.
+
+## Security Hardening
+
+Common security headers are applied by `lib/Security.php`. Endpoints can call
+`Security::sendHeaders()` and log suspicious activity via `Security::logEvent()`.
+Rate limiting helpers are also provided. See `docs/security/monitoring.md` for
+more information.

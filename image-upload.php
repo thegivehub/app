@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/lib/autoload.php';
 require_once __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/lib/Security.php';
+Security::sendHeaders();
+if (!Security::rateLimit($_SERVER['REMOTE_ADDR'] . '/image-upload', 20, 60)) {
+    header('Retry-After: 60');
+    http_response_code(429);
+    echo json_encode(['error' => 'Rate limit exceeded']);
+    exit;
+}
 Profiler::start('image-upload');
 
 // Set headers for CORS and JSON response
