@@ -155,7 +155,8 @@ function generateTestToken($userId) {
         'sub' => (string)$userId
     ];
     
-    return \Firebase\JWT\JWT::encode($payload, JWT_SECRET, 'HS256');
+    $jwtSecret = getenv('JWT_SECRET') ?: 'test_secret_key';
+    return \Firebase\JWT\JWT::encode($payload, $jwtSecret, 'HS256');
 }
 
 /**

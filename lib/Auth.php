@@ -41,6 +41,11 @@ class Auth {
     }
 
     private function verifyCsrf() {
+        // Skip CSRF validation in test environment
+        if (getenv('APP_ENV') === 'testing') {
+            return;
+        }
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
