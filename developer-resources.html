@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Resources - The Give Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--primary), #1e40af);
+            color: white;
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .quick-start {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-start h2 {
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        .integration-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .integration-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .integration-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .integration-card h3 {
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+        }
+
+        .code-block {
+            background: var(--gray-900);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #e5e7eb;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .resource-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            color: var(--gray-700);
+            transition: transform 0.2s;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .resource-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .resource-card h4 {
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-card p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .sdk-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .sdk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .sdk-card {
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .sdk-card.available {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .sdk-card.planned {
+            border-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .examples-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-badge.live {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.beta {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👨‍💻 Developer Resources</h1>
+            <p>Everything you need to integrate with The Give Hub platform - APIs, SDKs, examples, and comprehensive documentation.</p>
+        </div>
+
+        <div class="quick-start">
+            <h2>🚀 Quick Start</h2>
+            <p>Get up and running with The Give Hub API in minutes:</p>
+            <div class="code-block">
+                <code># 1. Get CSRF token
+curl -s https://app.thegivehub.com/csrf_token.php
+
+# 2. Authenticate
+curl -X POST https://app.thegivehub.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: YOUR_CSRF_TOKEN" \
+  -d '{"username": "your-username", "password": "your-password"}'
+
+# 3. Use the API with your JWT token
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  https://app.thegivehub.com/api.php/Campaign</code>
+            </div>
+        </div>
+
+        <div class="integration-cards">
+            <div class="integration-card">
+                <h3><span class="card-icon">🔌</span>REST API Integration</h3>
+                <p>Full-featured RESTful API with comprehensive endpoints for campaigns, users, donations, and blockchain operations.</p>
+                <div class="code-block">
+                    <code>fetch('/api.php/Campaign', {
+  headers: {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(campaigns => console.log(campaigns));</code>
+                </div>
+                <a href="/api-documentation.html" class="resource-card">
+                    <strong>View Full API Documentation →</strong>
+                </a>
+            </div>
+
+            <div class="integration-card">
+                <h3><span class="card-icon">⛓️</span>Blockchain Integration</h3>
+                <p>Direct blockchain integration with Stellar, Bitcoin, and Ethereum networks for secure, transparent transactions.</p>
+                <div class="code-block">
+                    <code>// Create donation transaction
+const donation = await fetch('/blockchain-transaction-api.php', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    campaign_id: 'campaign_123',
+    amount: 100,
+    currency: 'XLM'
+  })
+});</code>
+                </div>
+            </div>
+
+            <div class="integration-card">
+                <h3><span class="card-icon">🛡️</span>Security & Compliance</h3>
+                <p>Built-in KYC/AML processing, risk scoring, and compliance reporting for regulatory requirements.</p>
+                <div class="code-block">
+                    <code>// Process KYC verification
+const kycResult = await fetch('/kyc-api.php', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    user_id: 'user_123',
+    document_type: 'passport',
+    document_data: documentBase64
+  })
+});</code>
+                </div>
+            </div>
+
+            <div class="integration-card">
+                <h3><span class="card-icon">📊</span>Analytics & Reporting</h3>
+                <p>Comprehensive analytics, performance monitoring, and detailed reporting capabilities.</p>
+                <div class="code-block">
+                    <code>// Get campaign analytics
+const analytics = await fetch('/api.php/admin/reports', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + adminToken
+  }
+});</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="sdk-section">
+            <h2>🛠️ SDKs & Libraries</h2>
+            <p>Official and community-maintained SDKs for popular programming languages:</p>
+            <div class="sdk-grid">
+                <div class="sdk-card available">
+                    <h4>PHP SDK</h4>
+                    <span class="status-badge live">🟢 Available</span>
+                    <p>Native PHP classes and methods</p>
+                </div>
+                <div class="sdk-card available">
+                    <h4>JavaScript SDK</h4>
+                    <span class="status-badge live">🟢 Available</span>
+                    <p>Browser and Node.js compatible</p>
+                </div>
+                <div class="sdk-card planned">
+                    <h4>Python SDK</h4>
+                    <span class="status-badge beta">🟡 Planned</span>
+                    <p>Coming soon</p>
+                </div>
+                <div class="sdk-card planned">
+                    <h4>Node.js SDK</h4>
+                    <span class="status-badge beta">🟡 Planned</span>
+                    <p>Server-side JavaScript</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h2>💡 Integration Examples</h2>
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab('javascript')">JavaScript</button>
+                <button class="tab-button" onclick="showTab('php')">PHP</button>
+                <button class="tab-button" onclick="showTab('curl')">cURL</button>
+                <button class="tab-button" onclick="showTab('python')">Python</button>
+            </div>
+
+            <div id="javascript" class="tab-content active">
+                <h3>JavaScript Integration</h3>
+                <div class="code-block">
+                    <code>class GiveHubAPI {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    this.token = null;
+    this.csrfToken = null;
+  }
+
+  async init() {
+    // Get CSRF token
+    const csrfResponse = await fetch(`${this.baseUrl}/csrf_token.php`);
+    const csrfData = await csrfResponse.json();
+    this.csrfToken = csrfData.token;
+  }
+
+  async login(username, password) {
+    const response = await fetch(`${this.baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': this.csrfToken
+      },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      this.token = data.tokens.accessToken;
+    }
+    return data;
+  }
+
+  async getCampaigns() {
+    return await this.request('GET', '/api.php/Campaign');
+  }
+
+  async createDonation(campaignId, amount, currency = 'XLM') {
+    return await this.request('POST', '/blockchain-transaction-api.php', {
+      campaign_id: campaignId,
+      amount: amount,
+      currency: currency
+    });
+  }
+
+  async request(method, endpoint, body = null) {
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    if (body && method !== 'GET') {
+      options.body = JSON.stringify(body);
+      options.headers['X-CSRF-Token'] = this.csrfToken;
+    }
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+    return await response.json();
+  }
+}
+
+// Usage example
+const api = new GiveHubAPI('https://app.thegivehub.com');
+await api.init();
+await api.login('your-username', 'your-password');
+const campaigns = await api.getCampaigns();
+console.log('Available campaigns:', campaigns);</code>
+                </div>
+            </div>
+
+            <div id="php" class="tab-content">
+                <h3>PHP Integration</h3>
+                <div class="code-block">
+                    <code>&lt;?php
+class GiveHubAPI {
+    private $baseUrl;
+    private $token;
+    private $csrfToken;
+
+    public function __construct($baseUrl) {
+        $this->baseUrl = rtrim($baseUrl, '/');
+        $this->initCsrf();
+    }
+
+    private function initCsrf() {
+        $response = file_get_contents($this->baseUrl . '/csrf_token.php');
+        $data = json_decode($response, true);
+        $this->csrfToken = $data['token'];
+    }
+
+    public function login($username, $password) {
+        $data = [
+            'username' => $username,
+            'password' => $password
+        ];
+
+        $options = [
+            'http' => [
+                'header' => [
+                    "Content-Type: application/json",
+                    "X-CSRF-Token: {$this->csrfToken}"
+                ],
+                'method' => 'POST',
+                'content' => json_encode($data)
+            ]
+        ];
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($this->baseUrl . '/api/auth/login', false, $context);
+        $result = json_decode($response, true);
+
+        if ($result['success']) {
+            $this->token = $result['tokens']['accessToken'];
+        }
+
+        return $result;
+    }
+
+    public function getCampaigns() {
+        return $this->request('GET', '/api.php/Campaign');
+    }
+
+    public function createDonation($campaignId, $amount, $currency = 'XLM') {
+        return $this->request('POST', '/blockchain-transaction-api.php', [
+            'campaign_id' => $campaignId,
+            'amount' => $amount,
+            'currency' => $currency
+        ]);
+    }
+
+    private function request($method, $endpoint, $data = null) {
+        $headers = [
+            "Authorization: Bearer {$this->token}",
+            "Content-Type: application/json"
+        ];
+
+        if ($data && $method !== 'GET') {
+            $headers[] = "X-CSRF-Token: {$this->csrfToken}";
+        }
+
+        $options = [
+            'http' => [
+                'header' => implode("\r\n", $headers),
+                'method' => $method
+            ]
+        ];
+
+        if ($data && $method !== 'GET') {
+            $options['http']['content'] = json_encode($data);
+        }
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($this->baseUrl . $endpoint, false, $context);
+        return json_decode($response, true);
+    }
+}
+
+// Usage example
+$api = new GiveHubAPI('https://app.thegivehub.com');
+$loginResult = $api->login('your-username', 'your-password');
+
+if ($loginResult['success']) {
+    $campaigns = $api->getCampaigns();
+    echo "Available campaigns: " . json_encode($campaigns, JSON_PRETTY_PRINT);
+}
+?&gt;</code>
+                </div>
+            </div>
+
+            <div id="curl" class="tab-content">
+                <h3>cURL Examples</h3>
+                <div class="code-block">
+                    <code># Get CSRF Token
+CSRF_TOKEN=$(curl -s https://app.thegivehub.com/csrf_token.php | jq -r '.token')
+
+# Login and get JWT token
+LOGIN_RESPONSE=$(curl -s -X POST https://app.thegivehub.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -d '{"username": "your-username", "password": "your-password"}')
+
+JWT_TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.tokens.accessToken')
+
+# Get all campaigns
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://app.thegivehub.com/api.php/Campaign
+
+# Create a new campaign
+curl -X POST https://app.thegivehub.com/api.php/Campaign \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -d '{
+    "title": "New Campaign",
+    "description": "Campaign description",
+    "target": 10000,
+    "category": "education"
+  }'
+
+# Process a donation
+curl -X POST https://app.thegivehub.com/blockchain-transaction-api.php \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -d '{
+    "campaign_id": "campaign_123",
+    "amount": 100,
+    "currency": "XLM"
+  }'
+
+# Get user risk score (admin only)
+curl -H "Authorization: Bearer $ADMIN_JWT_TOKEN" \
+  "https://app.thegivehub.com/api.php/RiskScoringService/calculateRiskScore?user_id=user_123"</code>
+                </div>
+            </div>
+
+            <div id="python" class="tab-content">
+                <h3>Python Integration</h3>
+                <div class="code-block">
+                    <code>import requests
+import json
+
+class GiveHubAPI:
+    def __init__(self, base_url):
+        self.base_url = base_url.rstrip('/')
+        self.token = None
+        self.csrf_token = None
+        self.session = requests.Session()
+        self._init_csrf()
+    
+    def _init_csrf(self):
+        """Initialize CSRF token"""
+        response = self.session.get(f"{self.base_url}/csrf_token.php")
+        data = response.json()
+        self.csrf_token = data['token']
+    
+    def login(self, username, password):
+        """Authenticate user and store JWT token"""
+        data = {
+            'username': username,
+            'password': password
+        }
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': self.csrf_token
+        }
+        
+        response = self.session.post(
+            f"{self.base_url}/api/auth/login",
+            json=data,
+            headers=headers
+        )
+        
+        result = response.json()
+        if result.get('success'):
+            self.token = result['tokens']['accessToken']
+        
+        return result
+    
+    def get_campaigns(self):
+        """Get all campaigns"""
+        return self._request('GET', '/api.php/Campaign')
+    
+    def create_donation(self, campaign_id, amount, currency='XLM'):
+        """Create a donation transaction"""
+        data = {
+            'campaign_id': campaign_id,
+            'amount': amount,
+            'currency': currency
+        }
+        return self._request('POST', '/blockchain-transaction-api.php', data)
+    
+    def _request(self, method, endpoint, data=None):
+        """Make authenticated API request"""
+        headers = {
+            'Authorization': f'Bearer {self.token}',
+            'Content-Type': 'application/json'
+        }
+        
+        if data and method != 'GET':
+            headers['X-CSRF-Token'] = self.csrf_token
+        
+        response = self.session.request(
+            method,
+            f"{self.base_url}{endpoint}",
+            json=data if method != 'GET' else None,
+            headers=headers
+        )
+        
+        return response.json()
+
+# Usage example
+api = GiveHubAPI('https://app.thegivehub.com')
+login_result = api.login('your-username', 'your-password')
+
+if login_result.get('success'):
+    campaigns = api.get_campaigns()
+    print("Available campaigns:", json.dumps(campaigns, indent=2))
+    
+    # Create a donation
+    donation_result = api.create_donation('campaign_123', 100, 'XLM')
+    print("Donation result:", json.dumps(donation_result, indent=2))</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="resource-grid">
+            <a href="/api-documentation.html" class="resource-card">
+                <span class="resource-icon">📖</span>
+                <h4>API Documentation</h4>
+                <p>Complete REST API reference with examples</p>
+            </a>
+
+            <a href="/docs/system-architecture.md" class="resource-card">
+                <span class="resource-icon">🏗️</span>
+                <h4>System Architecture</h4>
+                <p>Technical architecture and system design</p>
+            </a>
+
+            <a href="/openapi.yml" class="resource-card">
+                <span class="resource-icon">📋</span>
+                <h4>OpenAPI Specification</h4>
+                <p>Machine-readable API specification</p>
+            </a>
+
+            <a href="/admin/index.html" class="resource-card">
+                <span class="resource-icon">⚙️</span>
+                <h4>Admin Interface</h4>
+                <p>Administrative dashboard and tools</p>
+            </a>
+
+            <a href="/tranche2-dashboard.html" class="resource-card">
+                <span class="resource-icon">📊</span>
+                <h4>System Status</h4>
+                <p>Real-time system monitoring</p>
+            </a>
+
+            <a href="/docs/performance-monitoring.md" class="resource-card">
+                <span class="resource-icon">⚡</span>
+                <h4>Performance Guide</h4>
+                <p>Monitoring and optimization</p>
+            </a>
+
+            <a href="https://wiki.thegivehub.com/" class="resource-card">
+                <span class="resource-icon">🌐</span>
+                <h4>External Wiki</h4>
+                <p>Comprehensive documentation portal</p>
+            </a>
+
+            <a href="https://developer.thegivehub.com/" class="resource-card">
+                <span class="resource-icon">🚀</span>
+                <h4>Developer Portal</h4>
+                <p>Additional developer resources</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Initialize syntax highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+</html>

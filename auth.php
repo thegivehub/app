@@ -3,8 +3,8 @@
 $req = json_encode($_REQUEST, JSON_PRETTY_PRINT);
 file_put_contents("google-auth.log", $req."\n", FILE_APPEND);
 
-require __DIR__ . '/lib/Auth.php';
 require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/lib/Auth.php';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/User.php';
 

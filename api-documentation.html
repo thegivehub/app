@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - The Give Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--success);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--gray-100);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 2rem;
+        }
+
+        .endpoint-group {
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .http-method {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: white;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .http-method.get { background: var(--success); }
+        .http-method.post { background: var(--primary); }
+        .http-method.put { background: var(--warning); }
+        .http-method.delete { background: var(--danger); }
+
+        .endpoint-path {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .endpoint-description {
+            color: var(--gray-600);
+            margin-left: auto;
+        }
+
+        .endpoint-content {
+            padding: 1.5rem;
+        }
+
+        .code-block {
+            background: var(--gray-900);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #e5e7eb;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .parameters-table th,
+        .parameters-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .parameters-table th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+
+        .param-type {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .required {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--gray-700);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-link-icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 API Documentation</h1>
+            <p>Comprehensive REST API reference for The Give Hub platform with real-time endpoints, authentication, and integration examples.</p>
+            <div class="api-status">
+                <span>🟢</span> API Status: Online
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('endpoints')">API Endpoints</button>
+            <button class="nav-tab" onclick="showTab('auth')">Authentication</button>
+            <button class="nav-tab" onclick="showTab('examples')">Examples</button>
+            <button class="nav-tab" onclick="showTab('schemas')">Schemas</button>
+        </div>
+
+        <div id="endpoints" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Core API Endpoints</h2>
+                </div>
+                <div class="section-content">
+                    <div class="endpoint-group">
+                        <div class="endpoint-header">
+                            <span class="http-method post">POST</span>
+                            <span class="endpoint-path">/api/auth/login</span>
+                            <span class="endpoint-description">User authentication</span>
+                        </div>
+                        <div class="endpoint-content">
+                            <p><strong>Description:</strong> Authenticate user and receive access tokens</p>
+                            <table class="parameters-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>username</td>
+                                        <td><span class="param-type">string</span></td>
+                                        <td><span class="required">Yes</span></td>
+                                        <td>Username or email address</td>
+                                    </tr>
+                                    <tr>
+                                        <td>password</td>
+                                        <td><span class="param-type">string</span></td>
+                                        <td><span class="required">Yes</span></td>
+                                        <td>User password</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="code-block">
+                                <code>{
+  "success": true,
+  "user": {
+    "_id": "67dd82614da16f108a04d862",
+    "username": "admin",
+    "email": "admin@thegivehub.com"
+  },
+  "tokens": {
+    "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGci...",
+    "refreshToken": "9ca699263cdf62a630d126e2..."
+  }
+}</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-group">
+                        <div class="endpoint-header">
+                            <span class="http-method get">GET</span>
+                            <span class="endpoint-path">/api.php/Campaign</span>
+                            <span class="endpoint-description">List all campaigns</span>
+                        </div>
+                        <div class="endpoint-content">
+                            <p><strong>Description:</strong> Retrieve list of all active campaigns</p>
+                            <table class="parameters-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>page</td>
+                                        <td><span class="param-type">integer</span></td>
+                                        <td>No</td>
+                                        <td>Page number for pagination</td>
+                                    </tr>
+                                    <tr>
+                                        <td>limit</td>
+                                        <td><span class="param-type">integer</span></td>
+                                        <td>No</td>
+                                        <td>Number of items per page</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-group">
+                        <div class="endpoint-header">
+                            <span class="http-method post">POST</span>
+                            <span class="endpoint-path">/kyc-api.php</span>
+                            <span class="endpoint-description">KYC verification processing</span>
+                        </div>
+                        <div class="endpoint-content">
+                            <p><strong>Description:</strong> Process KYC verification documents and data</p>
+                            <p><strong>Authentication:</strong> Bearer token required</p>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-group">
+                        <div class="endpoint-header">
+                            <span class="http-method get">GET</span>
+                            <span class="endpoint-path">/api.php/RiskScoringService/calculateRiskScore</span>
+                            <span class="endpoint-description">Calculate user risk score</span>
+                        </div>
+                        <div class="endpoint-content">
+                            <p><strong>Description:</strong> Calculate comprehensive risk score for a user</p>
+                            <p><strong>Authentication:</strong> Admin access required</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="auth" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Authentication & Security</h2>
+                </div>
+                <div class="section-content">
+                    <h3>JWT Bearer Token Authentication</h3>
+                    <p>Most API endpoints require authentication via JWT tokens. Include the token in the Authorization header:</p>
+                    <div class="code-block">
+                        <code>Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...</code>
+                    </div>
+
+                    <h3>CSRF Protection</h3>
+                    <p>All POST, PUT, and DELETE requests require CSRF tokens. Get a token from:</p>
+                    <div class="code-block">
+                        <code>GET /csrf_token.php</code>
+                    </div>
+                    <p>Include the token in the header:</p>
+                    <div class="code-block">
+                        <code>X-CSRF-Token: your-csrf-token-here</code>
+                    </div>
+
+                    <h3>Rate Limiting</h3>
+                    <p>API requests are rate limited to 100 requests per minute per IP address.</p>
+
+                    <h3>Security Headers</h3>
+                    <p>All responses include comprehensive security headers for protection against common attacks.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="examples" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Integration Examples</h2>
+                </div>
+                <div class="section-content">
+                    <h3>JavaScript/Fetch API</h3>
+                    <div class="code-block">
+                        <code>// Get CSRF token
+const csrfResponse = await fetch('/csrf_token.php');
+const csrfData = await csrfResponse.json();
+
+// Login request
+const loginResponse = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': csrfData.token
+  },
+  body: JSON.stringify({
+    username: 'your-username',
+    password: 'your-password'
+  })
+});
+
+const loginData = await loginResponse.json();
+console.log('Login successful:', loginData);</code>
+                    </div>
+
+                    <h3>cURL Examples</h3>
+                    <div class="code-block">
+                        <code># Get CSRF token
+CSRF_TOKEN=$(curl -s http://localhost/csrf_token.php | jq -r '.token')
+
+# Login with CSRF protection
+curl -X POST http://localhost/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -d '{"username": "admin", "password": "Passw0rd!"}'</code>
+                    </div>
+
+                    <h3>PHP Integration</h3>
+                    <div class="code-block">
+                        <code>// Using the Auth class directly
+require_once 'lib/Auth.php';
+$auth = new Auth();
+
+$result = $auth->login([
+    'username' => 'admin',
+    'password' => 'Passw0rd!'
+]);
+
+if ($result['success']) {
+    $token = $result['tokens']['accessToken'];
+    // Use token for subsequent requests
+}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="schemas" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>API Schemas & Documentation</h2>
+                </div>
+                <div class="section-content">
+                    <div class="quick-links">
+                        <a href="/openapi.yml" class="quick-link">
+                            <span class="quick-link-icon">📄</span>
+                            <div>
+                                <div><strong>OpenAPI Specification</strong></div>
+                                <div>Complete API schema in YAML format</div>
+                            </div>
+                        </a>
+                        <a href="/docs/" class="quick-link">
+                            <span class="quick-link-icon">📚</span>
+                            <div>
+                                <div><strong>Documentation Directory</strong></div>
+                                <div>Detailed guides and specifications</div>
+                            </div>
+                        </a>
+                        <a href="/admin/index.html" class="quick-link">
+                            <span class="quick-link-icon">🔐</span>
+                            <div>
+                                <div><strong>Admin Interface</strong></div>
+                                <div>Administrative dashboard and tools</div>
+                            </div>
+                        </a>
+                        <a href="/tranche2-dashboard.html" class="quick-link">
+                            <span class="quick-link-icon">⚙️</span>
+                            <div>
+                                <div><strong>System Status</strong></div>
+                                <div>Real-time system monitoring</div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <h3>Response Formats</h3>
+                    <p>All API responses follow a consistent format:</p>
+                    <div class="code-block">
+                        <code>// Success Response
+{
+  "success": true,
+  "data": { ... },
+  "metadata": { ... }
+}
+
+// Error Response
+{
+  "success": false,
+  "error": "Error message description",
+  "code": "ERROR_CODE"
+}</code>
+                    </div>
+
+                    <h3>Status Codes</h3>
+                    <ul>
+                        <li><strong>200 OK</strong> - Request successful</li>
+                        <li><strong>400 Bad Request</strong> - Invalid request parameters</li>
+                        <li><strong>401 Unauthorized</strong> - Authentication required</li>
+                        <li><strong>403 Forbidden</strong> - Insufficient permissions</li>
+                        <li><strong>404 Not Found</strong> - Resource not found</li>
+                        <li><strong>429 Too Many Requests</strong> - Rate limit exceeded</li>
+                        <li><strong>500 Internal Server Error</strong> - Server error</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <a href="/admin/index.html" class="quick-link">
+                <span class="quick-link-icon">🏠</span>
+                <div>
+                    <div><strong>Admin Dashboard</strong></div>
+                    <div>System administration</div>
+                </div>
+            </a>
+            <a href="/api.php/Tranche2Status/getStatus" class="quick-link">
+                <span class="quick-link-icon">📊</span>
+                <div>
+                    <div><strong>API Status</strong></div>
+                    <div>Real-time API health check</div>
+                </div>
+            </a>
+            <a href="https://wiki.thegivehub.com/" class="quick-link">
+                <span class="quick-link-icon">📖</span>
+                <div>
+                    <div><strong>External Wiki</strong></div>
+                    <div>Comprehensive documentation</div>
+                </div>
+            </a>
+            <a href="https://developer.thegivehub.com/" class="quick-link">
+                <span class="quick-link-icon">👨‍💻</span>
+                <div>
+                    <div><strong>Developer Portal</strong></div>
+                    <div>Integration resources</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Initialize syntax highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+</html>

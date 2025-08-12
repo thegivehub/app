@@ -7,15 +7,20 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "loadtest": "node scripts/load_test.js"
+    "loadtest": "node scripts/load_test.js",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:record": "cypress run"
   },
   "author": "",
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "cypress": "^14.5.4",
     "firebase": "^11.0.2"
   },
   "devDependencies": {
-    "autocannon": "^8.0.0"
+    "autocannon": "^8.0.0",
+    "cypress-mochawesome-reporter": "^4.0.0"
   }
 }

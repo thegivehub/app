@@ -137,19 +137,31 @@
         }
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        let csrfToken = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
             // Check if admin token exists
             const adminToken = localStorage.getItem('adminToken');
             
             if (adminToken) {
                 // If token exists, redirect to app.html
                 top.location.href = 'app.html';
+                return;
             }
             
             if (parent.location !== window.location) {
                 top.location.href = "/admin/index.html";
+                return;
             }
-            // Otherwise, show the login form (it's already visible in the HTML)
+
+            // Fetch CSRF token
+            try {
+                const res = await fetch('/csrf_token.php');
+                const data = await res.json();
+                csrfToken = data.token;
+            } catch (e) {
+                console.error('Failed to fetch CSRF token:', e);
+            }
         });
     </script>
 </head>
@@ -192,12 +204,27 @@
             // Clear any previous error
             errorMessage.classList.remove('show');
             
+            // Check if we have a CSRF token
+            if (!csrfToken) {
+                try {
+                    const res = await fetch('/csrf_token.php');
+                    const data = await res.json();
+                    csrfToken = data.token;
+                } catch (e) {
+                    console.error('Failed to fetch CSRF token:', e);
+                    errorMessage.textContent = 'Failed to initialize security token. Please refresh the page.';
+                    errorMessage.classList.add('show');
+                    return;
+                }
+            }
+            
             try {
-                // Submit login request
+                // Submit login request with CSRF token
                 const response = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
                     },
                     body: JSON.stringify({ username, password })
                 });

@@ -15,7 +15,8 @@
         "square/square": "^40.0",
         "aws/aws-sdk-php": "^3.337",
         "vlucas/phpdotenv": "^5.5",
-        "twilio/sdk": "^6"
+        "twilio/sdk": "^6",
+        "league/oauth2-google": "^4.0"
     },
     "autoload": {
         "classmap": [
