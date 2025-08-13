@@ -177,6 +177,29 @@
             color: #991b1b;
         }
 
+        .risk-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .risk-badge.low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .risk-badge.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk-badge.high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -324,14 +347,15 @@
                     <tr>
                         <th>User</th>
                         <th>Email</th>
+                        <th>Risk Score</th>
                         <th>Submission Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="verifications-list">
+                <tbody id="verifications-list" data-cy="kyc-list">
                     <tr>
-                        <td colspan="5" class="loading">Loading verifications...</td>
+                        <td colspan="6" class="loading">Loading verifications...</td>
                     </tr>
                 </tbody>
             </table>
@@ -481,7 +505,7 @@
                     console.error('Error loading verifications:', error);
                     this.verificationsTable.innerHTML = `
                         <tr>
-                            <td colspan="5" class="error">
+                            <td colspan="6" class="error">
                                 Failed to load verifications. Please try again.
                             </td>
                         </tr>
@@ -507,7 +531,7 @@
                 if (!verifications.length) {
                     this.verificationsTable.innerHTML = `
                         <tr>
-                            <td colspan="5" style="text-align: center;">No verifications found</td>
+                            <td colspan="6" style="text-align: center;">No verifications found</td>
                         </tr>
                     `;
                     return;
@@ -517,6 +541,13 @@
                     <tr>
                         <td>${v.userName || 'Unknown'}</td>
                         <td>${v.userEmail || 'Unknown'}</td>
+                        <td>
+                            ${v.riskScore !== undefined ? `
+                                <span class="risk-badge ${v.riskLevel || 'low'}">
+                                    ${v.riskScore} - ${(v.riskLevel || 'low').toUpperCase()}
+                                </span>
+                            ` : '<span style="color: #6b7280;">Not calculated</span>'}
+                        </td>
                         <td>${new Date(v.timestamp).toLocaleDateString()}</td>
                         <td>
                             <span class="status-badge ${v.status.toLowerCase()}">
@@ -524,7 +555,7 @@
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-primary" onclick="verificationManager.viewDetails('${v._id}')">
+                            <button class="btn btn-primary" data-cy="kyc-details" onclick="verificationManager.viewDetails('${v._id}')">
                                 View Details
                             </button>
                         </td>
@@ -586,12 +617,27 @@
                         <h3 style="margin-top: 1.5rem;">Verification Status</h3>
                         <p><strong>Status:</strong> <span class="status-badge ${verification.status.toLowerCase()}">${verification.status}</span></p>
                         
+                        <h3 style="margin-top: 1.5rem;">Risk Assessment</h3>
+                        <div style="margin-bottom: 1rem;">
+                            ${verification.riskScore !== undefined ? `
+                                <p><strong>Risk Score:</strong> <span class="risk-badge ${verification.riskLevel || 'low'}">${verification.riskScore} - ${(verification.riskLevel || 'low').toUpperCase()}</span></p>
+                                <button class="btn btn-primary" onclick="verificationManager.recalculateRisk('${verification._id}')" style="margin-top: 0.5rem;">
+                                    Recalculate Risk Score
+                                </button>
+                            ` : `
+                                <p style="color: #6b7280;">Risk score not calculated</p>
+                                <button class="btn btn-primary" onclick="verificationManager.calculateRisk('${verification._id}')">
+                                    Calculate Risk Score
+                                </button>
+                            `}
+                        </div>
+                        
                         <h3 style="margin-top: 1.5rem;">Documents</h3>
                         <div style="margin-top: 1rem;">
                             <img src="/uploads/document/${verification._id}_drivers_license.jpg" alt="ID Document" style="max-width: 100%; margin-bottom: 1rem;">
                             <img src="/uploads/selfie/${verification._id}_selfie.png" alt="Selfie" style="max-width: 100%;">
                             <div style="margin-top: 1rem;">
-                                <button class="btn btn-primary" id="compare-faces-btn" onclick="verificationManager.compareFaces()">
+                                <button class="btn btn-primary" id="compare-faces-btn" data-cy="kyc-compare" onclick="verificationManager.compareFaces()">
                                     Compare Faces with Rekognition
                                 </button>
                                 <div id="face-comparison-result" style="margin-top: 1rem; display: none;">
@@ -759,6 +805,36 @@
                     compareBtn.disabled = false;
                     compareBtn.textContent = 'Compare Faces with Rekognition';
                 }
+            }
+
+            async calculateRisk(userId) {
+                try {
+                    const response = await fetch(`/api.php/riskscoringservice/calculateriskscore?userId=${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to calculate risk score');
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(`Risk score calculated: ${result.score} (${result.level})`);
+                        this.viewDetails(this.currentVerification._id);
+                    } else {
+                        throw new Error(result.error || 'Risk calculation failed');
+                    }
+                } catch (error) {
+                    console.error('Error calculating risk:', error);
+                    alert('Failed to calculate risk score. Please try again.');
+                }
+            }
+
+            async recalculateRisk(userId) {
+                return this.calculateRisk(userId);
             }
         }
 
