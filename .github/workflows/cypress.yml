@@ -1,0 +1,57 @@
+name: Cypress E2E (no Dashboard)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install PHP if missing
+        run: |
+          if ! command -v php >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y php-cli
+          fi
+
+      - name: Start PHP built-in server
+        run: nohup php -S 0.0.0.0:8080 -t public >/dev/null 2>&1 & sleep 1
+
+      - name: Run Cypress (headless, local artifacts)
+        run: npm run cypress:run -- --config baseUrl=http://localhost:8080
+        continue-on-error: true
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-reports
+          path: cypress/reports
