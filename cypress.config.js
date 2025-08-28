@@ -1,6 +1,8 @@
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
+  // set `projectId` from env or replace with your Cypress Dashboard project id
+  projectId: process.env.CYPRESS_PROJECT_ID || '<YOUR_CYPRESS_PROJECT_ID>',
   e2e: {
     baseUrl: "https://app.thegivehub.com", // The Give Hub dev URL
     video: true,                      // record headless runs by default
@@ -36,8 +38,9 @@ module.exports = defineConfig({
       inlineAssets: true,
     },
     env: {
-      ADMIN_EMAIL: "admin@givehub.test",
-      ADMIN_PASS: "pass123", // use real secrets via CI env vars
+      ADMIN_EMAIL: "test120@thegivehub.com",
+      ADMIN_PASS: "Iaavsw1!", // use real secrets via CI env vars
+      APP_ENV: "testing"
     }
   }
 });
