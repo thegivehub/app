@@ -39,7 +39,7 @@ jobs:
           done
 
       - name: Start PHP built-in server
-        run: nohup php -S 0.0.0.0:8080 -t . >/dev/null 2>&1 & sleep 1
+        run: nohup php -S 0.0.0.0:8080 router.php >/dev/null 2>&1 & sleep 1
 
       - name: Run Cypress (headless, local artifacts)
         run: npm run cypress:run -- --config baseUrl=http://localhost:8080
