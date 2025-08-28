@@ -10,7 +10,7 @@
     "loadtest": "node scripts/load_test.js",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --headless",
-    "cypress:record": "cypress run --record --headless"
+    "cypress:record": "cypress run --record --headless --key $CYPRESS_RECORD_KEY"
   },
   "author": "",
   "license": "MIT",
