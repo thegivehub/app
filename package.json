@@ -9,8 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "loadtest": "node scripts/load_test.js",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "cypress:record": "cypress run"
+    "cypress:run": "cypress run --headless",
+    "cypress:record": "cypress run --record --headless"
   },
   "author": "",
   "license": "MIT",
