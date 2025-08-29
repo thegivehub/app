@@ -10,7 +10,9 @@
     "loadtest": "node scripts/load_test.js",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --headless",
-    "cypress:record": "cypress run --record --headless --key $CYPRESS_RECORD_KEY"
+    "cypress:record": "cypress run --record --headless --key $CYPRESS_RECORD_KEY",
+    "cypress:run:local": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=http://localhost:8080 cypress run --headless",
+    "cypress:open:local": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=http://localhost:8080 cypress open"
   },
   "author": "",
   "license": "MIT",
