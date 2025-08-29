@@ -17,6 +17,15 @@ if ($uri === '/api/public/ping' || $uri === '/api/ping') {
 if ($uri === '/api/admin/compliance.csv') {
     $csvFile = __DIR__ . '/compliance.csv';
     if (file_exists($csvFile)) {
+        // If the file is a PHP script, execute it and capture output
+        $first = trim(@file_get_contents($csvFile, false, null, 0, 5));
+        if (strpos($first, '<?php') === 0) {
+            ob_start();
+            include $csvFile;
+            $out = ob_get_clean();
+            echo $out;
+            exit;
+        }
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="compliance.csv"');
         readfile($csvFile);
