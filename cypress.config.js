@@ -4,7 +4,7 @@ module.exports = defineConfig({
   // set `projectId` from env or replace with your Cypress Dashboard project id
   projectId: process.env.CYPRESS_PROJECT_ID || '<YOUR_CYPRESS_PROJECT_ID>',
   e2e: {
-    baseUrl: "https://app.thegivehub.com", // The Give Hub dev URL
+    baseUrl: process.env.BASE_URL || "https://app.thegivehub.com", // The Give Hub dev URL
     video: true,                      // record headless runs by default
     videosFolder: "cypress/videos",
     screenshotsFolder: "cypress/screenshots",
