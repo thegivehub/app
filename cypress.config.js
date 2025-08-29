@@ -12,6 +12,8 @@ module.exports = defineConfig({
     viewportWidth: 1280,
     viewportHeight: 800,
     setupNodeEvents(on, config) {
+      // Expose TEST_ADMIN_TOKEN from process env into Cypress config
+      config.env.TEST_ADMIN_TOKEN = process.env.TEST_ADMIN_TOKEN || config.env.TEST_ADMIN_TOKEN;
       require('cypress-mochawesome-reporter/plugin')(on);
       on('task', {
         // example DB seed/reset
