@@ -23,21 +23,66 @@ Cypress.Commands.add('seedDB', () => {
 
 Cypress.Commands.add('adminLogin', () => {
   // Single place to keep selectors/flow
-  cy.visit('/login');
+  cy.visit('/login.html');
   cy.get('[data-cy=email]').type(Cypress.env('ADMIN_EMAIL'));
   cy.get('[data-cy=password]').type(Cypress.env('ADMIN_PASS'), { log: false });
   cy.get('[data-cy=submit]').click();
-  cy.url().should('include', '/dashboard');
+  
+  // Wait for login to complete and tokens to be stored
+  cy.window().then((win) => {
+    cy.wait(2000); // Give time for token storage
+    const accessToken = win.localStorage.getItem('accessToken');
+    const refreshToken = win.localStorage.getItem('refreshToken');
+    expect(accessToken).to.not.be.null;
+    expect(refreshToken).to.not.be.null;
+  });
 });
 
 Cypress.Commands.add('adminSession', () => {
-  // Cache session across specs for speed/stability
-  cy.session('admin', () => {
-    cy.visit('/login');
-    cy.get('[data-cy=email]').type(Cypress.env('ADMIN_EMAIL'));
-    cy.get('[data-cy=password]').type(Cypress.env('ADMIN_PASS'), { log: false });
-    cy.get('[data-cy=submit]').click();
-    cy.url().should('include', '/dashboard');
+  // If a test token is provided via Cypress env, use it directly (fast path for CI)
+  const testToken = Cypress.env('TEST_ADMIN_TOKEN');
+  if (testToken) {
+    Cypress.env('ACCESS_TOKEN', testToken);
+    Cypress.env('REFRESH_TOKEN', '');
+    cy.visit('/');
+    cy.window().then((win) => {
+      win.localStorage.setItem('accessToken', testToken);
+      if (Cypress.env('REFRESH_TOKEN')) win.localStorage.setItem('refreshToken', Cypress.env('REFRESH_TOKEN'));
+    });
+    return;
+  }
+
+  // Simple authentication without cy.session to avoid promise issues
+  cy.request({
+    method: 'POST',
+    url: '/api/auth/login',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-APP-ENV': 'testing'
+    },
+    body: {
+      username: Cypress.env('ADMIN_EMAIL'),
+      password: Cypress.env('ADMIN_PASS')
+    }
+  }).then((response) => {
+    // Check if login was successful
+    expect(response.status).to.eq(200);
+    expect(response.body).to.have.property('success', true);
+    expect(response.body).to.have.property('tokens');
+    expect(response.body.tokens).to.have.property('accessToken');
+    
+    // Store tokens in Cypress env for the duration of test run
+    Cypress.env('ACCESS_TOKEN', response.body.tokens.accessToken);
+    Cypress.env('REFRESH_TOKEN', response.body.tokens.refreshToken);
+  });
+  
+  // Visit a page to establish browser context  
+  cy.visit('/');
+  
+  // Store tokens in localStorage
+  cy.window().then((win) => {
+    win.localStorage.setItem('accessToken', Cypress.env('ACCESS_TOKEN'));
+    win.localStorage.setItem('refreshToken', Cypress.env('REFRESH_TOKEN'));
   });
 });
 
@@ -57,6 +102,52 @@ Cypress.Commands.add('captureTxFrom', (selector = '[data-cy=tx-hash]') => {
     });
 });
 
+// Authenticated API request command
+Cypress.Commands.add('apiRequest', (method, url, body = null) => {
+  return cy.window().then((win) => {
+    const accessToken = win.localStorage.getItem('accessToken');
+    
+    const requestOptions = {
+      method: method,
+      url: url,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      requestOptions.body = body;
+    }
+    
+    return cy.request(requestOptions);
+  });
+});
+
+// Override cy.request to automatically include auth headers for API calls
+Cypress.Commands.overwrite('request', (originalFn, options) => {
+  // Convert string URL to options object
+  if (typeof options === 'string') {
+    options = { url: options };
+  }
+  
+  // Only add auth headers for API endpoints (except public ones)
+  if (options.url && options.url.includes('/api/') && !options.url.includes('/api/public/')) {
+    // Get token from Cypress environment
+    const accessToken = Cypress.env('ACCESS_TOKEN');
+    
+    if (accessToken && !options.headers?.Authorization) {
+      options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${accessToken}`
+      };
+    }
+  }
+  
+  // For all requests, proceed with (potentially modified) options
+  return originalFn(options);
+});
+
 // Example: network capture helper for proof artifacts
 Cypress.Commands.add('interceptAndSave', (method, urlPattern, alias) => {
   cy.intercept(method, urlPattern).as(alias);
@@ -67,6 +158,16 @@ Cypress.Commands.add('waitAndSave', (alias, basename) => {
   cy.wait(alias).then(({ request, response }) => {
     cy.saveArtifact(`cypress/artifacts/${basename}-request-${ts()}.json`, request?.body ?? {});
     cy.saveArtifact(`cypress/artifacts/${basename}-response-${ts()}.json`, response?.body ?? {});
+  });
+});
+
+// Ensure authenticated session is active for all tests
+Cypress.Commands.add('ensureAuth', () => {
+  cy.window().then((win) => {
+    const accessToken = win.localStorage.getItem('accessToken');
+    if (!accessToken) {
+      cy.adminSession();
+    }
   });
 });
 
@@ -97,6 +198,7 @@ afterEach(function () {
  *  seedDB(): Chainable<any>;
  *  adminLogin(): Chainable<any>;
  *  adminSession(): Chainable<any>;
+ *  apiRequest(method: string, url: string, body?: any): Chainable<any>;
  *  stamp(): Chainable<string>;
  *  captureTxFrom(selector?: string): Chainable<any>;
  *  interceptAndSave(method: string, urlPattern: string|RegExp, alias: string): Chainable<any>;
