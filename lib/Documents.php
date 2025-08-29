@@ -277,8 +277,8 @@ public function upload($file = null, $type = "document") {
 
             //$selfiePath = __DIR__ . '/..'. $verification['selfieImageUrl'];
 
-            // If running in testing environment, return a deterministic fake result
-            if (getenv('APP_ENV') === 'testing' || (isset($_SERVER['ENV']) && $_SERVER['ENV'] === 'testing')) {
+            // If running in testing environment (or CI), return a deterministic fake result
+            if (getenv('APP_ENV') === 'testing' || (isset($_SERVER['APP_ENV']) && $_SERVER['APP_ENV'] === 'testing') || getenv('CI') === 'true' || (isset($_SERVER['CI']) && $_SERVER['CI'] === 'true')) {
                 $fake = [
                     'success' => true,
                     'isMatch' => true,
