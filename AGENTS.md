@@ -43,3 +43,11 @@
 - For local dev, create writable `uploads/` subdirs as needed.
 - Store CI secrets in the runner; never hardcode credentials in specs.
 
+
+
+Local Cypress helper
+- Start local server: `bash scripts/start-dev-server.sh`
+- Run Cypress locally (POSIX): `npm run cypress:run:local`
+- Open Cypress UI locally: `npm run cypress:open:local`
+
+These run with `APP_ENV=testing`, set a test admin token `TEST_ADMIN_TOKEN=TEST_ADMIN`, and point `BASE_URL` to `http://localhost:8080`.
