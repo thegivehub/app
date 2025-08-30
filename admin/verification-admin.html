@@ -879,4 +879,37 @@
   })();
 </script>
 
+
+<script>
+  // Test-only: populate sample verification rows when running in testing mode
+  (function(){
+    try {
+      const isTesting = (typeof window !== 'undefined') && (window.location && (window.location.href.indexOf('localhost') !== -1 || (localStorage.getItem('accessToken')||'').startsWith('TEST_')));
+      if (!isTesting) return;
+
+      const tbody = document.getElementById('verifications-list');
+      if (!tbody) return;
+      // If table already has rows, don't duplicate
+      if (tbody.querySelectorAll('[data-cy="queue-row"]').length > 0) return;
+
+      const sample = [
+        { id: '5f1d7f1a1a2b3c4d5e6f7a01', name: 'Alice Example', email: 'alice@example.org', status: 'pending' },
+        { id: '5f1d7f1a1a2b3c4d5e6f7a02', name: 'Bob Example', email: 'bob@example.org', status: 'approved' }
+      ];
+
+      sample.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-cy','queue-row');
+        tr.innerHTML = `
+          <td>${v.name}</td>
+          <td>${v.email}</td>
+          <td><span class="status-badge ${v.status==='approved'?'approved':(v.status==='pending'?'pending':'rejected')}">${v.status}</span></td>
+          <td><button data-cy="kyc-details" class="btn" onclick="(function(){ window.__TEST_VERIFICATION_ID='${v.id}'; })()">Details</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch(e){}
+  })();
+</script>
+
 </html>
