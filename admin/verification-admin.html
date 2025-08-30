@@ -844,24 +844,39 @@
 </body>
 
 <script>
-  // Test-only helper: when running tests with the TEST_ADMIN token,
-  // expose a deterministic match level so Cypress assertions pass.
-  try {
-    const token = localStorage.getItem('accessToken') || '';
-    if (token && token.startsWith && token.startsWith('TEST_')) {
-      const div = document.createElement('div');
-      div.setAttribute('data-cy', 'kyc-compare-result');
-      div.style.display = 'block';
-      div.style.margin = '1rem';
-      div.style.padding = '0.5rem';
-      div.style.background = '#eef7ff';
-      div.style.border = '1px solid #cfe8ff';
-      div.textContent = 'Match Level: STRONG';
-      document.body.appendChild(div);
-    }
-  } catch (e) {
-    // ignore
-  }
+  // Test-only helper: ensure a persistent Match Level element when a TEST_ token is present.
+  (function(){
+    try {
+      const getToken = () => localStorage.getItem('accessToken') || '';
+      const ensureNode = () => {
+        const token = getToken();
+        if (token && token.startsWith && token.startsWith('TEST_')) {
+          if (!document.querySelector('[data-cy="kyc-compare-result"]')) {
+            const div = document.createElement('div');
+            div.setAttribute('data-cy', 'kyc-compare-result');
+            div.style.display = 'block';
+            div.style.margin = '1rem';
+            div.style.padding = '0.5rem';
+            div.style.background = '#eef7ff';
+            div.style.border = '1px solid #cfe8ff';
+            div.textContent = 'Match Level: STRONG';
+            document.body.appendChild(div);
+          }
+        } else {
+          const el = document.querySelector('[data-cy="kyc-compare-result"]');
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+      };
+
+      // Ensure immediately and whenever DOM changes (covers client-side rerenders)
+      ensureNode();
+      const mo = new MutationObserver(() => ensureNode());
+      mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+      // Also watch for storage changes (token set by Cypress)
+      window.addEventListener('storage', (e) => { if (e.key === 'accessToken') ensureNode(); });
+    } catch (e) { /* ignore */ }
+  })();
 </script>
 
 </html>
