@@ -13,5 +13,5 @@ for d in admin impact portal; do
   fi
 done
 
-echo "Starting PHP built-in server on 0.0.0.0:8080 (docroot = project root) using router.php"
-php -S 0.0.0.0:8080 router.php >/tmp/php-server.log 2>&1
+echo "Starting PHP built-in server on 0.0.0.0:8081 (docroot = project root) using router.php"
+php -S 0.0.0.0:8081 router.php >/tmp/php-server.log 2>&1
