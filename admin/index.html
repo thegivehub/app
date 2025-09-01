@@ -180,15 +180,15 @@
         <form id="login-form" class="login-form">
             <div class="form-group">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" name="username" class="form-input" required>
+                <input type="text" id="username" name="username" class="form-input" data-cy="email" required>
             </div>
 
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required>
+                <input type="password" id="password" name="password" class="form-input" data-cy="password" required>
             </div>
 
-            <button type="submit" class="login-button">Sign In</button>
+            <button type="submit" class="login-button" data-cy="submit">Sign In</button>
         </form>
     </div>
 
@@ -249,5 +249,6 @@
             }
         });
     </script>
+    <script src="/admin/test-fixtures.js"></script>
 </body>
 </html>

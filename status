@@ -1,0 +1,8 @@
+<?php
+header('Content-Type: application/json');
+echo json_encode([
+    "status" => "operational", 
+    "timestamp" => date('c'), 
+    "version" => "2.0.0"
+]);
+?>

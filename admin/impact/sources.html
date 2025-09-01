@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Integration Sources - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .connector { border: 1px solid #ddd; padding: 1rem; margin: 1rem 0; }
+        .btn { padding: 0.5rem 1rem; cursor: pointer; background: #2563eb; color: white; border: none; }
+        .status { margin: 0.5rem 0; font-weight: bold; }
+        .connected { color: #22c55e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Integration Services</h1>
+        
+        <div class="connector" data-cy="connector">
+            <h3>External API Connector #1</h3>
+            <p>Status: Ready</p>
+            <button class="btn" data-cy="test-connection" onclick="testConnection(this)">Test Connection</button>
+            <div class="status" style="display:none;"></div>
+        </div>
+        
+        <div class="connector" data-cy="connector">
+            <h3>Database Sync Connector #2</h3>
+            <p>Status: Ready</p>
+            <button class="btn" data-cy="test-connection" onclick="testConnection(this)">Test Connection</button>
+            <div class="status" style="display:none;"></div>
+        </div>
+        
+        <div class="connector" data-cy="connector">
+            <h3>Impact Metrics Collector #3</h3>
+            <p>Status: Ready</p>
+            <button class="btn" data-cy="test-connection" onclick="testConnection(this)">Test Connection</button>
+            <div class="status" style="display:none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        function testConnection(button) {
+            const statusDiv = button.nextElementSibling;
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = 'Testing...';
+            
+            setTimeout(() => {
+                statusDiv.textContent = 'Connection OK';
+                statusDiv.classList.add('connected');
+            }, 1500);
+        }
+    </script>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>

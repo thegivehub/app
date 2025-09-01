@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Reports - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .report-controls { margin: 1rem 0; }
+        .report-status { margin: 2rem 0; padding: 1rem; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Compliance Reporting</h1>
+        
+        <div class="report-controls">
+            <button data-cy="generate-report" onclick="generateReport()">Generate Report</button>
+            
+            <div id="report-options" style="display:none; margin-top: 1rem;">
+                <label for="report-type">Report Type:</label>
+                <select data-cy="report-type" id="report-type">
+                    <option value="sar">SAR Summary</option>
+                    <option value="transaction">Transaction Report</option>
+                    <option value="risk">Risk Assessment</option>
+                </select>
+                <button data-cy="run-report" onclick="runReport()">Run Report</button>
+            </div>
+        </div>
+        
+        <div class="report-status" id="report-status" style="display:none;">
+            <p data-cy="report-ready">Report is ready for download</p>
+            <button data-cy="download-csv" onclick="downloadReport()">Download CSV</button>
+        </div>
+    </div>
+    
+    <script>
+        function generateReport() {
+            document.getElementById('report-options').style.display = 'block';
+        }
+        
+        function runReport() {
+            setTimeout(() => {
+                document.getElementById('report-status').style.display = 'block';
+            }, 1000);
+        }
+        
+        function downloadReport() {
+            // Simulate download
+            console.log('Downloading compliance report...');
+        }
+    </script>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>

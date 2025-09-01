@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Step Verification - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .step { display: none; padding: 2rem; background: #f5f5f5; margin: 1rem 0; }
+        .step.active { display: block; }
+        .btn { padding: 0.5rem 1rem; margin: 0.5rem; cursor: pointer; }
+        .complete { background: #22c55e; color: white; padding: 1rem; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Multi-Step Verification Process</h1>
+        
+        <button data-cy="verify-start" onclick="startVerification()">Start Verification</button>
+        
+        <div id="step1" class="step">
+            <h3>Step 1: Initial Check</h3>
+            <p>Performing initial verification checks...</p>
+            <button data-cy="step-1-next" onclick="nextStep(2)">Next</button>
+        </div>
+        
+        <div id="step2" class="step">
+            <h3>Step 2: Document Review</h3>
+            <p>Reviewing submitted documents...</p>
+            <button data-cy="step-2-next" onclick="nextStep(3)">Next</button>
+        </div>
+        
+        <div id="step3" class="step">
+            <h3>Step 3: Final Verification</h3>
+            <p>Completing final verification steps...</p>
+            <button data-cy="step-3-complete" onclick="completeVerification()">Complete</button>
+        </div>
+        
+        <div id="complete" class="complete">
+            <h2>Verification Complete</h2>
+            <p>All verification steps have been completed successfully.</p>
+        </div>
+    </div>
+    
+    <script>
+        function startVerification() {
+            document.getElementById('step1').classList.add('active');
+        }
+        
+        function nextStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+        }
+        
+        function completeVerification() {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('complete').style.display = 'block';
+        }
+    </script>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>

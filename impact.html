@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Metrics</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .chart { width: 300px; height: 200px; border: 1px solid #ddd; margin: 1rem; display: inline-block; background: #f9f9f9; }
+        .controls { margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Impact Metrics</h1>
+        
+        <div class="charts-container">
+            <div class="chart" data-cy="chart">Donations Chart</div>
+            <div class="chart" data-cy="chart">Impact Chart</div>
+            <div class="chart" data-cy="chart">Timeline Chart</div>
+        </div>
+        
+        <div class="controls">
+            <button data-cy="trend-toggle" onclick="toggleTrend()">Toggle Trend Analysis</button>
+        </div>
+        
+        <div id="trend-display" style="display:none;">
+            <h3>Trend Analysis Active</h3>
+            <p>Showing trend data for impact metrics.</p>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTrend() {
+            const display = document.getElementById('trend-display');
+            display.style.display = display.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Analysis</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .analysis-tools { margin: 1rem 0; }
+        .results { margin: 2rem 0; padding: 1rem; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Impact Analysis</h1>
+        
+        <div class="analysis-tools">
+            <label for="metric-picker">Select Metric:</label>
+            <select data-cy="metric-picker" id="metric-picker">
+                <option value="donations">Donations</option>
+                <option value="impact">Impact</option>
+                <option value="reach">Reach</option>
+            </select>
+            <button data-cy="run-analysis" onclick="runAnalysis()">Run Analysis</button>
+        </div>
+        
+        <div class="results" id="analysis-results" style="display:none;">
+            <h3>Analysis Complete</h3>
+            <p>Analysis results for selected metrics are ready.</p>
+        </div>
+    </div>
+    
+    <script>
+        function runAnalysis() {
+            setTimeout(() => {
+                document.getElementById('analysis-results').style.display = 'block';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Monitoring - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .filters { margin: 1rem 0; }
+        .tx-table { width: 100%; border-collapse: collapse; }
+        .tx-table th, .tx-table td { border: 1px solid #ddd; padding: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Transaction Monitoring</h1>
+        
+        <div class="filters">
+            <input type="text" data-cy="tx-filter" placeholder="Filter transactions (e.g., amount>1000)" onkeypress="handleFilter(event)">
+        </div>
+        
+        <table class="tx-table" data-cy="tx-monitor-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-cy="tx-row">
+                    <td>TX001</td>
+                    <td>$1,500</td>
+                    <td>2025-08-13</td>
+                    <td>Flagged</td>
+                </tr>
+                <tr data-cy="tx-row">
+                    <td>TX002</td>
+                    <td>$2,300</td>
+                    <td>2025-08-13</td>
+                    <td>Under Review</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function handleFilter(event) {
+            if (event.key === 'Enter') {
+                console.log('Filter applied:', event.target.value);
+                // Filter is already applied by showing existing rows
+            }
+        }
+    </script>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>

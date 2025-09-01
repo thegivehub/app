@@ -45,3 +45,6 @@ repomix*
 .cursor
 .aider*
 .phpunit.result.cache
+cypress/screenshots
+cypress/artifacts
+cache

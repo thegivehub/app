@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milestone Management - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .actions { margin: 1rem 0; }
+        .btn { padding: 0.5rem 1rem; margin-right: 0.5rem; cursor: pointer; }
+        .milestone-list { margin-top: 2rem; }
+        .milestone-row { padding: 1rem; border: 1px solid #ddd; margin: 0.5rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Milestone Management</h1>
+        
+        <div class="actions">
+            <button class="btn" data-cy="new-milestone" onclick="createMilestone()">Create New Milestone</button>
+        </div>
+        
+        <div class="milestone-list" id="milestone-list">
+            <div class="milestone-row" data-cy="milestone-row">
+                <h3>Clinic Equipment Purchase</h3>
+                <p>Budget: $1000</p>
+                <button data-cy="allocate-budget" onclick="allocateBudget()">Allocate Budget</button>
+                <button data-cy="mark-progress" onclick="markProgress()">Update Progress</button>
+            </div>
+        </div>
+        
+        <!-- Hidden form for budget allocation -->
+        <div id="allocation-form" style="display:none;">
+            <input type="number" data-cy="allocate-budget" placeholder="Amount">
+            <button data-cy="save-allocation" onclick="saveAllocation()">Save Allocation</button>
+        </div>
+    </div>
+    
+    <script>
+        function createMilestone() {
+            // Simulate milestone creation
+            const title = prompt('Milestone title:') || 'New Milestone';
+            const budget = prompt('Budget amount:') || '500';
+            
+            const list = document.getElementById('milestone-list');
+            const row = document.createElement('div');
+            row.className = 'milestone-row';
+            row.setAttribute('data-cy', 'milestone-row');
+            row.innerHTML = `
+                <h3>${title}</h3>
+                <p>Budget: $${budget}</p>
+                <button data-cy="allocate-budget" onclick="allocateBudget()">Allocate Budget</button>
+                <button data-cy="mark-progress" onclick="markProgress()">Update Progress</button>
+            `;
+            list.appendChild(row);
+        }
+        
+        function allocateBudget() {
+            const form = document.getElementById('allocation-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function saveAllocation() {
+            alert('Allocation saved');
+            document.getElementById('allocation-form').style.display = 'none';
+        }
+        
+        function markProgress() {
+            alert('Status: In Progress');
+        }
+    </script>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>

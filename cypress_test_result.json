@@ -1,0 +1,96 @@
+
+DevTools listening on ws://127.0.0.1:39503/devtools/browser/a7da7063-001b-401e-a39c-91b88ce67b0d
+
+resize:  can't open terminal /dev/tty
+================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        14.5.4                                                                         │
+  │ Browser:        Chrome 120                                                                     │
+  │ Node Version:   v22.18.0 (/home/cdr/.nvm/versions/node/v22.18.0/bin/node)                      │
+  │ Specs:          1 found (proof_tranche2.cy.js)                                                 │
+  │ Searched:       cypress/e2e/proof_tranche2.cy.js                                               │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Remove output folder /home/cdr/domains/thegivehub.com/app/cypress/reports/html
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  proof_tranche2.cy.js                                                            (1 of 1)
+
+
+  The Give Hub — Tranche #2 Proof (End-to-End)
+    1) "before each" hook for "T97: Enhance identity verification"
+
+
+  0 passing (11s)
+  1 failing
+
+  1) The Give Hub — Tranche #2 Proof (End-to-End)
+       "before each" hook for "T97: Enhance identity verification":
+     AssertionError: expected null not to be null
+
+This error occurred while creating the session. Because the session setup failed, we failed the test.
+
+Because this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `The Give Hub — Tranche #2 P...`
+      at Object.proxyGetter [as get] (https://app.thegivehub.com/__cypress/runner/cypress_runner.js:80410:22)
+      at Context.eval (webpack://thegivehub/./cypress/support/e2e.js:54:36)
+      at getRet (https://app.thegivehub.com/__cypress/runner/cypress_runner.js:121066:20)
+      at tryCatcher (https://app.thegivehub.com/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (https://app.thegivehub.com/__cypress/runner/cypress_runner.js:4285:29)
+
+
+
+[mochawesome] Report JSON saved to /home/cdr/domains/thegivehub.com/app/cypress/reports/html/.jsons/givehub-proof.json
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        32                                                                               │
+  │ Passing:      0                                                                                │
+  │ Failing:      1                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      31                                                                               │
+  │ Screenshots:  2                                                                                │
+  │ Video:        true                                                                             │
+  │ Duration:     11 seconds                                                                       │
+  │ Spec Ran:     proof_tranche2.cy.js                                                             │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /home/cdr/domains/thegivehub.com/app/cypress/screenshots/proof_tranche2.cy.js/Th     (1050x883)
+     e Give Hub — Tranche #2 Proof (End-to-End) -- T97 Enhance identity verification                
+     -- before each hook (failed).png                                                               
+  -  /home/cdr/domains/thegivehub.com/app/cypress/screenshots/proof_tranche2.cy.js/FA     (1050x883)
+     ILED-T97_Enhance_identity_verification-2025-08-22T22-17-35-253Z.png                            
+
+
+  (Video)
+
+  -  Video output: /home/cdr/domains/thegivehub.com/app/cypress/videos/proof_tranche2.cy.js.mp4
+
+Start generate report process
+Read and merge jsons from "/home/cdr/domains/thegivehub.com/app/cypress/reports/html/.jsons"
+Copy media folder from "/home/cdr/domains/thegivehub.com/app/cypress/videos" to "/home/cdr/domains/thegivehub.com/app/cypress/reports/html/videos"
+Enhance report
+Create HTML report
+HTML report successfully created!
+/home/cdr/domains/thegivehub.com/app/cypress/reports/html/givehub-proof.html
+
+resize:  can't open terminal /dev/tty
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  proof_tranche2.cy.js                     00:11       32        -        1        -       31 │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:11       32        -        1        -       31  
+

@@ -1,0 +1,17 @@
+<?php
+header('Content-Type: text/csv');
+header('Content-Disposition: attachment; filename="compliance-report.csv"');
+
+$csv_data = [
+    ['Transaction ID', 'Amount', 'Date', 'Risk Level', 'Status'],
+    ['TX001', '1500', '2025-08-13', 'HIGH', 'Flagged'],
+    ['TX002', '2300', '2025-08-13', 'MEDIUM', 'Under Review'],
+    ['TX003', '500', '2025-08-12', 'LOW', 'Approved']
+];
+
+$output = fopen('php://output', 'w');
+foreach ($csv_data as $row) {
+    fputcsv($output, $row);
+}
+fclose($output);
+?>

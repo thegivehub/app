@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - Admin</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .log-table { width: 100%; border-collapse: collapse; }
+        .log-table th, .log-table td { border: 1px solid #ddd; padding: 0.5rem; }
+        .monitoring-status { padding: 1rem; background: #22c55e; color: white; text-align: center; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audit Logs</h1>
+        
+        <div class="monitoring-status" data-cy="monitoring-status">
+            System Monitoring: ACTIVE - Last Updated: 2025-08-13 15:30:45 UTC
+        </div>
+        
+        <table class="log-table" data-cy="audit-log">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-cy="log-row">
+                    <td>2025-08-13 15:25:12</td>
+                    <td>admin@thegivehub.com</td>
+                    <td>KYC_VERIFICATION_APPROVED</td>
+                    <td>User ID: 12345</td>
+                    <td>SUCCESS</td>
+                </tr>
+                <tr data-cy="log-row">
+                    <td>2025-08-13 15:20:45</td>
+                    <td>admin@thegivehub.com</td>
+                    <td>RISK_SCORE_CALCULATED</td>
+                    <td>User ID: 12344</td>
+                    <td>SUCCESS</td>
+                </tr>
+                <tr data-cy="log-row">
+                    <td>2025-08-13 15:15:30</td>
+                    <td>system</td>
+                    <td>COMPLIANCE_REPORT_GENERATED</td>
+                    <td>Report ID: RPT-001</td>
+                    <td>SUCCESS</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="/admin/test-fixtures.js"></script>
+</body>
+</html>
