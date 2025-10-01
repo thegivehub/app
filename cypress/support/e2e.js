@@ -47,6 +47,8 @@ Cypress.Commands.add('adminSession', () => {
     cy.visit('/');
     cy.window().then((win) => {
       win.localStorage.setItem('accessToken', testToken);
+      // Also set adminToken for pages that require it
+      win.localStorage.setItem('adminToken', testToken);
       if (Cypress.env('REFRESH_TOKEN')) win.localStorage.setItem('refreshToken', Cypress.env('REFRESH_TOKEN'));
     });
     return;
