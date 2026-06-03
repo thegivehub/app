@@ -27,16 +27,24 @@ EOT;
         $message= file_get_contents($tpl);
         $message = preg_replace_callback("/\%\%(.+?)\%\%/", function($m) use ($obj) {
             return $obj->{$m[1]} ?? '';
-        });
-        
+        }, $message);
+
+        // Determine if this is an HTML email
+        $isHtml = stripos($message, '<html') !== false || stripos($message, '<!doctype') !== false;
+
         $msg = <<<EOT
 To: {$to}
 From: The Give Hub Support <support@thegivehub.com>
 Subject: {$subject}
 Bcc: cdr@netoasis.net
-
-        {$message}
 EOT;
+
+        // Add HTML headers if needed
+        if ($isHtml) {
+            $msg .= "\nMIME-Version: 1.0\nContent-Type: text/html; charset=UTF-8\n";
+        }
+
+        $msg .= "\n{$message}";
 
         $msg = escapeshellarg($msg);
         $cmd = "echo {$msg} |  /usr/sbin/exim -i -f\"The Give Hub Support <support@thegivehub.com>\" {$to}";

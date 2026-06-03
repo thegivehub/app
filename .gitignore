@@ -47,4 +47,8 @@ repomix*
 .phpunit.result.cache
 cypress/screenshots
 cypress/artifacts
+ cypress/videos
+ cypress/reports
+ cypress/reports/**
+ cypress/videos/**
 cache

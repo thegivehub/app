@@ -1,0 +1,41 @@
+name: Deploy (SSH)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (staging|production)"
+        required: true
+        default: "staging"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            APP_DIR=${APP_DIR:-/var/www/app}
+            cd "$APP_DIR"
+            echo "[Deploy] Pull latest code"
+            git fetch --all --prune
+            git checkout main
+            git pull --ff-only
+            echo "[Deploy] Bring up services"
+            if command -v docker compose >/dev/null 2>&1; then
+              docker compose down || true
+              docker compose up -d --build
+            else
+              docker-compose down || true
+              docker-compose up -d --build
+            fi
+            echo "[Deploy] Done"
+

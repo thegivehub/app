@@ -2,19 +2,20 @@
 // Router for PHP built-in server to ensure headers and route API requests
 require_once __DIR__ . '/lib/Security.php';
 Security::sendHeaders();
+Security::enforceSessionCookiePolicy();
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = __DIR__ . $uri;
 
 // Quick health/ping endpoint to avoid 500s during rate-limit tests
-if ($uri === '/api/public/ping' || $uri === '/api/ping') {
+if ($uri === '/api.php/public/ping' || $uri === '/api.php/ping') {
     header('Content-Type: application/json');
     echo json_encode(['status' => 'ok']);
     exit;
 }
 
 // Serve raw compliance CSV for compatibility with tests
-if ($uri === '/api/admin/compliance.csv') {
+if ($uri === '/api.php/admin/compliance.csv') {
     $csvFile = __DIR__ . '/compliance.csv';
     if (file_exists($csvFile)) {
         // If the file is a PHP script, execute it and capture output

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tranche #3 Proofs</title>
+  <style>body{font-family:sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem} code{background:#f3f3f3;padding:.15rem .3rem;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Tranche #3 Proofs</h1>
+  <p>This page lists public proof JSON artifacts generated from the system.</p>
+  <ul id="list"></ul>
+  <script>
+    fetch('proofs-api.php?action=list').then(r=>r.json()).then(j=>{
+      const ul = document.getElementById('list');
+      if (!j.success) { ul.innerHTML = '<li>Failed to load proofs</li>'; return; }
+      j.files.forEach(f=>{
+        const li = document.createElement('li');
+        const url = f.url.startsWith('/') ? f.url.replace(/^\//,'') : f.url;
+        li.innerHTML = `<a href="${url}" target="_blank">${f.file}</a> <small>(${f.size} bytes; ${f.mtime})</small>`;
+        ul.appendChild(li);
+      });
+      if (j.files.length === 0) ul.innerHTML = '<li>No proofs found.</li>';
+    });
+  </script>
+</body>
+<html>

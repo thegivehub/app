@@ -323,7 +323,10 @@ class AdminUserController {
             if (!$user) {
                 $this->sendError(404, "User not found");
             }
-            
+
+            // Capture old status for approval detection
+            $oldStatus = $user['status'] ?? 'pending';
+
             // Prepare update data
             $updateData = [];
             
@@ -391,10 +394,58 @@ class AdminUserController {
             
             // Get updated user
             $updatedUser = $this->db->getCollection('users')->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
-            
+
+            // Send welcome email if user was just approved (pending -> active)
+            if ($oldStatus === 'pending' && isset($updateData['status']) && $updateData['status'] === 'active') {
+                $this->sendWelcomeEmail($updatedUser);
+            }
+
             $this->sendResponse($updatedUser);
         } catch (Exception $e) {
             $this->sendError(500, "Error updating user: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send welcome email to newly approved user
+     *
+     * @param array $user The approved user data
+     * @return bool Success status
+     */
+    private function sendWelcomeEmail($user) {
+        try {
+            require_once __DIR__ . '/Mailer.php';
+            $mailer = new Mailer();
+
+            // Prepare template variables
+            $templateVars = (object)[
+                'firstName' => $user['personalInfo']['firstName'] ?? $user['username'] ?? 'User',
+                'username' => $user['username'] ?? $user['email'],
+                'loginUrl' => 'https://app.thegivehub.com/login.html',
+                'supportEmail' => 'support@thegivehub.com'
+            ];
+
+            $templatePath = __DIR__ . '/../templates/welcome-email.html';
+
+            // Check if template exists
+            if (!file_exists($templatePath)) {
+                error_log("Welcome email template not found: $templatePath");
+                return false;
+            }
+
+            // Send email
+            $mailer->sendEmail(
+                $user['email'],
+                'Welcome to The Give Hub - Your Account is Approved!',
+                $templatePath,
+                $templateVars
+            );
+
+            error_log("Welcome email sent successfully to {$user['email']}");
+            return true;
+        } catch (Exception $e) {
+            error_log("Failed to send welcome email to {$user['email']}: " . $e->getMessage());
+            return false;
         }
     }
 

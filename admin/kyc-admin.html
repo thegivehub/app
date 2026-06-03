@@ -699,7 +699,7 @@
             async function loadVerificationData() {
                 try {
                     const filters = getFilters();
-                    let url = '/api/kyc/pending';
+                    let url = '/api.php/kyc/pending';
                     
                     // Start loading indicator
                     verificationList.innerHTML = `<tr><td colspan="6" class="text-center">Loading verification data...</td></tr>`;
@@ -919,7 +919,7 @@
                         throw new Error('Authentication token missing');
                     }
 
-                    const response = await fetch('/api/kyc/review', {
+                    const response = await fetch('/api.php/kyc/review', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${adminToken}`,

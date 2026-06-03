@@ -12,11 +12,14 @@ class Auth {
     private $mail;
     /** @var MongoCollection */
     private $users;
+    /** @var MongoCollection */
+    private $revokedTokens;
     public $config;
 
     public function __construct() {
         $this->db = new Database();
         $this->users = $this->db->getCollection('users');
+        $this->revokedTokens = $this->db->getCollection('revoked_tokens');
         $this->mail = new Mailer();
         
         $this->config = [
@@ -53,12 +56,37 @@ class Auth {
         }
         
         if (session_status() === PHP_SESSION_NONE) {
+            require_once __DIR__ . '/Security.php';
+            Security::enforceSessionCookiePolicy();
             session_start();
         }
-        $token = $headers['X-CSRF-Token'] ?? '';
+        
+        // Handle case-insensitive header lookup (X-CSRF-Token, X-Csrf-Token, etc.)
+        $token = '';
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'x-csrf-token') {
+                $token = $value;
+                break;
+            }
+        }
+        
+        // Debug logging to file
+        $debugInfo = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'session_id' => session_id(),
+            'session_token' => $_SESSION['csrf_token'] ?? 'NONE',
+            'provided_token' => $token,
+            'session_data' => $_SESSION,
+            'cookie_header' => $_SERVER['HTTP_COOKIE'] ?? 'NONE'
+        ];
+        file_put_contents(__DIR__ . '/../logs/csrf-debug.log', json_encode($debugInfo, JSON_PRETTY_PRINT) . "\n\n", FILE_APPEND);
+        
         if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            file_put_contents(__DIR__ . '/../logs/csrf-debug.log', "CSRF VALIDATION FAILED!\n\n", FILE_APPEND);
             throw new Exception('Invalid CSRF token');
         }
+        
+        file_put_contents(__DIR__ . '/../logs/csrf-debug.log', "CSRF VALIDATION PASSED!\n\n", FILE_APPEND);
     }
 
     /**
@@ -419,7 +447,9 @@ class Auth {
         $payload = [
             'iat' => $issuedAt,
             'exp' => $expire,
-            'sub' => (string)$userId
+            'sub' => (string)$userId,
+            // Unique token identifier so individual tokens can be revoked.
+            'jti' => bin2hex(random_bytes(16))
         ];
 
         $jwt = JWT::encode($payload, $this->config['jwt_secret'], 'HS256');
@@ -438,35 +468,177 @@ class Auth {
 
     public function decodeToken($token) {
         try {
+            $payload = null;
+
             if ($this->config['dev_mode']) {
                 // In dev mode, manually decode the token without checking expiration
                 $parts = explode('.', $token);
                 if (count($parts) != 3) {
                     return null;
                 }
-                
+
                 $payload = json_decode(base64_decode(str_replace(
-                    ['-', '_'], 
-                    ['+', '/'], 
+                    ['-', '_'],
+                    ['+', '/'],
                     $parts[1]
                 )));
-                
+
                 if (!$payload) {
                     return null;
                 }
-                
-                return $payload;
             } else {
                 // Normal production behavior - validate with expiration check
-                return JWT::decode(
+                $payload = JWT::decode(
                     $token,
                     new Key($this->config['jwt_secret'], 'HS256')
                 );
             }
+
+            // Reject tokens that have been explicitly revoked (logout).
+            // Tokens issued before jti existed have no jti and are treated
+            // as not-revoked so existing sessions keep working.
+            if (isset($payload->jti) && $this->isTokenRevoked($payload->jti)) {
+                error_log("Token rejected: jti {$payload->jti} is revoked");
+                return null;
+            }
+
+            return $payload;
         } catch (Exception $e) {
             error_log("Token decode error (dev mode): " . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Check whether a token identifier (jti) has been revoked.
+     */
+    public function isTokenRevoked($jti) {
+        if (empty($jti)) {
+            return false;
+        }
+        $entry = $this->revokedTokens->findOne(['jti' => (string)$jti]);
+        return $entry !== null;
+    }
+
+    /**
+     * Revoke a single JWT by storing its jti in the revoked_tokens
+     * collection. The entry carries an expiry matching the token's own
+     * expiry so a TTL index can purge it once it is no longer needed.
+     *
+     * @param string $token Raw JWT access token.
+     * @return array
+     */
+    public function revokeToken($token) {
+        try {
+            $decoded = $this->decodeToken($token);
+            if (!$decoded) {
+                throw new Exception('Invalid or already-revoked token');
+            }
+
+            if (!isset($decoded->jti)) {
+                // Legacy token without a jti - nothing individually revocable.
+                return [
+                    'success' => true,
+                    'message' => 'Token has no identifier; nothing to revoke'
+                ];
+            }
+
+            // Expire the revocation record when the token would have expired
+            // anyway (fall back to jwt_expire window if exp is missing).
+            $expTimestamp = isset($decoded->exp)
+                ? (int)$decoded->exp
+                : (time() + $this->config['jwt_expire']);
+            $expiresAt = new MongoDB\BSON\UTCDateTime($expTimestamp * 1000);
+
+            // Idempotent: don't store the same jti twice.
+            if (!$this->isTokenRevoked($decoded->jti)) {
+                $this->revokedTokens->insertOne([
+                    'jti' => (string)$decoded->jti,
+                    'sub' => isset($decoded->sub) ? (string)$decoded->sub : null,
+                    'revokedAt' => new MongoDB\BSON\UTCDateTime(),
+                    'expiresAt' => $expiresAt
+                ]);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Token revoked'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Log a user out: revoke the supplied access token and clear the
+     * stored refresh token so it can no longer be used to mint new tokens.
+     * The access token is taken from the Authorization header when not
+     * passed explicitly (matching the rest of the auth-guard flow).
+     *
+     * @param array $data Optional payload; may contain 'token'.
+     * @return array
+     */
+    public function logout($data = []) {
+        try {
+            // Resolve the access token: explicit payload first, then the
+            // Authorization: Bearer header used everywhere else.
+            $token = is_array($data) && !empty($data['token']) ? $data['token'] : null;
+            if (!$token) {
+                $headers = getallheaders();
+                $authHeader = $headers['Authorization'] ?? '';
+                if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                    $token = trim($matches[1]);
+                }
+            }
+
+            if (!$token) {
+                throw new Exception('No token provided');
+            }
+
+            $decoded = $this->decodeToken($token);
+            if (!$decoded || !isset($decoded->sub)) {
+                throw new Exception('Invalid token');
+            }
+
+            // Revoke this access token.
+            $revokeResult = $this->revokeToken($token);
+            if (!$revokeResult['success']) {
+                throw new Exception($revokeResult['error'] ?? 'Failed to revoke token');
+            }
+
+            // Clear the stored refresh token for this user so it can't be
+            // exchanged for new access tokens.
+            $userId = (string)$decoded->sub;
+            if (preg_match('/^[a-f0-9]{24}$/i', $userId)) {
+                $this->users->updateOne(
+                    ['_id' => new MongoDB\BSON\ObjectId($userId)],
+                    [
+                        '$unset' => ['auth.refreshToken' => ''],
+                        '$set' => ['updatedAt' => new MongoDB\BSON\UTCDateTime()]
+                    ]
+                );
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Logged out successfully'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Alias for logout() so POST /api/auth/revoke also works.
+     */
+    public function revoke($data = []) {
+        return $this->logout($data);
     }
     
     /**

@@ -305,7 +305,7 @@ class ProductionIntegration {
             'concurrent_users' => $options['concurrent_users'] ?? 50,
             'endpoints' => [
                 '/api.php/Campaign',
-                '/api/auth/login',
+                '/api.php/auth/login',
                 '/api.php/User'
             ]
         ];

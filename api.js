@@ -58,7 +58,7 @@ function getInstance(className) {
 
 /* -------------------------------------------------- base route */
 
-app.all('/api/:resource/:method?/:id?', async (req, res) => {
+app.all('/api.php/:resource/:method?/:id?', async (req, res) => {
   const httpMethod = req.method;
   const resource   = capitalize(req.params.resource || '');
   const custom     = req.params.method;
@@ -125,7 +125,7 @@ app.all('/api/:resource/:method?/:id?', async (req, res) => {
 });
 
 /* -------------------------------------------------- pre‑flight */
-app.options('/api/*', (req, res) => {
+app.options('/api.php/*', (req, res) => {
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.sendStatus(204);

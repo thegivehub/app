@@ -24,16 +24,29 @@ class Campaign {
     public function create($data) {
         // Log incoming data for debugging
         error_log("Creating campaign with data: " . print_r($data, true));
-        
+
+        // Sanitize description if present
+        if (isset($data['description'])) {
+            // Remove any script tags as extra safety
+            $data['description'] = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $data['description']);
+            // Limit description length (10,000 characters)
+            if (strlen($data['description']) > 10000) {
+                return [
+                    'success' => false,
+                    'error' => 'Description is too long (max 10,000 characters)'
+                ];
+            }
+        }
+
         // Set required default fields if not provided
         if (!isset($data['createdAt'])) {
             $data['createdAt'] = date('Y-m-d H:i:s');
         }
-        
+
         if (!isset($data['status'])) {
             $data['status'] = 'pending';
         }
-        
+
         if (!isset($data['raised'])) {
             $data['raised'] = 0;
         }
@@ -197,13 +210,18 @@ class Campaign {
                 error_log("WARNING: Retrieved campaign does not have creatorId!");
             }
             
+            // Regenerate static page if campaign is published
+            if ($campaign && isset($campaign['status']) && $campaign['status'] === 'published') {
+                $this->regenerateStaticPage($insertedId);
+            }
+
             return [
                 'success' => true,
                 'id' => $insertedId,
                 'campaign' => $campaign
             ];
         }
-        
+
         error_log("Failed to create campaign: " . ($result['error'] ?? 'Unknown error'));
         return [
             'success' => false,
@@ -259,11 +277,29 @@ class Campaign {
         // Ensure the _id field is never modified during updates
         unset($data['_id']);
 
+        // Sanitize description if present
+        if (isset($data['description'])) {
+            // Remove any script tags as extra safety
+            $data['description'] = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $data['description']);
+            // Limit description length (10,000 characters)
+            if (strlen($data['description']) > 10000) {
+                return [
+                    'success' => false,
+                    'error' => 'Description is too long (max 10,000 characters)'
+                ];
+            }
+        }
+
         $result = $this->collection->updateOne(
             ['_id' => new MongoDB\BSON\ObjectId($id)],
             ['$set' => $data]
         );
-        
+
+        // Regenerate static page if campaign is published
+        if (isset($data['status']) && $data['status'] === 'published') {
+            $this->regenerateStaticPage($id);
+        }
+
         return [
             'success' => count($result) > 0,
             'modifiedCount' => count($result)
@@ -272,10 +308,114 @@ class Campaign {
     
     public function delete($id) {
         $result = $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
-        
+
         return [
             'success' => count($result) > 0,
             'deletedCount' => count($result)
+        ];
+    }
+
+    /**
+     * Save translation for a campaign
+     *
+     * @param string $id Campaign ID
+     * @param string $lang Language code (e.g., 'es', 'fr')
+     * @param array $translationData Translation data
+     * @return array Result with success status
+     */
+    public function saveTranslation($id, $lang, $translationData) {
+        // Validate language code
+        if (!preg_match('/^[a-z]{2}(-[A-Z]{2})?$/', $lang)) {
+            return [
+                'success' => false,
+                'error' => 'Invalid language code'
+            ];
+        }
+
+        // Sanitize description if present
+        if (isset($translationData['description'])) {
+            $translationData['description'] = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $translationData['description']);
+            if (strlen($translationData['description']) > 10000) {
+                return [
+                    'success' => false,
+                    'error' => 'Description is too long (max 10,000 characters)'
+                ];
+            }
+        }
+
+        // Update the translations field using dot notation
+        $result = $this->collection->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($id)],
+            ['$set' => ["translations.$lang" => $translationData]]
+        );
+
+        // Regenerate static pages for all languages
+        $this->regenerateStaticPage($id);
+
+        return [
+            'success' => count($result) > 0,
+            'message' => 'Translation saved successfully'
+        ];
+    }
+
+    /**
+     * Get available languages for a campaign
+     *
+     * @param string $id Campaign ID
+     * @return array Available language codes
+     */
+    public function getLanguages($id) {
+        $campaign = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
+
+        if (!$campaign) {
+            return [
+                'success' => false,
+                'error' => 'Campaign not found'
+            ];
+        }
+
+        $languages = [$campaign['defaultLanguage'] ?? 'en'];
+
+        if (isset($campaign['translations']) && is_array($campaign['translations'])) {
+            $languages = array_merge($languages, array_keys((array)$campaign['translations']));
+        }
+
+        return [
+            'success' => true,
+            'languages' => $languages
+        ];
+    }
+
+    /**
+     * Delete a translation
+     *
+     * @param string $id Campaign ID
+     * @param string $lang Language code to delete
+     * @return array Result with success status
+     */
+    public function deleteTranslation($id, $lang) {
+        // Don't allow deleting the default language
+        $campaign = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
+        $defaultLang = $campaign['defaultLanguage'] ?? 'en';
+
+        if ($lang === $defaultLang) {
+            return [
+                'success' => false,
+                'error' => 'Cannot delete default language'
+            ];
+        }
+
+        $result = $this->collection->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($id)],
+            ['$unset' => ["translations.$lang" => ""]]
+        );
+
+        // Regenerate static pages
+        $this->regenerateStaticPage($id);
+
+        return [
+            'success' => count($result) > 0,
+            'message' => 'Translation deleted successfully'
         ];
     }
 
@@ -487,6 +627,36 @@ class Campaign {
                 'success' => false,
                 'error' => $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Regenerate static HTML page for a campaign
+     *
+     * @param string $campaignId The campaign ID
+     * @return void
+     */
+    private function regenerateStaticPage($campaignId) {
+        try {
+            $scriptPath = __DIR__ . '/../scripts/generate-campaign-pages.php';
+
+            if (!file_exists($scriptPath)) {
+                error_log("Static page generator script not found: {$scriptPath}");
+                return;
+            }
+
+            // Run the generator script in the background
+            $command = sprintf(
+                'php %s %s > /dev/null 2>&1 &',
+                escapeshellarg($scriptPath),
+                escapeshellarg($campaignId)
+            );
+
+            exec($command);
+            error_log("Triggered static page regeneration for campaign: {$campaignId}");
+        } catch (Exception $e) {
+            error_log("Error regenerating static page for campaign {$campaignId}: " . $e->getMessage());
+            // Don't throw - this is not critical to campaign creation/update
         }
     }
 

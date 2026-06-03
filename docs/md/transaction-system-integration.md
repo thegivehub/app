@@ -867,7 +867,7 @@ export function DonationForm({ campaignId, userId }) {
       );
       
       // Submit donation via API
-      const response = await fetch('/api/donations', {
+      const response = await fetch('/api.php/donations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

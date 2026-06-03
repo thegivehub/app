@@ -1,0 +1,8 @@
+{
+  "url": "http://localhost:8080",
+  "duration": 5,
+  "connections": 20,
+  "requests": 0,
+  "latency": 0,
+  "throughput": 0
+}

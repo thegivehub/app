@@ -51,10 +51,11 @@ document.addEventListener("DOMContentLoaded", () => {
             
             setLoading(true);
             
-            // Check if app.api is available for authenticated requests
-            if (window.app && window.app.api) {
-                // Use the fetchWithAuth helper
-                const data = await window.app.api.fetchWithAuth(`/campaigns?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt&filter=%7B"status"%3A"active"%7D`);
+            // Check if app.api is available (access parent window's app since we're in an iframe)
+            const parentApp = window.parent.app || window.top.app || window.app;
+            if (parentApp && parentApp.api) {
+                // Use the fetchWithAuth helper - note: api.BASE_URL already includes /api.php
+                const data = await parentApp.api.fetchWithAuth(`/Campaign?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt&filter=%7B"status"%3A"active"%7D`);
                 
                 // Update total items if provided in response
                 if (data.total !== undefined) {
@@ -90,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fetchOptions.headers["Authorization"] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch(`/api/campaign?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt`, fetchOptions);
+                const response = await fetch(`/api.php/Campaign?page=${state.currentPage}&limit=${state.itemsPerPage}&sort=-createdAt`, fetchOptions);
                 
                 if (!response.ok) {
                     throw new Error(`Failed to load campaigns: ${response.statusText}`);

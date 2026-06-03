@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/Cache.php';
+
 class Security {
     private static $logFile = __DIR__ . '/../logs/security.log';
 
@@ -36,5 +38,19 @@ class Security {
             return false;
         }
         return true;
+    }
+
+    public static function enforceSessionCookiePolicy() {
+        // Always set HttpOnly and a sane SameSite default
+        @ini_set('session.cookie_httponly', '1');
+        if (!ini_get('session.cookie_samesite')) {
+            @ini_set('session.cookie_samesite', 'Lax');
+        }
+        // Enforce secure cookies in production or when behind HTTPS
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+                   (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        if ($isHttps || getenv('APP_ENV') === 'production') {
+            @ini_set('session.cookie_secure', '1');
+        }
     }
 }

@@ -23,9 +23,21 @@ class StellarFeeManager {
     
     // Cache duration in milliseconds
     private $cacheDuration;
-    
+
     // Initialize cache for fee stats
     private $feeStatsCache;
+
+    // Short cache duration (ms) used by the optimized-fee path
+    private $optimizedCacheDuration;
+
+    // Initialize cache for the optimized-fee fee_stats lookups
+    private $optimizedStatsCache;
+
+    // Hard cap (stroops) on per-operation fee for optimization
+    private $maxFeePerOp;
+
+    // HTTP timeout (seconds) for direct Horizon fee_stats calls
+    private $feeStatsHttpTimeout;
     
     // Horizon server connection URL
     private $horizonUrl;
@@ -61,12 +73,25 @@ class StellarFeeManager {
         
         // Cache duration in milliseconds
         $this->cacheDuration = $config['cacheDuration'] ?? 60000; // 1 minute default
-        
+
         // Initialize cache for fee stats
         $this->feeStatsCache = [
             'timestamp' => 0,
             'data' => null
         ];
+
+        // Short cache for the optimized-fee fee_stats lookups so we don't hammer Horizon
+        $this->optimizedCacheDuration = $config['optimizedCacheDuration'] ?? 10000; // 10s default
+        $this->optimizedStatsCache = [
+            'timestamp' => 0,
+            'data' => null
+        ];
+
+        // Hard cap (in stroops) on the per-operation fee to avoid overpaying. 100000 = 0.01 XLM.
+        $this->maxFeePerOp = $config['maxFeePerOp'] ?? 100000;
+
+        // HTTP timeout (seconds) for direct Horizon fee_stats calls used by getOptimizedFee
+        $this->feeStatsHttpTimeout = $config['feeStatsHttpTimeout'] ?? 3;
         
         // Initialize Horizon server connection
         $this->isTestnet = $config['useTestnet'] ?? true;
@@ -368,6 +393,141 @@ class StellarFeeManager {
         $baseFee = $this->getRecommendedFee($options);
         return $baseFee * max(1, $operationCount);
     }
+
+    /**
+     * Fetch raw fee stats directly from the Horizon /fee_stats endpoint.
+     *
+     * Unlike getFeeStats() (which uses the SDK and only exposes fee_charged
+     * percentiles), this reads the full payload including last_ledger_base_fee
+     * and ledger_capacity_usage, and is cached on a short window so the
+     * optimizer can be called frequently without hammering Horizon.
+     *
+     * @param bool $forceRefresh Force refresh the short-lived cache
+     * @return array|null Decoded fee_stats payload, or null on failure
+     */
+    private function fetchRawFeeStats($forceRefresh = false) {
+        $now = round(microtime(true) * 1000);
+
+        if (!$forceRefresh &&
+            $this->optimizedStatsCache['data'] &&
+            $now - $this->optimizedStatsCache['timestamp'] < $this->optimizedCacheDuration) {
+            $this->log('Using cached raw fee stats');
+            return $this->optimizedStatsCache['data'];
+        }
+
+        $url = rtrim($this->horizonUrl, '/') . '/fee_stats';
+
+        try {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => $this->feeStatsHttpTimeout,
+                CURLOPT_CONNECTTIMEOUT => $this->feeStatsHttpTimeout,
+                CURLOPT_HTTPHEADER     => ['Accept: application/json']
+            ]);
+
+            $body = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+
+            if ($body === false || $httpCode < 200 || $httpCode >= 300) {
+                throw new \Exception("fee_stats request failed (HTTP $httpCode): $curlErr");
+            }
+
+            $data = json_decode($body, true);
+            if (!is_array($data) || !isset($data['fee_charged'])) {
+                throw new \Exception('Unexpected fee_stats payload');
+            }
+
+            $this->optimizedStatsCache = [
+                'timestamp' => $now,
+                'data'      => $data
+            ];
+
+            return $data;
+        } catch (\Exception $error) {
+            $this->log('Error fetching raw fee stats', $error->getMessage());
+
+            // Return expired cache if available rather than failing hard
+            if ($this->optimizedStatsCache['data']) {
+                $this->log('Using expired raw fee stats due to error');
+                return $this->optimizedStatsCache['data'];
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Compute a network-aware, optimized total fee for a transaction.
+     *
+     * Reads recent ledger fee-charged percentiles from Horizon /fee_stats and
+     * maps the requested priority to a percentile:
+     *   - 'low'    -> p10  (cheapest; may take longer to confirm)
+     *   - 'normal' -> p50  (median; balanced)
+     *   - 'high'   -> p90  (priority; pay more to outbid congestion)
+     * When the ledger is near capacity we nudge the chosen percentile up one
+     * level so transactions still land during congestion.
+     *
+     * The chosen per-operation fee is clamped to [base fee, maxFeePerOp] and
+     * multiplied by the operation count to produce the total fee. On any
+     * network failure it falls back to the base fee (last_ledger_base_fee if
+     * known, otherwise defaultBaseFee) so callers never block on Horizon.
+     *
+     * @param int    $opCount  Number of operations in the transaction (>= 1)
+     * @param string $priority 'low' | 'normal' | 'high'
+     * @return int Total optimized fee in stroops
+     */
+    public function getOptimizedFee($opCount = 1, $priority = 'normal') {
+        $opCount = max(1, (int)$opCount);
+        $priority = strtolower($priority);
+
+        // Map priority -> percentile key in the fee_charged object
+        $percentileMap = [
+            'low'    => 'p10',
+            'normal' => 'p50',
+            'high'   => 'p90'
+        ];
+        $percentileKey = $percentileMap[$priority] ?? 'p50';
+
+        $stats = $this->fetchRawFeeStats();
+
+        // Determine the network base fee (sane minimum)
+        $baseFee = $this->defaultBaseFee;
+        if ($stats && isset($stats['last_ledger_base_fee'])) {
+            $baseFee = max($baseFee, (int)$stats['last_ledger_base_fee']);
+        }
+
+        // Graceful fallback: no usable stats -> base fee per operation
+        if (!$stats || !isset($stats['fee_charged'][$percentileKey])) {
+            $this->log("getOptimizedFee falling back to base fee ($baseFee stroops/op)");
+            $perOp = min(max($baseFee, $this->defaultBaseFee), $this->maxFeePerOp);
+            return $perOp * $opCount;
+        }
+
+        // Bump the percentile up one tier when the ledger is near capacity so
+        // we don't underbid during congestion.
+        $capacity = isset($stats['ledger_capacity_usage'])
+            ? (float)$stats['ledger_capacity_usage']
+            : 0.0;
+        if ($capacity >= 0.75) {
+            $escalation = ['p10' => 'p50', 'p50' => 'p90', 'p90' => 'p90'];
+            $percentileKey = $escalation[$percentileKey];
+            $this->log("Ledger near capacity ($capacity); escalating to $percentileKey");
+        }
+
+        $perOp = (int)$stats['fee_charged'][$percentileKey];
+
+        // Clamp to [base fee, maxFeePerOp]
+        $perOp = max($perOp, $baseFee);
+        $perOp = min($perOp, $this->maxFeePerOp);
+
+        $totalFee = $perOp * $opCount;
+
+        $this->log("Optimized fee: $totalFee stroops ($perOp/op x $opCount, priority: $priority, percentile: $percentileKey, capacity: $capacity)");
+        return $totalFee;
+    }
     
     /**
      * Check if a transaction failed due to fee-related issues
@@ -467,13 +627,25 @@ class StellarFeeManager {
     public function createTransactionWithRecommendedFee($transactionBuilder, $options = []) {
         $priorityLevel = $options['priorityLevel'] ?? 'medium';
         $operationCount = $options['operationCount'] ?? 1;
-        
+
         try {
-            // Get the recommended fee based on network conditions and priority
-            $recommendedFee = $this->estimateTransactionFee($operationCount, [
-                'priorityLevel' => $priorityLevel,
-                'forceRefresh' => $options['forceRefresh'] ?? false
-            ]);
+            if (!empty($options['optimize'])) {
+                // Use network-aware fee optimization (opt-in). Map the existing
+                // priority vocabulary onto the optimizer's low/normal/high.
+                $optimizePriority = [
+                    'low'    => 'low',
+                    'medium' => 'normal',
+                    'high'   => 'high'
+                ][$priorityLevel] ?? 'normal';
+
+                $recommendedFee = $this->getOptimizedFee($operationCount, $optimizePriority);
+            } else {
+                // Get the recommended fee based on network conditions and priority
+                $recommendedFee = $this->estimateTransactionFee($operationCount, [
+                    'priorityLevel' => $priorityLevel,
+                    'forceRefresh' => $options['forceRefresh'] ?? false
+                ]);
+            }
             
             $this->log("Setting transaction fee to $recommendedFee stroops (priority: $priorityLevel)");
             

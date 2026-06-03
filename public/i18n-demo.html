@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>I18n Demo</title>
+  <script src="/assets/js/i18n.js"></script>
+</head>
+<body>
+  <div style="max-width:680px;margin:2rem auto;">
+    <h1>I18n Demo</h1>
+    <p>
+      <label>Language:
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+    </p>
+    <h2 data-i18n="donate.title">Make a Donation</h2>
+    <label data-i18n="donate.amount">Amount ($)</label>
+    <input data-i18n-attr="placeholder" data-i18n="donate.amount" />
+    <p>
+      <button data-i18n="donate.submit">Complete Donation</button>
+    </p>
+  </div>
+  <script>
+    I18n.init({ defaultLang: 'en', supported:['en','fr','es','ar'] }).then(()=>{
+      document.getElementById('lang').addEventListener('change', (e)=>{
+        I18n.setLanguage(e.target.value);
+      });
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - APP_ENV=staging
+    ports:
+      - "8080:80"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    ports:
+      - "27018:27017"
+

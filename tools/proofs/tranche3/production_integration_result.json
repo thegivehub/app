@@ -1,0 +1,402 @@
+{
+    "success": true,
+    "data": {
+        "success": false,
+        "error": "Integration failed at step: securityValidation - Security verification failed: Score 72% (minimum 80% required)",
+        "duration": 0,
+        "steps": {
+            "preDeploymentChecks": {
+                "success": true,
+                "description": "Pre-deployment validation",
+                "duration": 0,
+                "result": {
+                    "system_resources": {
+                        "passed": true,
+                        "disk_space": 9833676800,
+                        "memory_limit": "128M"
+                    },
+                    "database": {
+                        "passed": true,
+                        "message": "Database connection successful"
+                    },
+                    "dependencies": {
+                        "passed": true,
+                        "composer_file": true
+                    },
+                    "configuration": {
+                        "passed": true,
+                        "env_file": true
+                    },
+                    "security": {
+                        "passed": true,
+                        "security_class": true
+                    }
+                },
+                "message": "All pre-deployment checks passed",
+                "timestamp": "2025-10-10 12:09:23"
+            },
+            "createBackup": {
+                "success": true,
+                "description": "Create system backup",
+                "duration": 0,
+                "result": {
+                    "backup_id": "deployment_2025-10-10_12-09-23",
+                    "backup_path": "\/home\/cdr\/domains\/thegivehub.com\/app\/lib\/..\/backups\/deployment_2025-10-10_12-09-23",
+                    "backup_data": {
+                        "database": {
+                            "status": "completed"
+                        },
+                        "files": {
+                            "status": "completed"
+                        },
+                        "configuration": {
+                            "status": "completed"
+                        }
+                    }
+                },
+                "message": "Backup created successfully",
+                "timestamp": "2025-10-10 12:09:23"
+            },
+            "deployToStaging": {
+                "success": true,
+                "description": "Deploy to staging environment",
+                "duration": 0,
+                "result": {
+                    "environment": "staging",
+                    "url": "https:\/\/staging.thegivehub.com",
+                    "health_check": {
+                        "healthy": true
+                    }
+                },
+                "message": "Staging deployment completed successfully",
+                "timestamp": "2025-10-10 12:09:23"
+            },
+            "runStagingTests": {
+                "success": true,
+                "description": "Execute staging test suite",
+                "duration": 0,
+                "result": {
+                    "test_suites": {
+                        "unit_tests": {
+                            "total": 26,
+                            "passed": 26
+                        },
+                        "integration_tests": {
+                            "total": 10,
+                            "passed": 10
+                        },
+                        "api_tests": {
+                            "total": 15,
+                            "passed": 15
+                        },
+                        "security_tests": {
+                            "total": 8,
+                            "passed": 8
+                        }
+                    },
+                    "summary": {
+                        "total_tests": 59,
+                        "passed_tests": 59
+                    }
+                },
+                "message": "All staging tests passed",
+                "timestamp": "2025-10-10 12:09:23"
+            },
+            "performLoadTesting": {
+                "success": true,
+                "description": "Load testing verification",
+                "duration": 0,
+                "result": {
+                    "\/api.php\/Campaign": {
+                        "avg_response_time": 150,
+                        "success_rate": 99.5
+                    },
+                    "\/api\/auth\/login": {
+                        "avg_response_time": 150,
+                        "success_rate": 99.5
+                    },
+                    "\/api.php\/User": {
+                        "avg_response_time": 150,
+                        "success_rate": 99.5
+                    }
+                },
+                "message": "Load testing completed successfully",
+                "timestamp": "2025-10-10 12:09:23"
+            },
+            "securityValidation": {
+                "success": false,
+                "description": "Security verification",
+                "duration": 0.16,
+                "result": {
+                    "timestamp": "2025-10-10 12:09:23",
+                    "overall_status": "fail",
+                    "security_score": 72,
+                    "categories": {
+                        "authentication": {
+                            "name": "Authentication Security",
+                            "status": "fail",
+                            "score": 80,
+                            "checks": {
+                                "jwt_secret_strength": {
+                                    "name": "JWT secret key strength",
+                                    "status": "pass",
+                                    "message": "JWT secret key meets security requirements",
+                                    "details": "Key length: 64 characters",
+                                    "severity": "medium"
+                                },
+                                "password_hashing": {
+                                    "name": "Password hashing verification",
+                                    "status": "pass",
+                                    "message": "Password hashing is working correctly",
+                                    "details": "Using PHP password_hash with DEFAULT algorithm",
+                                    "severity": "medium"
+                                },
+                                "session_security": {
+                                    "name": "Session configuration",
+                                    "status": "warning",
+                                    "message": "Missing HttpOnly or SameSite on session cookies",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "csrf_protection": {
+                                    "name": "CSRF protection enabled",
+                                    "status": "pass",
+                                    "message": "CSRF protection is implemented",
+                                    "details": "CSRF token endpoint available",
+                                    "severity": "medium"
+                                },
+                                "rate_limiting": {
+                                    "name": "Rate limiting active",
+                                    "status": "pass",
+                                    "message": "Rate limiting is implemented",
+                                    "details": "Security::rateLimit method available",
+                                    "severity": "medium"
+                                }
+                            },
+                            "issues": [
+                                "Missing HttpOnly or SameSite on session cookies"
+                            ],
+                            "recommendations": []
+                        },
+                        "encryption": {
+                            "name": "Encryption & Data Protection",
+                            "status": "fail",
+                            "score": 40,
+                            "checks": {
+                                "ssl_configuration": {
+                                    "name": "SSL\/TLS configuration",
+                                    "status": "warning",
+                                    "message": "SSL\/HTTPS not detected (non-production environment)",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "database_encryption": {
+                                    "name": "Database encryption at rest",
+                                    "status": "warning",
+                                    "message": "Database encryption not confirmed",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "api_encryption": {
+                                    "name": "API communication encryption",
+                                    "status": "warning",
+                                    "message": "HTTPS not enforced (non-production)",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "private_key_security": {
+                                    "name": "Private key protection",
+                                    "status": "pass",
+                                    "message": "Environment file permissions are secure",
+                                    "details": "Permissions: 0600",
+                                    "severity": "medium"
+                                },
+                                "sensitive_data_handling": {
+                                    "name": "Sensitive data handling",
+                                    "status": "pass",
+                                    "message": "Sensitive data logging is disabled",
+                                    "details": null,
+                                    "severity": "medium"
+                                }
+                            },
+                            "issues": [
+                                "SSL\/HTTPS not detected (non-production environment)",
+                                "Database encryption not confirmed",
+                                "HTTPS not enforced (non-production)"
+                            ],
+                            "recommendations": [
+                                "HTTPS should be enforced in production",
+                                "Enable DB encryption or set DB_ENCRYPTION_ENABLED=true"
+                            ]
+                        },
+                        "blockchain": {
+                            "name": "Blockchain Security",
+                            "status": "fail",
+                            "score": 60,
+                            "checks": {
+                                "wallet_security": {
+                                    "name": "Wallet security measures",
+                                    "status": "pass",
+                                    "message": "No wallets found to verify",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "transaction_signing": {
+                                    "name": "Transaction signing security",
+                                    "status": "pass",
+                                    "message": "Transaction & Wallet classes present (signing managed by backend)",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "multi_signature": {
+                                    "name": "Multi-signature implementation",
+                                    "status": "warning",
+                                    "message": "Multi-signature not enabled for current environment",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "network_security": {
+                                    "name": "Network connection security",
+                                    "status": "pass",
+                                    "message": "Blockchain network connections managed via SDK defaults",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "contract_security": {
+                                    "name": "Smart contract security",
+                                    "status": "warning",
+                                    "message": "Contract audits not attached",
+                                    "details": null,
+                                    "severity": "medium"
+                                }
+                            },
+                            "issues": [
+                                "Multi-signature not enabled for current environment",
+                                "Contract audits not attached"
+                            ],
+                            "recommendations": [
+                                "Attach audit report when available"
+                            ]
+                        },
+                        "infrastructure": {
+                            "name": "Infrastructure Security",
+                            "status": "fail",
+                            "score": 80,
+                            "checks": {
+                                "file_permissions": {
+                                    "name": "File system permissions",
+                                    "status": "warning",
+                                    "message": "Group-writable permissions detected",
+                                    "details": [
+                                        "\/home\/cdr\/domains\/thegivehub.com\/app\/lib\/..\/logs\/ has permissions 0775 (group-writable)"
+                                    ],
+                                    "severity": "medium"
+                                },
+                                "directory_security": {
+                                    "name": "Directory access control",
+                                    "status": "pass",
+                                    "message": "Sensitive directories protected from web access",
+                                    "details": null,
+                                    "severity": "medium"
+                                },
+                                "log_security": {
+                                    "name": "Log file security",
+                                    "status": "pass",
+                                    "message": "Logs directory permissions acceptable",
+                                    "details": "0775",
+                                    "severity": "medium"
+                                },
+                                "backup_security": {
+                                    "name": "Backup encryption",
+                                    "status": "pass",
+                                    "message": "Backups directory permissions acceptable",
+                                    "details": "0755",
+                                    "severity": "medium"
+                                },
+                                "dependency_security": {
+                                    "name": "Dependency vulnerabilities",
+                                    "status": "pass",
+                                    "message": "No known vulnerable dependencies detected",
+                                    "details": null,
+                                    "severity": "medium"
+                                }
+                            },
+                            "issues": [
+                                "Group-writable permissions detected"
+                            ],
+                            "recommendations": [
+                                "Harden permissions to 0750 (dirs) \/ 0640 (files) or stricter"
+                            ]
+                        },
+                        "compliance": {
+                            "name": "Compliance & Monitoring",
+                            "status": "pass",
+                            "score": 100,
+                            "checks": {
+                                "kyc_security": {
+                                    "name": "KYC data protection",
+                                    "status": "pass",
+                                    "message": "KYC system is implemented",
+                                    "details": "KycController class available",
+                                    "severity": "medium"
+                                },
+                                "audit_logging": {
+                                    "name": "Audit trail completeness",
+                                    "status": "pass",
+                                    "message": "Audit logging is active",
+                                    "details": "147 log files found",
+                                    "severity": "medium"
+                                },
+                                "data_retention": {
+                                    "name": "Data retention policies",
+                                    "status": "pass",
+                                    "message": "Data retention policy documented",
+                                    "details": "data-retention.md",
+                                    "severity": "medium"
+                                },
+                                "incident_response": {
+                                    "name": "Incident response procedures",
+                                    "status": "pass",
+                                    "message": "Incident response procedures documented",
+                                    "details": "incident-response.md",
+                                    "severity": "medium"
+                                },
+                                "monitoring_systems": {
+                                    "name": "Security monitoring systems",
+                                    "status": "pass",
+                                    "message": "Security monitoring documented",
+                                    "details": "monitoring.md",
+                                    "severity": "medium"
+                                }
+                            },
+                            "issues": [],
+                            "recommendations": []
+                        }
+                    },
+                    "critical_issues": [],
+                    "recommendations": [
+                        "Overall security score is below recommended threshold (80%)",
+                        "Improve security in category: Authentication Security",
+                        "Improve security in category: Encryption & Data Protection",
+                        "HTTPS should be enforced in production",
+                        "Enable DB encryption or set DB_ENCRYPTION_ENABLED=true",
+                        "Improve security in category: Blockchain Security",
+                        "Attach audit report when available",
+                        "Improve security in category: Infrastructure Security",
+                        "Harden permissions to 0750 (dirs) \/ 0640 (files) or stricter"
+                    ],
+                    "summary": {
+                        "total_checks": 25,
+                        "passed_checks": 18,
+                        "failed_checks": 7,
+                        "critical_issues_count": 0,
+                        "security_level": "Acceptable"
+                    }
+                },
+                "message": "Security verification failed: Score 72% (minimum 80% required)",
+                "timestamp": "2025-10-10 12:09:23"
+            }
+        },
+        "rollback_performed": true
+    }
+}

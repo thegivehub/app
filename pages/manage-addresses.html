@@ -537,7 +537,7 @@
                 },
                 async loadAddresses() {
                     try {
-                        const response = await fetch('/api/address/list', {
+                        const response = await fetch('/api.php/address/list', {
                             headers: {
                                 'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                             }
@@ -802,7 +802,7 @@
                         }
                         
                         // Send validation request
-                        const response = await fetch('/api/address/validate', {
+                        const response = await fetch('/api.php/address/validate', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -882,7 +882,7 @@
                             addressData._id = addressId;
                         }
                         
-                        const endpoint = isNewAddress ? '/api/address/add' : '/api/address/update';
+                        const endpoint = isNewAddress ? '/api.php/address/add' : '/api.php/address/update';
                         
                         const response = await fetch(endpoint, {
                             method: 'POST',

@@ -1,11 +1,7 @@
 # Security Monitoring
 
-This project logs potential security events to `logs/security.log`. The `Security` class provides helper methods used by API endpoints.
+- Monitor authentication failures and rate limiting events.
+- Audit access to sensitive APIs.
+- Alert on anomalous activity in logs.
+- Periodically run security verification.
 
-## Features
-
-- **HTTP Security Headers**: `Security::sendHeaders()` sets common security headers like HSTS and CSP.
-- **Rate Limiting**: `Security::rateLimit($key, $max, $window)` returns `false` when the request count exceeds the limit.
-- **Event Logging**: `Security::logEvent($type, $context = [])` writes structured JSON entries to `logs/security.log`.
-
-See [procedures.md](procedures.md) for our response process when suspicious activity is detected.

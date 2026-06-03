@@ -643,11 +643,17 @@
               app.loadContent('/pages/new-campaign.html');
               return false;
             });
-            app.auth.init();
 
             app.theme.init();
-            // Initialize with default content
-            app.loadContent('/pages/browse.html');
+            
+            // Initialize auth first, then load content
+            app.auth.init().then((authenticated) => {
+              if (authenticated) {
+                // Initialize with default content only after auth succeeds
+                app.loadContent('/pages/browse.html');
+              }
+            });
+            
             // Event listeners
             app.elements.menuTrigger.addEventListener(
               'click',
@@ -794,30 +800,31 @@
         };
         // Replace the existing auth object in your app
         app.auth = {
-          init() {
+          async init() {
             // Check if user is authenticated first using local storage
             const accessToken = localStorage.getItem('accessToken');
             
             if (!accessToken) {
               console.log('No access token found, redirecting to login');
               top.location.href = '/pages/login.html';
-              return;
+              return false;
             }
             
             // If we have a token, verify it's valid by making a request to the server
-            fetch('/api/User/me', {
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            })
-            .then(response => {
+            try {
+              const response = await fetch('/api.php/User/me', {
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
               if (!response.ok) {
                 throw new Error('Invalid token');
               }
-              return response.json();
-            })
-            .then(userData => {
+              
+              const userData = await response.json();
+              
               // User is authenticated, update UI
               console.log('User is authenticated:', userData);
               document.body.setAttribute('data-auth-status', 'authenticated');
@@ -835,14 +842,16 @@
                   document.querySelector('.user-avatar').textContent = initials;
                 }
               }
-            })
-            .catch(error => {
+              
+              return true;
+            } catch (error) {
               console.error('Authentication error:', error);
               // Token is invalid, clear storage and redirect
               localStorage.removeItem('accessToken');
               localStorage.removeItem('refreshToken');
               top.location.href = '/pages/login.html';
-            });
+              return false;
+            }
           },
 
           // Helper method to check current auth status
@@ -914,7 +923,7 @@
             }
 
             // Try to fetch real profile data if possible
-            fetch('/api/user/me', {
+            fetch('/api.php/user/me', {
               headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',

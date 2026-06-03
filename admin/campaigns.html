@@ -289,7 +289,7 @@ function checkAdminAuth() {
     }
     
     // Verify token with server
-    fetch('/api/admin/verify', {
+    fetch('/api.php/admin/verify', {
         headers: {
             'Authorization': `Bearer ${adminToken}`
         }

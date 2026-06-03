@@ -1,3 +1,5 @@
+const ts = () => new Date().toISOString().replace(/[:.]/g, '-');
+
 describe('Temp T97 only', () => {
   before(() => cy.task('db:seed'));
   beforeEach(() => { cy.viewport(1280,800); cy.adminSession(); });

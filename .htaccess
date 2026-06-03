@@ -15,8 +15,15 @@
 # Enable URL rewriting
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+# Static campaign pages - serve from /campaigns directory
+# Allow /campaigns/slug to serve /campaigns/slug.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^campaigns/([a-z0-9-]+)$ /campaigns/$1.html [L]
     
     # Route verification API endpoints to verification-api.php
     #RewriteRule ^api/verification/(.*)$ verification-api.php/$1 [QSA,L]
     RewriteRule ^registration\.html$ /register.html [L,R=301]
+    RewriteRule ^api(?:/(.*))?$ api.php/$1 [L,QSA,PT]
 </IfModule>

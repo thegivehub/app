@@ -131,7 +131,7 @@
                 this.setLoading(true);
 
                 try {
-                    const response = await fetch('/api/auth/login', {
+                    const response = await fetch('/api.php/auth/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -206,5 +206,6 @@
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
+    <script src="/register-sw.js"></script>
 </body>
 </html>

@@ -390,6 +390,7 @@ const AdminUserManagement = {
             <td>${joinedDate}</td>
             <td>
                 <div class="user-actions">
+                    ${user.status === 'pending' ? `<button class="btn btn-sm btn-success approve-user-btn me-1" data-id="${user._id}" title="Approve User"><i class="bi bi-check-circle"></i> Approve</button>` : ''}
                     <button class="btn btn-sm btn-outline view-user-btn" data-id="${user._id}">View</button>
                     <button class="btn btn-sm btn-outline edit-user-btn" data-id="${user._id}">Edit</button>
                 </div>
@@ -397,14 +398,19 @@ const AdminUserManagement = {
         `;
         
         // Add event listeners to buttons
+        const approveBtn = row.querySelector('.approve-user-btn');
+        if (approveBtn) {
+            approveBtn.addEventListener('click', () => this.approveUser(user._id));
+        }
+
         row.querySelector('.view-user-btn').addEventListener('click', () => {
             this.viewUserDetails(user._id);
         });
-        
+
         row.querySelector('.edit-user-btn').addEventListener('click', () => {
             this.editUser(user._id);
         });
-        
+
         return row;
     },
 
@@ -1009,6 +1015,46 @@ const AdminUserManagement = {
         } catch (error) {
             console.error('Error toggling admin role:', error);
             this.showNotification(error.message, 'error');
+            this.showLoading(false);
+        }
+    },
+
+    // Approve user (change status from pending to active)
+    async approveUser(userId) {
+        try {
+            // Confirm action
+            if (!confirm('Are you sure you want to approve this user? A welcome email will be sent to their email address.')) {
+                return;
+            }
+
+            this.showLoading(true);
+
+            // Update user status to active
+            const response = await fetch(`${this.config.apiBase}?id=${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify({ status: 'active' })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.success === false) {
+                throw new Error(data.error || 'Failed to approve user');
+            }
+
+            // Reload users to refresh the table
+            await this.loadUsers();
+
+            // Show success message
+            this.showNotification('User approved successfully! Welcome email has been sent.', 'success');
+
+            this.showLoading(false);
+        } catch (error) {
+            console.error('Error approving user:', error);
+            this.showNotification('Error approving user: ' + error.message, 'error');
             this.showLoading(false);
         }
     },

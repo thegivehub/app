@@ -1,0 +1,15 @@
+{
+  "nav": { "home": "Home", "campaigns": "Campaigns", "login": "Login" },
+  "donate": {
+    "title": "Make a Donation",
+    "amount": "Amount ($)",
+    "crypto": "Cryptocurrency",
+    "card": "Credit Card",
+    "submit": "Complete Donation",
+    "recurring": "Make this a recurring donation",
+    "frequency": "Frequency",
+    "monthly": "Monthly",
+    "weekly": "Weekly"
+  }
+}
+

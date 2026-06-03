@@ -434,7 +434,7 @@ const csrfResponse = await fetch('/csrf_token.php');
 const csrfData = await csrfResponse.json();
 
 // Login request
-const loginResponse = await fetch('/api/auth/login', {
+const loginResponse = await fetch('/api.php/auth/login', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

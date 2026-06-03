@@ -120,7 +120,7 @@
                     throw new Error("No access token found");
                 }
 
-                const response = await fetch("/api/auth/getUserIdFromToken", {
+                const response = await fetch("/api.php/auth/getUserIdFromToken", {
                     method: "GET",
                     headers: {
                         "Authorization": "Bearer " + token,
@@ -146,7 +146,7 @@
         async function getUserWallets() {
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/getUserWallets', {
+                const response = await fetch('/api.php/wallets/getUserWallets', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -202,7 +202,7 @@
         async function loadWalletDetails(walletId) {
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/getUserWallet', {
+                const response = await fetch('/api.php/wallets/getUserWallet', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -265,7 +265,7 @@
             
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/setDefaultWallet', {
+                const response = await fetch('/api.php/wallets/setDefaultWallet', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -295,7 +295,7 @@
         async function createWallet() {
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/createWallet', {
+                const response = await fetch('/api.php/wallets/createWallet', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -327,7 +327,7 @@
         async function fundTestnetAccount(publicKey) {
             try {
                 setLoading(true);
-                const response = await fetch('/api/wallets/fundTestnetAccount', {
+                const response = await fetch('/api.php/wallets/fundTestnetAccount', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -363,7 +363,7 @@
                 if (isLoading) return;
                 setLoading(true);
                 
-                const response = await fetch('/api/wallets/getTransactions', {
+                const response = await fetch('/api.php/wallets/getTransactions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

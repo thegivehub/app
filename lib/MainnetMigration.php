@@ -187,17 +187,19 @@ class MainnetMigration {
         }
 
         // Update database with new mainnet accounts
-        foreach ($createdAccounts['campaigns'] as $campaignAccount) {
-            $this->db->getCollection('campaigns')->updateOne(
-                ['_id' => new MongoDB\BSON\ObjectId($campaignAccount['campaign_id'])],
-                [
-                    '$set' => [
-                        'blockchain.mainnet_wallet' => $campaignAccount['account']['publicKey'],
-                        'blockchain.mainnet_secret' => $campaignAccount['account']['secretKey'],
-                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
+        if (!empty($createdAccounts['campaigns']) && is_array($createdAccounts['campaigns'])) {
+            foreach ($createdAccounts['campaigns'] as $campaignAccount) {
+                $this->db->getCollection('campaigns')->updateOne(
+                    ['_id' => new MongoDB\BSON\ObjectId($campaignAccount['campaign_id'])],
+                    [
+                        '$set' => [
+                            'blockchain.mainnet_wallet' => $campaignAccount['account']['publicKey'],
+                            'blockchain.mainnet_secret' => $campaignAccount['account']['secretKey'],
+                            'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                        ]
                     ]
-                ]
-            );
+                );
+            }
         }
 
         return $createdAccounts;
@@ -259,7 +261,7 @@ class MainnetMigration {
 
         return [
             'migrated_users' => $migratedUsers,
-            'total_users' => $users->count()
+            'total_users' => is_array($users) ? count($users) : 0
         ];
     }
 
@@ -292,7 +294,7 @@ class MainnetMigration {
 
         return [
             'migrated_campaigns' => $migratedCampaigns,
-            'total_campaigns' => $campaigns->count()
+            'total_campaigns' => is_array($campaigns) ? count($campaigns) : 0
         ];
     }
 

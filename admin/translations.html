@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Translations Manager</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .container{max-width:960px;margin:2rem auto;background:#fff;padding:1.5rem;border-radius:8px}
+    textarea{width:100%;min-height:280px;font-family:monospace}
+    .row{display:flex;gap:1rem}
+    .row>*{flex:1}
+  </style>
+  <script src="/assets/js/i18n.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await I18n.init({ defaultLang: 'en', supported: ['en','fr','es','ar'] });
+      const langSel = document.getElementById('lang');
+      const area = document.getElementById('json');
+      const saveBtn = document.getElementById('save');
+      const loadBtn = document.getElementById('load');
+      const previewBtn = document.getElementById('preview');
+      const key = (l)=>`i18n.override.${l}`;
+
+      loadBtn.onclick = async () => {
+        const l = langSel.value; area.value='';
+        const ls = localStorage.getItem(key(l));
+        if (ls) { area.value = ls; return; }
+        const res = await fetch(`/assets/i18n/${l}.json`);
+        area.value = await res.text();
+      };
+      saveBtn.onclick = () => {
+        try{ JSON.parse(area.value); }catch(e){ alert('Invalid JSON'); return; }
+        localStorage.setItem(key(langSel.value), area.value);
+        alert('Saved in browser (localStorage). For production, commit to assets/i18n/');
+      };
+      previewBtn.onclick = async () => {
+        try{ const data = JSON.parse(area.value); }catch(e){ alert('Invalid JSON'); return; }
+        // Live preview: temporarily override dictionary
+        I18n.setLanguage(langSel.value).then(()=>{
+          // Merge override and re-apply
+          try{
+            I18n.__dict = JSON.parse(area.value); // not public, illustrative only
+          }catch(e){}
+        });
+      };
+      loadBtn.click();
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Translations Manager</h1>
+    <p>Load, edit, and preview translation JSON. Changes are stored locally (for admins to export and commit).</p>
+    <div class="row">
+      <label>Language
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+    </div>
+    <textarea id="json" spellcheck="false"></textarea>
+    <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+      <button id="load">Load</button>
+      <button id="save">Save (local)</button>
+      <button id="preview">Preview</button>
+    </div>
+    <hr>
+    <h2 data-i18n="donate.title">Make a Donation</h2>
+    <label data-i18n="donate.amount">Amount ($)</label>
+    <input placeholder="" data-i18n-attr="placeholder" data-i18n="donate.amount" />
+  </div>
+</body>
+</html>
+

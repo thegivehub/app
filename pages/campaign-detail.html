@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
         :root {
@@ -75,18 +76,17 @@
         }
 
         .campaign-header {
-            display: grid;
-            gap: 24px;
-            grid-template-columns: 2fr 1fr;
             position: relative;
             background: linear-gradient(to bottom right, #ffffff, #f8fafc);
             border: 1px solid #e2e8f0;
         }
 
-        @media (max-width: 768px) {
-            .campaign-header {
-                grid-template-columns: 1fr;
-            }
+        .campaign-info {
+            width: 100%;
+        }
+
+        .campaign-map-section {
+            margin-top: 24px;
         }
 
         .campaign-title {
@@ -101,8 +101,72 @@
 
         .campaign-description {
             font-size: 1.1rem;
-            color: #666;
+            color: #333;
             margin-bottom: 24px;
+            min-height: 100px;
+            /* Debug: make it obvious where the content is */
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            /* Ensure proper display of block elements */
+            display: block;
+            white-space: normal;
+            line-height: 1.6;
+        }
+
+        /* Markdown content styles */
+        .campaign-description h1, .campaign-description h2, .campaign-description h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #1e293b;
+            display: block;
+            line-height: 1.3;
+        }
+
+        .campaign-description h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .campaign-description h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .campaign-description h3 {
+            font-size: 1.25em;
+            font-weight: bold;
+        }
+
+        .campaign-description p {
+            margin-bottom: 1em;
+            display: block;
+        }
+        .campaign-description ul, .campaign-description ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        .campaign-description a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        .campaign-description code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .campaign-description blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1em;
+            margin-left: 0;
+            font-style: italic;
+            color: #666;
+        }
+        .campaign-description img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
         }
 
         .stats-grid {
@@ -332,6 +396,40 @@
         }
 
         /* Inline Editing Styles */
+        .edit-input,
+        .edit-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: inherit;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+
+        .edit-input:focus,
+        .edit-textarea:focus {
+            outline: none;
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .edit-input.campaign-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+
+        .edit-textarea.campaign-description {
+            min-height: 200px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
         [contenteditable="true"] {
             position: relative;
             outline: none;
@@ -380,6 +478,78 @@
 
         .edit-mode .edit-controls {
             display: flex;
+        }
+
+        .edit-mode-banner {
+            display: none;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            align-items: center;
+            gap: 12px;
+        }
+
+        .edit-mode .edit-mode-banner {
+            display: flex;
+        }
+
+        .edit-mode-banner i {
+            font-size: 1.5rem;
+        }
+
+        .edit-mode-banner h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .edit-mode-banner p {
+            margin: 4px 0 0 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* EasyMDE Editor Customization */
+        .edit-mode .EasyMDEContainer {
+            margin-bottom: 16px;
+        }
+
+        .edit-mode .CodeMirror {
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .edit-mode .CodeMirror-focused {
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .edit-mode .editor-toolbar {
+            border: 2px solid var(--primary-color);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            background-color: #f8fafc;
+        }
+
+        .edit-mode .editor-toolbar button {
+            color: var(--text-color);
+        }
+
+        .edit-mode .editor-toolbar button:hover,
+        .edit-mode .editor-toolbar button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .edit-mode .editor-statusbar {
+            color: #666;
+            font-size: 0.875rem;
         }
 
         .edit-button {
@@ -465,22 +635,139 @@
             margin-top: 8px;
         }
 
-        .add-milestone-button {
+        .add-milestone-button,
+        .add-metric-button {
             background-color: var(--primary-color);
             color: white;
-            padding: 4px 12px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .add-milestone-button:hover,
+        .add-metric-button:hover {
+            background-color: #1e40af;
+        }
+
+        .edit-mode .add-milestone-button,
+        .edit-mode .add-metric-button {
+            display: inline-flex;
+        }
+
+        .add-milestone-button,
+        .add-metric-button {
+            display: none;
+        }
+
+        .metric-item-controls,
+        .milestone-item-controls {
+            display: none;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .edit-mode .metric-item-controls,
+        .edit-mode .milestone-item-controls {
+            display: flex;
+        }
+
+        .item-edit-btn,
+        .item-delete-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .item-edit-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .item-delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* Auth Banner Styles */
+        .auth-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+        }
+
+        .auth-banner h3 {
+            color: white;
+        }
+
+        .auth-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .register-button {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .register-button:hover {
+            background-color: #15803d;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .login-button {
+            background-color: white;
+            color: var(--primary-color);
+        }
+
+        .login-button:hover {
+            background-color: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
-    <script src="/lib/DonateButton.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script>
+        // Early debug - check if scripts are loading
+        console.log('[EARLY] Page loading, marked type:', typeof marked);
+    </script>
+    <script src="/assets/js/analytics.js"></script>
+    <script src="/lib/DonateButton.js?v=2"></script>
+    <script src="/components/language-switcher.js"></script>
 </head>
 <body>
+    <script>
+        // Check at body start
+        console.log('[BODY START] Body loading, marked type:', typeof marked);
+    </script>
 <main>
     <div class="container">
+        <div class="edit-mode-banner">
+            <i class="fa-solid fa-edit"></i>
+            <div>
+                <h3>Edit Mode</h3>
+                <p>Make your changes below, then click "Save Changes" when you're done.</p>
+            </div>
+        </div>
         <div class="edit-controls">
             <button class="edit-button save-button" onclick="app.saveChanges()">
                 <i class="fa-solid fa-save"></i>
@@ -494,18 +781,37 @@
         <div class="donate-button-container">
             <donate-button id="donate-btn"></donate-button>
         </div>
-        <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
+        <!-- Auth Banner for Non-Authenticated Users -->
+        <div id="auth-banner" class="card auth-banner" style="display: none;">
+            <div style="text-align: center; padding: 12px;">
+                <i class="fa-solid fa-user-circle" style="font-size: 2em; color: white; margin-bottom: 8px;"></i>
+                <h3 style="margin-bottom: 8px;">Support This Campaign</h3>
+                <p style="margin-bottom: 16px;">Create an account or log in to make a donation and track your impact.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="/register.html" class="auth-button register-button">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </a>
+                    <a href="/login.html" class="auth-button login-button">
+                        <i class="fa-solid fa-sign-in-alt"></i> Log In
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="card campaign-header">
             <div class="campaign-info">
-                <span style="float:right">
-                    <a href="#" class="link" onclick="app.editCampaign(); return false;">
-                    <i class="fa-solid fa-edit"></i> Edit
-                </a>
-                |
-                <a href="#" class="link" onclick="app.deleteCampaign(); return false;">
-                    Delete
-                </a>
-                </span>
+                <div style="float:right; display: flex; align-items: center; gap: 12px;">
+                    <language-switcher id="language-switcher"></language-switcher>
+                    <span>
+                        <a href="#" class="link" onclick="app.editCampaign(); return false;">
+                        <i class="fa-solid fa-edit"></i> Edit
+                    </a>
+                    |
+                    <a href="#" class="link" onclick="app.deleteCampaign(); return false;">
+                        Delete
+                    </a>
+                    </span>
+                </div>
                 <h1 id="campaign-title" class="campaign-title" contenteditable="false">Campaign Title</h1>
                 <p id="campaign-description" class="campaign-description" contenteditable="false"></p>
                 <div class="stats-grid">
@@ -523,6 +829,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Location Map -->
+        <div class="card campaign-map-section">
+            <h2 class="section-title">Campaign Location</h2>
             <div id="map"></div>
         </div>
 
@@ -582,22 +893,51 @@
             id: null,
             isEditMode: false,
             originalData: null,
-            timelineChart: null
+            timelineChart: null,
+            isAuthenticated: false,
+            isOwner: false,
+            descriptionEditor: null,
+            currentLanguage: 'en',
+            availableLanguages: ['en']
         },
         init() {
+            console.log('init() called');
+
+            // Check for embedded campaign data (for static pages)
+            const dataEl = document.getElementById('campaign-data');
+            if (dataEl) {
+                try {
+                    const data = JSON.parse(dataEl.textContent);
+                    console.log('Using embedded campaign data (static page)');
+                    app.data = data;
+                    app.state.loaded = true;
+                    app.state.id = data._id;
+                    app.state.isAuthenticated = !!localStorage.getItem('accessToken');
+                    app.initLanguageSupport();
+                    app.render();
+                    return;
+                } catch (e) {
+                    console.error('Failed to parse embedded data:', e);
+                    // Fall through to fetch from API
+                }
+            }
+
+            // Dynamic mode: fetch from API
             const query = app.utils.parseSearch();
             const campaignId = query.id;
+            console.log('Campaign ID from URL:', campaignId);
             if (!campaignId) {
                 alert('Campaign ID is required');
                 return;
             }
             app.state.id = campaignId;
+            app.state.isAuthenticated = !!localStorage.getItem('accessToken');
+            console.log('Fetching campaign data from API...');
             app.fetch(`/api/campaign?id=${campaignId}`);
         },
         editCampaign() {
-            if(confirm('Press Edit Campaign on the next screen to edit this campaign.')) {
-                window.location.href = `/pages/campaign-edit.html?id=${this.state.id}`;
-            }
+            // Toggle edit mode instead of navigating to a different page
+            app.toggleEditMode();
         },
         deleteCampaign() {
             if(confirm('Are you sure you want to delete this campaign?')) {
@@ -624,38 +964,152 @@
                 app.state.originalData = JSON.parse(JSON.stringify(app.data));
                 app.state.isEditMode = true;
                 document.body.classList.add('edit-mode');
-                
-                // Enable content editing
-                $$('[contenteditable="false"]').forEach(el => {
-                    el.setAttribute('contenteditable', 'true');
-                });
+
+                // Convert display elements to form inputs
+                const titleEl = $('#campaign-title');
+                const descEl = $('#campaign-description');
+                const locationEl = $('#campaign-location');
+                const goalEl = $('#campaign-goal');
+
+                // Replace title with input
+                titleEl.outerHTML = `<input type="text" id="campaign-title" class="campaign-title edit-input" value="${titleEl.textContent}">`;
+
+                // Replace description with textarea for markdown editor
+                const descText = app.data.description || '';
+                descEl.outerHTML = `<textarea id="campaign-description" class="campaign-description edit-textarea">${descText}</textarea>`;
+
+                // Initialize EasyMDE markdown editor
+                setTimeout(() => {
+                    if (!app.state.descriptionEditor) {
+                        app.state.descriptionEditor = new EasyMDE({
+                            element: document.getElementById('campaign-description'),
+                            spellChecker: false,
+                            placeholder: 'Enter campaign description (Markdown supported)...',
+                            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
+                            status: ["lines", "words"],
+                            minHeight: "300px"
+                        });
+                        app.state.descriptionEditor.value(descText);
+                    }
+                }, 100);
+
+                // Add location editing
+                const locationData = app.data.location || {};
+                locationEl.parentElement.innerHTML = `
+                    <div class="stat-value edit-location-fields">
+                        <input type="text" id="edit-region" placeholder="Region" value="${locationData.region || ''}" style="width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 4px;">
+                        <input type="text" id="edit-country" placeholder="Country" value="${locationData.country || ''}" style="width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 4px;">
+                        <input type="number" id="edit-lat" placeholder="Latitude" value="${locationData.coordinates?.latitude || ''}" style="width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 4px;">
+                        <input type="number" id="edit-lng" placeholder="Longitude" value="${locationData.coordinates?.longitude || ''}" style="width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    </div>
+                    <div class="stat-label">Location</div>
+                `;
+
+                // Add goal editing
+                const goalAmount = app.data.funding?.goalAmount || app.data.fundingGoal || 0;
+                goalEl.parentElement.innerHTML = `
+                    <div class="stat-value">
+                        <input type="number" id="edit-goal" value="${goalAmount}" style="width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    </div>
+                    <div class="stat-label">Goal Amount</div>
+                `;
             }
         },
         cancelChanges() {
             if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+                // Clean up markdown editor
+                if (app.state.descriptionEditor) {
+                    app.state.descriptionEditor.toTextArea();
+                    app.state.descriptionEditor = null;
+                }
+
                 app.state.isEditMode = false;
                 document.body.classList.remove('edit-mode');
-                
-                // Disable content editing
-                $$('[contenteditable="true"]').forEach(el => {
-                    el.setAttribute('contenteditable', 'false');
-                });
-                
+
                 // Restore original data
                 app.data = JSON.parse(JSON.stringify(app.state.originalData));
-                app.render();
+                app.state.originalData = null;
+
+                // Restore view mode UI
+                app.restoreViewMode();
             }
+        },
+        restoreViewMode() {
+            const data = app.data;
+
+            // Restore title
+            const titleInput = $('#campaign-title');
+            if (titleInput && titleInput.tagName === 'INPUT') {
+                titleInput.outerHTML = `<h1 id="campaign-title" class="campaign-title">${data.title || 'Campaign Title'}</h1>`;
+            }
+
+            // Restore description
+            const descInput = $('#campaign-description');
+            if (descInput && descInput.tagName === 'TEXTAREA') {
+                let parsedDescription = data.description || 'Campaign Description';
+                if (typeof marked !== 'undefined' && marked.parse && data.description) {
+                    try {
+                        marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+                        parsedDescription = marked.parse(data.description);
+                    } catch (e) {
+                        console.error('Error parsing markdown:', e);
+                    }
+                }
+                descInput.outerHTML = `<p id="campaign-description" class="campaign-description">${parsedDescription}</p>`;
+            }
+
+            // Restore location stat card
+            const locationField = $('.edit-location-fields');
+            if (locationField) {
+                locationField.parentElement.innerHTML = `
+                    <div class="stat-value" id="campaign-location">${data.location?.region || 'Unknown'}</div>
+                    <div class="stat-label">Location</div>
+                `;
+            }
+
+            // Restore goal stat card
+            const goalInput = $('#edit-goal');
+            if (goalInput) {
+                const goalAmount = data.funding?.goalAmount || data.fundingGoal || 0;
+                const currency = data.funding?.currency || 'USD';
+                goalInput.parentElement.parentElement.innerHTML = `
+                    <div class="stat-value" id="campaign-goal">${app.utils.formatCurrency(goalAmount, currency)}</div>
+                    <div class="stat-label">Goal Amount</div>
+                `;
+            }
+
+            // Re-render everything else
+            app.render();
         },
         async saveChanges() {
             try {
-                // Collect all editable content
+                // Collect all editable content from form inputs
+                const titleInput = $('#campaign-title');
+                const regionInput = $('#edit-region');
+                const countryInput = $('#edit-country');
+                const latInput = $('#edit-lat');
+                const lngInput = $('#edit-lng');
+                const goalInput = $('#edit-goal');
+
+                // Get description from EasyMDE editor
+                const description = app.state.descriptionEditor ? app.state.descriptionEditor.value() : app.data.description;
+
                 const updatedData = {
                     ...app.data,
-                    title: $('#campaign-title').textContent,
-                    description: $('#campaign-description').textContent,
+                    title: titleInput ? titleInput.value : app.data.title,
+                    description: description,
+                    location: {
+                        ...app.data.location,
+                        region: regionInput ? regionInput.value : app.data.location?.region,
+                        country: countryInput ? countryInput.value : app.data.location?.country,
+                        coordinates: {
+                            latitude: latInput ? parseFloat(latInput.value) : app.data.location?.coordinates?.latitude,
+                            longitude: lngInput ? parseFloat(lngInput.value) : app.data.location?.coordinates?.longitude
+                        }
+                    },
                     funding: {
                         ...app.data.funding,
-                        raisedAmount: parseFloat($('#raised-amount-input').value || 0)
+                        goalAmount: goalInput ? parseFloat(goalInput.value) : (app.data.funding?.goalAmount || app.data.fundingGoal)
                     }
                 };
 
@@ -673,14 +1127,19 @@
 
                 const result = await response.json();
                 if (result.success) {
+                    // Clean up markdown editor
+                    if (app.state.descriptionEditor) {
+                        app.state.descriptionEditor.toTextArea();
+                        app.state.descriptionEditor = null;
+                    }
+
                     app.state.isEditMode = false;
                     document.body.classList.remove('edit-mode');
-                    $$('[contenteditable="true"]').forEach(el => {
-                        el.setAttribute('contenteditable', 'false');
-                    });
-                    alert('Changes saved successfully!');
                     app.data = updatedData;
-                    app.render();
+                    app.restoreViewMode();
+                    alert('Changes saved successfully!');
+                } else {
+                    throw new Error(result.error || 'Save failed');
                 }
             } catch (error) {
                 console.error('Error saving changes:', error);
@@ -696,7 +1155,7 @@
                 formData.append('image', file);
                 formData.append('campaignId', app.state.id);
 
-                const response = await fetch('/api/campaign/media', {
+                const response = await fetch('/api.php/campaign/media', {
                     method: 'POST',
                     body: formData,
                     "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
@@ -716,6 +1175,195 @@
             } catch (error) {
                 console.error('Error uploading image:', error);
                 alert('Failed to upload image. Please try again.');
+            }
+        },
+        addMetric() {
+            const name = prompt('Metric name:');
+            if (!name) return;
+
+            const baseline = parseFloat(prompt('Baseline value:') || '0');
+            const current = parseFloat(prompt('Current value:') || '0');
+            const target = parseFloat(prompt('Target value:') || '0');
+            const unit = prompt('Unit (e.g., people, kg, liters):') || '';
+
+            if (!app.data.impact) app.data.impact = { metrics: [] };
+            if (!app.data.impact.metrics) app.data.impact.metrics = [];
+
+            app.data.impact.metrics.push({
+                name,
+                baseline,
+                current,
+                target,
+                unit
+            });
+
+            app.render();
+        },
+        editMetric(index) {
+            const metric = app.data.impact.metrics[index];
+            if (!metric) return;
+
+            const name = prompt('Metric name:', metric.name);
+            if (name === null) return;
+
+            const baseline = parseFloat(prompt('Baseline value:', metric.baseline) || '0');
+            const current = parseFloat(prompt('Current value:', metric.current) || '0');
+            const target = parseFloat(prompt('Target value:', metric.target) || '0');
+            const unit = prompt('Unit:', metric.unit) || '';
+
+            app.data.impact.metrics[index] = {
+                name,
+                baseline,
+                current,
+                target,
+                unit
+            };
+
+            app.render();
+        },
+        deleteMetric(index) {
+            if (confirm('Are you sure you want to delete this metric?')) {
+                app.data.impact.metrics.splice(index, 1);
+                app.render();
+            }
+        },
+        addMilestone() {
+            const title = prompt('Milestone title:');
+            if (!title) return;
+
+            const description = prompt('Description:') || '';
+            const scheduledDate = prompt('Scheduled date (YYYY-MM-DD):') || new Date().toISOString().split('T')[0];
+            const status = prompt('Status (pending/active/completed):', 'pending') || 'pending';
+
+            if (!app.data.timeline) app.data.timeline = { milestones: [] };
+            if (!app.data.timeline.milestones) app.data.timeline.milestones = [];
+
+            app.data.timeline.milestones.push({
+                title,
+                description,
+                scheduledDate,
+                status
+            });
+
+            app.render();
+        },
+        editMilestone(index) {
+            const milestone = app.data.timeline.milestones[index];
+            if (!milestone) return;
+
+            const title = prompt('Milestone title:', milestone.title);
+            if (title === null) return;
+
+            const description = prompt('Description:', milestone.description) || '';
+            const scheduledDate = prompt('Scheduled date (YYYY-MM-DD):', milestone.scheduledDate) || milestone.scheduledDate;
+            const status = prompt('Status (pending/active/completed):', milestone.status) || 'pending';
+
+            app.data.timeline.milestones[index] = {
+                title,
+                description,
+                scheduledDate,
+                status
+            };
+
+            app.render();
+        },
+        deleteMilestone(index) {
+            if (confirm('Are you sure you want to delete this milestone?')) {
+                app.data.timeline.milestones.splice(index, 1);
+                app.render();
+            }
+        },
+        // Language support functions
+        getTranslatedContent(lang = null) {
+            const language = lang || app.state.currentLanguage;
+            const data = app.data;
+
+            // If requesting default language or no translations exist, return original data
+            if (!data.translations || language === data.defaultLanguage) {
+                return data;
+            }
+
+            // If translation exists for this language, merge it with base data
+            if (data.translations[language]) {
+                const translation = data.translations[language];
+                return {
+                    ...data,
+                    title: translation.title || data.title,
+                    description: translation.description || data.description,
+                    location: {
+                        ...data.location,
+                        ...(translation.location || {})
+                    },
+                    impact: {
+                        ...data.impact,
+                        metrics: data.impact?.metrics?.map((metric, idx) => ({
+                            ...metric,
+                            ...(translation.impact?.metrics?.[idx] || {})
+                        })) || []
+                    },
+                    timeline: {
+                        ...data.timeline,
+                        milestones: data.timeline?.milestones?.map((milestone, idx) => ({
+                            ...milestone,
+                            ...(translation.timeline?.milestones?.[idx] || {})
+                        })) || []
+                    }
+                };
+            }
+
+            // Fallback to default language
+            return data;
+        },
+        switchLanguage(lang) {
+            if (lang === app.state.currentLanguage) return;
+
+            app.state.currentLanguage = lang;
+
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('lang', lang);
+            window.history.pushState({}, '', url);
+
+            // Update language switcher component
+            const switcher = document.getElementById('language-switcher');
+            if (switcher) {
+                switcher.setCurrentLanguage(lang);
+            }
+
+            // Re-render with new language
+            app.render();
+        },
+        initLanguageSupport() {
+            // Get available languages from campaign data
+            const languages = [app.data.defaultLanguage || 'en'];
+            if (app.data.translations) {
+                languages.push(...Object.keys(app.data.translations));
+            }
+            app.state.availableLanguages = languages;
+
+            // Check URL for language parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlLang = urlParams.get('lang');
+            if (urlLang && languages.includes(urlLang)) {
+                app.state.currentLanguage = urlLang;
+            } else {
+                // Detect browser language
+                const browserLang = navigator.language.split('-')[0];
+                if (languages.includes(browserLang)) {
+                    app.state.currentLanguage = browserLang;
+                }
+            }
+
+            // Initialize language switcher component
+            const switcher = document.getElementById('language-switcher');
+            if (switcher) {
+                switcher.setLanguages(languages);
+                switcher.setCurrentLanguage(app.state.currentLanguage);
+
+                // Listen for language change events
+                switcher.addEventListener('language-change', (e) => {
+                    app.switchLanguage(e.detail.language);
+                });
             }
         },
         utils: {
@@ -745,19 +1393,43 @@
             }
         },
         fetch(url) {
+            console.log('fetch() called with URL:', url);
             const app=this;
             fetch(url, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    ...(localStorage.getItem('accessToken') ? {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    } : {})
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('API response received:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Campaign data received:', data);
                 app.data = data;
                 app.state.loaded = true;
+
+                // Check ownership
+                if (app.state.isAuthenticated && data.creatorId) {
+                    // Extract user ID from token
+                    const token = localStorage.getItem('accessToken');
+                    if (token) {
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            const userId = payload.sub || payload.userId || payload._id || payload.id;
+                            app.state.isOwner = (userId === data.creatorId || userId === data.creatorId?.$oid);
+                        } catch (e) {
+                            console.error('Error parsing token:', e);
+                        }
+                    }
+                }
+
+                app.initLanguageSupport();
                 app.render();
-                
+
                 // After rendering the campaign, fetch donations data
                 if (app.state.id) {
                     app.fetchDonations(app.state.id);
@@ -771,7 +1443,9 @@
             fetch(`/api.php/Donation/getCampaignDonations?campaignId=${campaignId}`, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    ...(localStorage.getItem('accessToken') ? {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    } : {})
                 }
             })
             .then(response => response.json())
@@ -830,21 +1504,101 @@
             .catch(error => console.error('Donation fetch error:', error));
         },
         render() {
-            const data = app.data;
+            // Get translated content based on current language
+            const data = app.getTranslatedContent();
 
             console.log('Campaign Data:', data);
-            
+            console.log('Current Language:', app.state.currentLanguage);
+
+            // Skip rendering if in edit mode (don't overwrite form inputs)
+            if (app.state.isEditMode) {
+                return;
+            }
+
             // Basic Info
-            $('#campaign-title').textContent = data.title || "Campaign Title";
-            $('#campaign-description').textContent = data.description || "Campaign Description";
-            $('#campaign-location').textContent = data.location?.region || "Unknown";
-            if(data.funding){
-                $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount ?? data.fundingGoal ?? 0, data.funding.currency ?? 'USD');
-                $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount ?? 0, data.funding.currency ?? 'USD');
-                $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount ?? 0);
-            }else{
-                $('#campaign-goal').textContent = app.utils.formatCurrency(data.fundingGoal ?? 0, 'USD');
-                console.log('Funding data not available.');
+            const titleEl = $('#campaign-title');
+            if (titleEl && titleEl.tagName === 'H1') {
+                titleEl.textContent = data.title || "Campaign Title";
+            } else if (titleEl && titleEl.tagName === 'INPUT') {
+                // We're in edit mode, don't overwrite
+                return;
+            } else {
+                // Restore H1 element for view mode
+                const titleContainer = $('#campaign-title')?.parentElement || document.querySelector('.campaign-info');
+                const existingTitle = $('#campaign-title');
+                if (existingTitle) {
+                    existingTitle.outerHTML = `<h1 id="campaign-title" class="campaign-title" contenteditable="false">${data.title || "Campaign Title"}</h1>`;
+                }
+            }
+
+            // Parse markdown for description (only in view mode)
+            const descEl = $('#campaign-description');
+            if (descEl && descEl.tagName !== 'TEXTAREA') {
+                if (data.description) {
+                    try {
+                        let parsedDescription;
+
+                        // Check if marked is loaded and parse markdown
+                        if (typeof marked !== 'undefined' && marked.parse) {
+                            console.log('Parsing markdown with marked.parse()');
+
+                            // Configure marked to handle breaks properly
+                            marked.setOptions({
+                                breaks: true,        // Convert \n to <br>
+                                gfm: true,          // GitHub Flavored Markdown
+                                headerIds: false,   // Don't add IDs to headers
+                                mangle: false       // Don't escape autolinked email addresses
+                            });
+
+                            parsedDescription = marked.parse(data.description);
+                        } else {
+                            // Fallback: simple formatting
+                            console.warn('marked.js not available, using simple formatting');
+                            parsedDescription = data.description
+                                .replace(/\n/g, '<br>')
+                                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                        }
+
+                        // Restore P element if needed
+                        if (descEl.tagName === 'INPUT' || descEl.tagName === 'TEXTAREA') {
+                            descEl.outerHTML = `<p id="campaign-description" class="campaign-description" contenteditable="false">${parsedDescription}</p>`;
+                        } else {
+                            descEl.innerHTML = parsedDescription;
+                        }
+                        console.log('Description rendered, length:', parsedDescription.length);
+                    } catch (error) {
+                        console.error('Error parsing markdown:', error);
+                        // Fallback to plain text with line breaks
+                        if (descEl) {
+                            descEl.innerHTML = data.description.replace(/\n/g, '<br>');
+                        }
+                    }
+                } else {
+                    console.warn('No description in campaign data');
+                    if (descEl) {
+                        descEl.textContent = "Campaign Description";
+                    }
+                }
+            }
+
+            // Only update location if not in edit mode
+            const locationEl = $('#campaign-location');
+            if (locationEl && !locationEl.parentElement.querySelector('.edit-location-fields')) {
+                locationEl.textContent = data.location?.region || "Unknown";
+            }
+
+            // Only update goal if not in edit mode
+            const goalEl = $('#campaign-goal');
+            if (goalEl && goalEl.tagName !== 'INPUT') {
+                if(data.funding){
+                    goalEl.textContent = app.utils.formatCurrency(data.funding.goalAmount ?? data.fundingGoal ?? 0, data.funding.currency ?? 'USD');
+                    $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount ?? 0, data.funding.currency ?? 'USD');
+                    $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount ?? 0);
+                } else {
+                    goalEl.textContent = app.utils.formatCurrency(data.fundingGoal ?? 0, 'USD');
+                    console.log('Funding data not available.');
+                }
             }
 
             // Map
@@ -873,39 +1627,85 @@
 
             // Impact Metrics
             const impactMetrics = data.impact?.metrics || [];
+            const impactSection = $('#impact-metrics');
             if (impactMetrics.length === 0) {
-                $('#impact-metrics').innerHTML = '<li>No impact metrics available.</li>';
+                impactSection.innerHTML = '<li>No impact metrics available.</li>';
             } else {
-                const metricsHtml = impactMetrics.map(metric => `
+                const metricsHtml = impactMetrics.map((metric, index) => `
                     <li>
-                        <div class="flex justify-between items-center">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong>${metric.name}</strong>
                             <span>${metric.current}/${metric.target} ${metric.unit}</span>
                         </div>
-                        <div class="text-sm text-gray-600">Baseline: ${metric.baseline} ${metric.unit}</div>
+                        <div style="font-size: 0.875rem; color: #666;">Baseline: ${metric.baseline} ${metric.unit}</div>
+                        <div class="metric-item-controls">
+                            <button class="item-edit-btn" onclick="app.editMetric(${index})">
+                                <i class="fa-solid fa-edit"></i> Edit
+                            </button>
+                            <button class="item-delete-btn" onclick="app.deleteMetric(${index})">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
                     </li>
                 `).join('');
-                $('#impact-metrics').innerHTML = metricsHtml;
+                impactSection.innerHTML = metricsHtml;
+            }
+
+            // Add "Add Metric" button
+            const metricsCard = impactSection.closest('.card');
+            let addMetricBtn = metricsCard.querySelector('.add-metric-button');
+            if (!addMetricBtn) {
+                addMetricBtn = document.createElement('button');
+                addMetricBtn.className = 'add-metric-button';
+                addMetricBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Metric';
+                addMetricBtn.onclick = () => app.addMetric();
+                metricsCard.appendChild(addMetricBtn);
             }
 
             // Milestones
             const milestones = data.timeline?.milestones || [];
+            const milestonesSection = $('#milestones');
             if (milestones.length === 0) {
-                $('#milestones').innerHTML = '<li>No milestones available.</li>';
+                milestonesSection.innerHTML = '<li>No milestones available.</li>';
                 const canvas = document.getElementById('timeline-chart');
                 if (canvas) canvas.outerHTML = '<p id="timeline-chart">No timeline data.</p>';
             } else {
-                const milestonesHtml = data.timeline.milestones.map(milestone => `
+                const milestonesHtml = milestones.map((milestone, index) => `
                     <li>
-                        <div class="flex justify-between items-center">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong>${milestone.title}</strong>
                             <span class="status-badge ${app.utils.getStatusClass(milestone.status)}">${milestone.status}</span>
                         </div>
-                        <p class="text-gray-600 mt-2">${milestone.description}</p>
+                        <p style="color: #666; margin-top: 8px;">${milestone.description}</p>
+                        <div class="milestone-item-controls">
+                            <button class="item-edit-btn" onclick="app.editMilestone(${index})">
+                                <i class="fa-solid fa-edit"></i> Edit
+                            </button>
+                            <button class="item-delete-btn" onclick="app.deleteMilestone(${index})">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
                     </li>
                 `).join('');
-                $('#milestones').innerHTML = milestonesHtml;
+                milestonesSection.innerHTML = milestonesHtml;
                 app.renderTimeline();
+            }
+
+            // Add "Add Milestone" button
+            const milestonesCard = milestonesSection.closest('.card');
+            let addMilestoneBtn = milestonesCard.querySelector('.add-milestone-button');
+            if (!addMilestoneBtn) {
+                addMilestoneBtn = document.createElement('button');
+                addMilestoneBtn.className = 'add-milestone-button';
+                addMilestoneBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Milestone';
+                addMilestoneBtn.onclick = () => app.addMilestone();
+                // Insert before the chart
+                const chart = document.getElementById('timeline-chart');
+                if (chart) {
+                    milestonesCard.insertBefore(addMilestoneBtn, chart);
+                } else {
+                    milestonesCard.appendChild(addMilestoneBtn);
+                }
             }
 
             // Media Gallery
@@ -934,6 +1734,18 @@
                 }
             }).join('');
             $('#media-gallery').innerHTML = mediaHtml;
+
+            // Show/hide edit controls based on ownership
+            const editControls = document.querySelector('.campaign-info span[style*="float:right"]');
+            if (editControls) {
+                editControls.style.display = app.state.isOwner ? 'inline' : 'none';
+            }
+
+            // Show/hide auth banner based on authentication
+            const authBanner = document.getElementById('auth-banner');
+            if (authBanner) {
+                authBanner.style.display = app.state.isAuthenticated ? 'none' : 'block';
+            }
         },
         renderTimeline() {
             const milestones = app.data.timeline?.milestones || [];
@@ -1099,8 +1911,15 @@
     };
     */
 
+    // Debug: Log that the script is loaded
+    console.log('Campaign detail script loaded');
+    console.log('marked available:', typeof marked);
+
     window.app = app;
-    document.addEventListener('DOMContentLoaded', () => app.init());
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired, initializing app');
+        app.init();
+    });
 })();
 </script>
 </body>
