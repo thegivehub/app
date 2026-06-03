@@ -499,7 +499,7 @@ class GiveHubAPI {
         ];
 
         $context = stream_context_create($options);
-        $response = file_get_contents($this->baseUrl . '/api/auth/login', false, $context);
+        $response = file_get_contents($this->baseUrl . '/api.php/auth/login', false, $context);
         $result = json_decode($response, true);
 
         if ($result['success']) {

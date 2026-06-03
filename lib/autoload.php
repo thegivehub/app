@@ -1,17 +1,19 @@
 <?php
 
-/**
- * Sends a JSON response and exits
- * @param int $code HTTP response code
- * @param mixed $data Data to be JSON encoded
- * @param bool $exit Whether to exit after sending (default: true)
- */
-function sendJson($code, $data, $exit = true) {
-    http_response_code($code);
-    header('Content-Type: application/json');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if ($exit) {
-        exit;
+if (!function_exists("sendJson")) {
+    /**
+     * Sends a JSON response and exits
+     * @param int $code HTTP response code
+     * @param mixed $data Data to be JSON encoded
+     * @param bool $exit Whether to exit after sending (default: true)
+     */
+    function sendJson($code, $data, $exit = true) {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($exit) {
+            exit;
+        }
     }
 }
 

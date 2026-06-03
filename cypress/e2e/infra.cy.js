@@ -11,13 +11,13 @@ describe('Tranche2 - Infra & Security', () => {
 
   it('T110: Implement rate limiting & abuse protection', () => {
     const tries = Array.from({length:30}, (_,i)=>i);
-    tries.forEach(i => cy.request({ url:'/api/public/ping', failOnStatusCode:false }));
-    cy.request({ url:'/api/public/ping', failOnStatusCode:false }).then(r => expect([200,429,500]).to.include(r.status));
+    tries.forEach(i => cy.request({ url:'/api.php/public/ping', failOnStatusCode:false }));
+    cy.request({ url:'/api.php/public/ping', failOnStatusCode:false }).then(r => expect([200,429,500]).to.include(r.status));
   });
 
   it('T111: Address penetration test fixes (security headers)', () => {
     // Use API endpoint where security headers are enforced consistently
-    cy.request({ url: '/api/public/ping', failOnStatusCode: false }).then(r => {
+    cy.request({ url: '/api.php/public/ping', failOnStatusCode: false }).then(r => {
       expect(r.headers).to.have.property('content-security-policy');
       expect(r.headers).to.have.property('strict-transport-security');
       expect(r.headers).to.have.property('x-content-type-options');

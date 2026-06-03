@@ -31,7 +31,7 @@ class JumioService {
             ? 'https://app.thegivehub.com' 
             : 'https://dev.thegivehub.com';
             
-        $this->callbackUrl = $appDomain . '/api/kyc/webhook';
+        $this->callbackUrl = $appDomain . '/api.php/kyc/webhook';
     }
 
     /**

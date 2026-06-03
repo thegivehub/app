@@ -193,3 +193,27 @@ docker-compose down
 docker-compose build
 docker-compose up -d
 ```
+
+## Rollback
+
+If a deployment needs to be rolled back, you can revert to a previous commit and rebuild the containers.
+
+Option A: Use the rollback helper script (recommended when deploying from git):
+
+```bash
+# Example: rollback to the previous commit
+./scripts/rollback.sh HEAD~1
+
+# Dry run
+./scripts/rollback.sh HEAD~1 --dry-run
+```
+
+Option B: Manually checkout a previous commit and rebuild:
+
+```bash
+git checkout <commit-sha>
+docker compose down || docker-compose down
+docker compose up -d --build || docker-compose up -d --build
+```
+
+Note: If you deploy via container registry images, adopt an image tag based rollback (swap to the prior tag and redeploy). The CI workflow `build.yml` publishes images to GHCR with tags `latest` and `sha-<commit>`.

@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8">
+    <title>Campaign Detail</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --background-color: #f4f4f9;
+            --text-color: #333;
+            --header-background: #666;
+            --header-color: #fff;
+            --primary-color: #2563eb;
+            --success-color: #22c55e;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            box-sizing: border-box;
+            font-family: "Lexend", "Helvetica Neue", "Helvetica", sans-serif;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                font-size: 14px;
+            }
+        }
+
+        * {
+            box-sizing: inherit;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1024px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            gap: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .campaign-header {
+            position: relative;
+            background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+            border: 1px solid #e2e8f0;
+        }
+
+        .campaign-info {
+            width: 100%;
+        }
+
+        .campaign-map-section {
+            margin-top: 24px;
+        }
+
+        .campaign-title {
+            font-size: 2.5rem;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #1e293b;
+            border-bottom: 3px solid var(--success-color);
+            padding-bottom: 12px;
+            display: inline-block;
+        }
+
+        .campaign-description {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 24px;
+            min-height: 100px;
+            /* Debug: make it obvious where the content is */
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            /* Ensure proper display of block elements */
+            display: block;
+            white-space: normal;
+            line-height: 1.6;
+        }
+
+        /* Markdown content styles */
+        .campaign-description h1, .campaign-description h2, .campaign-description h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #1e293b;
+            display: block;
+            line-height: 1.3;
+        }
+
+        .campaign-description h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .campaign-description h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .campaign-description h3 {
+            font-size: 1.25em;
+            font-weight: bold;
+        }
+
+        .campaign-description p {
+            margin-bottom: 1em;
+            display: block;
+        }
+        .campaign-description ul, .campaign-description ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        .campaign-description a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        .campaign-description code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .campaign-description blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1em;
+            margin-left: 0;
+            font-style: italic;
+            color: #666;
+        }
+        .campaign-description img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: var(--border-radius);
+            margin-top: 16px;
+        }
+
+        .progress-container {
+            margin: 24px 0;
+            background: linear-gradient(to right, #dcfce7, #f0fdf4);
+            padding: 24px;
+            border-radius: var(--border-radius);
+        }
+
+        .progress-bar {
+            background-color: white;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 32px;
+            margin: 8px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar div {
+            height: 100%;
+            background-color: var(--success-color);
+            transition: width 1s ease-in-out;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: #1e293b;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .impact-metrics, .milestones {
+            list-style: none;
+        }
+
+        .impact-metrics li, .milestones li {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .impact-metrics li:last-child, .milestones li:last-child {
+            border-bottom: none;
+        }
+
+        .impact-metrics li:hover, .milestones li:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .media-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            background: #f8fafc;
+        }
+
+        .media-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .media-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .media-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-completed {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-pending {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        /* Timeline styles */
+        .timeline {
+            position: relative;
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0.6rem;
+            width: 2px;
+            background: var(--gray-300);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.85rem;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .timeline-date {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+        .link {
+            color: #339;
+            text-decoration: none;
+            background-color: #0099ff00;
+            transition: all 300ms linear;
+        }
+        .link:hover {
+            color: #fff;
+            text-decoration: underline;
+            background-color: #0066ffcc;
+        }
+
+        /* Sticky Donate Button */
+        .donate-button-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+        
+        /* Custom styling for the donate-button web component */
+        donate-button {
+            --primary-color: var(--success-color);
+            --primary-hover: #15803d;
+        }
+
+        /* Inline Editing Styles */
+        [contenteditable="true"] {
+            position: relative;
+            outline: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        [contenteditable="true"]:hover {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        [contenteditable="true"]:focus {
+            background-color: rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Edit Mode Styles */
+        .edit-mode [contenteditable="true"] {
+            border: 1px dashed #2563eb;
+        }
+
+        .edit-mode [contenteditable="true"]:hover::before {
+            content: "Click to edit";
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2563eb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .edit-controls {
+            display: none;
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .edit-mode .edit-controls {
+            display: flex;
+        }
+
+        .edit-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-button {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .save-button:hover {
+            background-color: #15803d;
+        }
+
+        .cancel-button {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .cancel-button:hover {
+            background-color: #b91c1c;
+        }
+
+        .media-upload {
+            display: none;
+        }
+
+        .edit-mode .media-upload {
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .media-upload-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .media-upload-button:hover {
+            background-color: #1e40af;
+        }
+
+        .progress-edit {
+            display: none;
+        }
+
+        .edit-mode .progress-edit {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .progress-edit input {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            width: 120px;
+        }
+
+        .milestone-controls {
+            display: none;
+        }
+
+        .edit-mode .milestone-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .add-milestone-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Auth Banner Styles */
+        .auth-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+        }
+
+        .auth-banner h3 {
+            color: white;
+        }
+
+        .auth-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .register-button {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .register-button:hover {
+            background-color: #15803d;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .login-button {
+            background-color: white;
+            color: var(--primary-color);
+        }
+
+        .login-button:hover {
+            background-color: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script>
+        // Early debug - check if scripts are loading
+        console.log('[EARLY] Page loading, marked type:', typeof marked);
+    </script>
+    <script src="/assets/js/analytics.js"></script>
+    <script src="/lib/DonateButton.js?v=2"></script>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Culture and creativity are essential to community identity. Your contribution will help preserve and promote the unique artistic traditions of San Diego while n">
+    <link rel="canonical" href="https://app.thegivehub.com/campaigns/documentary-about-san-diego.html">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Documentary about San Diego">
+    <meta property="og:description" content="Culture and creativity are essential to community identity. Your contribution will help preserve and promote the unique artistic traditions of San Diego while n">
+    <meta property="og:url" content="https://app.thegivehub.com/campaigns/documentary-about-san-diego.html">
+    <meta property="og:type" content="website">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Documentary about San Diego">
+    <meta name="twitter:description" content="Culture and creativity are essential to community identity. Your contribution will help preserve and promote the unique artistic traditions of San Diego while n">
+    
+<script id="campaign-data" type="application/json">{"_id":"67e0d0aae7d5939c500bfa0e","title":"Documentary about San Diego","description":"Culture and creativity are essential to community identity. Your contribution will help preserve and promote the unique artistic traditions of San Diego while nurturing the next generation of artists.\n\nYour support will make a difference in San Diego and beyond. Every donation, no matter the size, brings us closer to our goal. Thank you for your generosity!","category":"Arts","creatorId":"677cef307592768558ef91c3","creatorName":"chuckles","fundingGoal":63400,"raised":27262,"status":"active","createdAt":"2024-07-28 14:18:42","deadline":"2024-09-24 14:18:42","minContribution":25,"location":{"region":"San Diego","country":"United States"},"images":[{"uploadedAt":"2025-04-11T09:28:32+00:00","url":"/img/campaign-placeholder-3.jpg"}],"reviewedAt":"2024-07-29 14:18:42","reviewedBy":"Joseph Watson","gallery":null,"stellarAddress":"GAPPQWHW5EV2OHAYMOAOGCHMGFIC364JCWLYSBXFZDOSZKK3NR4OHAGO","updatedAt":"2025-05-07T15:01:26+00:00","walletId":"681b75c67d992a95b605d78a"}</script>
+</head>
+<body>
+    <script>
+        // Check at body start
+        console.log('[BODY START] Body loading, marked type:', typeof marked);
+    </script>
+<main>
+    <div class="container">
+        <div class="edit-controls">
+            <button class="edit-button save-button" onclick="app.saveChanges()">
+                <i class="fa-solid fa-save"></i>
+                Save Changes
+            </button>
+            <button class="edit-button cancel-button" onclick="app.cancelChanges()">
+                <i class="fa-solid fa-times"></i>
+                Cancel
+            </button>
+        </div>
+        <div class="donate-button-container">
+            <donate-button id="donate-btn"></donate-button>
+        </div>
+        <!-- Auth Banner for Non-Authenticated Users -->
+        <div id="auth-banner" class="card auth-banner" style="display: none;">
+            <div style="text-align: center; padding: 12px;">
+                <i class="fa-solid fa-user-circle" style="font-size: 2em; color: white; margin-bottom: 8px;"></i>
+                <h3 style="margin-bottom: 8px;">Support This Campaign</h3>
+                <p style="margin-bottom: 16px;">Create an account or log in to make a donation and track your impact.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="/register.html" class="auth-button register-button">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </a>
+                    <a href="/login.html" class="auth-button login-button">
+                        <i class="fa-solid fa-sign-in-alt"></i> Log In
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card campaign-header">
+            <div class="campaign-info">
+                <span style="float:right">
+                    <a href="#" class="link" onclick="app.editCampaign(); return false;">
+                    <i class="fa-solid fa-edit"></i> Edit
+                </a>
+                |
+                <a href="#" class="link" onclick="app.deleteCampaign(); return false;">
+                    Delete
+                </a>
+                </span>
+                <h1 id="campaign-title" class="campaign-title" contenteditable="false">Campaign Title</h1>
+                <p id="campaign-description" class="campaign-description" contenteditable="false"></p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-donors">0</div>
+                        <div class="stat-label">Total Donors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-location">Unknown</div>
+                        <div class="stat-label">Location</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="campaign-goal">$0</div>
+                        <div class="stat-label">Goal Amount</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Map -->
+        <div class="card campaign-map-section">
+            <h2 class="section-title">Campaign Location</h2>
+            <div id="map"></div>
+        </div>
+
+        <div class="card">
+            <div class="progress-container">
+                <div class="progress-stats">
+                    <span>Progress</span>
+                    <span id="campaign-raised">$0</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-bar-fill"></div>
+                </div>
+                
+                <!-- Recent Donations -->
+                <div class="recent-donations-container" style="margin-top: 20px;">
+                    <h3 style="font-size: 1.2rem; margin-bottom: 10px;">Recent Donations</h3>
+                    <ul id="recent-donations" class="recent-donations" style="list-style: none; padding: 0;">
+                        <li>Loading recent donations...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Impact Metrics</h2>
+            <ul id="impact-metrics" class="impact-metrics"></ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Milestones</h2>
+            <ul id="milestones" class="milestones"></ul>
+            <canvas id="timeline-chart" style="width:100%;max-height:300px;"></canvas>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Media Gallery</h2>
+            <div class="media-upload">
+                <label class="media-upload-button">
+                    <i class="fa-solid fa-upload"></i>
+                    Add New Image
+                    <input type="file" accept="image/*" style="display: none" onchange="app.handleImageUpload(event)">
+                </label>
+            </div>
+            <div id="media-gallery" class="media-gallery"></div>
+        </div>
+    </div>
+</main>
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+    const app = {
+        data: {},
+        state: {
+            loaded: false,
+            map: null,
+            id: null,
+            isEditMode: false,
+            originalData: null,
+            timelineChart: null,
+            isAuthenticated: false,
+            isOwner: false
+        },
+        init() {
+            console.log('init() called');
+
+            // Check for embedded campaign data (for static pages)
+            const dataEl = document.getElementById('campaign-data');
+            if (dataEl) {
+                try {
+                    const data = JSON.parse(dataEl.textContent);
+                    console.log('Using embedded campaign data (static page)');
+                    app.data = data;
+                    app.state.loaded = true;
+                    app.state.id = data._id;
+                    app.state.isAuthenticated = !!localStorage.getItem('accessToken');
+                    app.render();
+                    return;
+                } catch (e) {
+                    console.error('Failed to parse embedded data:', e);
+                    // Fall through to fetch from API
+                }
+            }
+
+            // Dynamic mode: fetch from API
+            const query = app.utils.parseSearch();
+            const campaignId = query.id;
+            console.log('Campaign ID from URL:', campaignId);
+            if (!campaignId) {
+                alert('Campaign ID is required');
+                return;
+            }
+            app.state.id = campaignId;
+            app.state.isAuthenticated = !!localStorage.getItem('accessToken');
+            console.log('Fetching campaign data from API...');
+            app.fetch(`/api/campaign?id=${campaignId}`);
+        },
+        editCampaign() {
+            if(confirm('Press Edit Campaign on the next screen to edit this campaign.')) {
+                window.location.href = `/pages/campaign-edit.html?id=${this.state.id}`;
+            }
+        },
+        deleteCampaign() {
+            if(confirm('Are you sure you want to delete this campaign?')) {
+                fetch(`/api/campaign?id=${this.state.id}`, {
+                    method: 'DELETE',
+                    "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Campaign deleted successfully');
+                        // history.go(-1);
+                        location.href = '/pages/my-campaigns.html';
+                    } else {
+                        alert('Error deleting campaign');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        },
+        toggleEditMode() {
+            if (!app.state.isEditMode) {
+                // Store original data for cancellation
+                app.state.originalData = JSON.parse(JSON.stringify(app.data));
+                app.state.isEditMode = true;
+                document.body.classList.add('edit-mode');
+                
+                // Enable content editing
+                $$('[contenteditable="false"]').forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                });
+            }
+        },
+        cancelChanges() {
+            if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+                app.state.isEditMode = false;
+                document.body.classList.remove('edit-mode');
+                
+                // Disable content editing
+                $$('[contenteditable="true"]').forEach(el => {
+                    el.setAttribute('contenteditable', 'false');
+                });
+                
+                // Restore original data
+                app.data = JSON.parse(JSON.stringify(app.state.originalData));
+                app.render();
+            }
+        },
+        async saveChanges() {
+            try {
+                // Collect all editable content
+                const updatedData = {
+                    ...app.data,
+                    title: $('#campaign-title').textContent,
+                    description: $('#campaign-description').textContent,
+                    funding: {
+                        ...app.data.funding,
+                        raisedAmount: parseFloat($('#raised-amount-input').value || 0)
+                    }
+                };
+
+                // Send to server
+                const response = await fetch(`/api/campaign?id=${app.state.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (!response.ok) throw new Error('Failed to save changes');
+
+                const result = await response.json();
+                if (result.success) {
+                    app.state.isEditMode = false;
+                    document.body.classList.remove('edit-mode');
+                    $$('[contenteditable="true"]').forEach(el => {
+                        el.setAttribute('contenteditable', 'false');
+                    });
+                    alert('Changes saved successfully!');
+                    app.data = updatedData;
+                    app.render();
+                }
+            } catch (error) {
+                console.error('Error saving changes:', error);
+                alert('Failed to save changes. Please try again.');
+            }
+        },
+        async handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('campaignId', app.state.id);
+
+                const response = await fetch('/api.php/campaign/media', {
+                    method: 'POST',
+                    body: formData,
+                    "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+                });
+
+                if (!response.ok) throw new Error('Failed to upload image');
+
+                const result = await response.json();
+                if (result.success) {
+                    app.data.media.push({
+                        type: 'image',
+                        url: result.url,
+                        caption: file.name
+                    });
+                    app.render();
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image. Please try again.');
+            }
+        },
+        utils: {
+            parseSearch() {
+                const qs = document.location.search.replace(/^\?/, '');
+                const items = qs.split(/&/);
+                const query = {};
+                for (let item of items) {
+                    const parts = item.split(/=/, 2);
+                    if (parts && parts[0]) query[parts[0]] = parts[1];
+                }
+                return query;
+            },
+            formatCurrency(amount, currency = 'USD') {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: currency
+                }).format(amount);
+            },
+            getStatusClass(status) {
+                const statusMap = {
+                    'active': 'status-active',
+                    'completed': 'status-completed',
+                    'pending': 'status-pending'
+                };
+                return statusMap[status.toLowerCase()] || 'status-pending';
+            }
+        },
+        fetch(url) {
+            console.log('fetch() called with URL:', url);
+            const app=this;
+            fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(localStorage.getItem('accessToken') ? {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    } : {})
+                }
+            })
+            .then(response => {
+                console.log('API response received:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Campaign data received:', data);
+                app.data = data;
+                app.state.loaded = true;
+
+                // Check ownership
+                if (app.state.isAuthenticated && data.creatorId) {
+                    // Extract user ID from token
+                    const token = localStorage.getItem('accessToken');
+                    if (token) {
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            const userId = payload.sub || payload.userId || payload._id || payload.id;
+                            app.state.isOwner = (userId === data.creatorId || userId === data.creatorId?.$oid);
+                        } catch (e) {
+                            console.error('Error parsing token:', e);
+                        }
+                    }
+                }
+
+                app.render();
+
+                // After rendering the campaign, fetch donations data
+                if (app.state.id) {
+                    app.fetchDonations(app.state.id);
+                }
+            })
+            .catch(error => console.error('Fetch error:', error));
+        },
+        
+        fetchDonations(campaignId) {
+            // Fetch donations from the donations collection
+            fetch(`/api.php/Donation/getCampaignDonations?campaignId=${campaignId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(localStorage.getItem('accessToken') ? {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    } : {})
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    console.log('Donation data:', result.data);
+                    
+                    // Update the campaign funding data with actual donations
+                    if (!app.data.funding) {
+                        app.data.funding = {};
+                    }
+                    
+                    // Update the funding data
+                    app.data.funding.raisedAmount = result.data.totalAmount || 0;
+                    app.data.funding.donorCount = result.data.donorCount || 0;
+                    
+                    // Render recent donations
+                    if (result.data.recentDonations && result.data.recentDonations.length > 0) {
+                        const donationsHtml = result.data.recentDonations.map(donation => {
+                            // Only show donor name if donation is public
+                            const donorName = donation.visibility === 'public' ? donation.donor : 'Anonymous';
+                            return `
+                                <li style="padding: 10px; margin-bottom: 8px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <strong>${donorName}</strong>
+                                        <span>${app.utils.formatCurrency(donation.amount, donation.currency)}</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #666;">
+                                        ${donation.date ? new Date(donation.date).toLocaleDateString() : 'Recently'}
+                                    </div>
+                                </li>
+                            `;
+                        }).join('');
+                        
+                        $('#recent-donations').innerHTML = donationsHtml;
+                    } else {
+                        $('#recent-donations').innerHTML = '<li>No donations yet. Be the first to donate!</li>';
+                    }
+                    
+                    // Update progress bar based on new numbers
+                    if (app.data.funding && app.data.funding.goalAmount) {
+                        const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                        $('#progress-bar-fill').style.width = `${progress}%`;
+                    }
+                    
+                    // Update displayed amount
+                    $('#campaign-raised').textContent = app.utils.formatCurrency(
+                        app.data.funding.raisedAmount, 
+                        app.data.funding.currency || 'USD'
+                    );
+                    
+                    // Update donor count
+                    $('#campaign-donors').textContent = new Intl.NumberFormat().format(app.data.funding.donorCount);
+                }
+            })
+            .catch(error => console.error('Donation fetch error:', error));
+        },
+        render() {
+            const data = app.data;
+
+            console.log('Campaign Data:', data);
+            
+            // Basic Info
+            $('#campaign-title').textContent = data.title || "Campaign Title";
+
+            // Parse markdown for description
+            if (data.description) {
+                try {
+                    let parsedDescription;
+
+                    // Check if marked is loaded and parse markdown
+                    if (typeof marked !== 'undefined' && marked.parse) {
+                        console.log('Parsing markdown with marked.parse()');
+
+                        // Configure marked to handle breaks properly
+                        marked.setOptions({
+                            breaks: true,        // Convert \n to <br>
+                            gfm: true,          // GitHub Flavored Markdown
+                            headerIds: false,   // Don't add IDs to headers
+                            mangle: false       // Don't escape autolinked email addresses
+                        });
+
+                        parsedDescription = marked.parse(data.description);
+                    } else {
+                        // Fallback: simple formatting
+                        console.warn('marked.js not available, using simple formatting');
+                        parsedDescription = data.description
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    }
+
+                    $('#campaign-description').innerHTML = parsedDescription;
+                    console.log('Description rendered, length:', parsedDescription.length);
+                    console.log('First 200 chars of rendered HTML:', parsedDescription.substring(0, 200));
+                    console.log('Description element:', $('#campaign-description'));
+                } catch (error) {
+                    console.error('Error parsing markdown:', error);
+                    // Fallback to plain text with line breaks
+                    $('#campaign-description').innerHTML = data.description.replace(/\n/g, '<br>');
+                }
+            } else {
+                console.warn('No description in campaign data');
+                $('#campaign-description').textContent = "Campaign Description";
+            }
+
+            $('#campaign-location').textContent = data.location?.region || "Unknown";
+            if(data.funding){
+                $('#campaign-goal').textContent = app.utils.formatCurrency(data.funding.goalAmount ?? data.fundingGoal ?? 0, data.funding.currency ?? 'USD');
+                $('#campaign-raised').textContent = app.utils.formatCurrency(data.funding.raisedAmount ?? 0, data.funding.currency ?? 'USD');
+                $('#campaign-donors').textContent = new Intl.NumberFormat().format(data.funding.donorCount ?? 0);
+            }else{
+                $('#campaign-goal').textContent = app.utils.formatCurrency(data.fundingGoal ?? 0, 'USD');
+                console.log('Funding data not available.');
+            }
+
+            // Map
+            if (data.location?.coordinates?.latitude && data.location?.coordinates?.longitude) {
+                app.renderMap(data.location?.coordinates?.latitude, 
+                            data.location?.coordinates?.longitude, 
+                            `${data.location?.region}, ${data.location?.country}`);
+                console.log(data.location);
+            }else{
+                console.log('No coordinates available for the map.');
+            }
+
+            // Progress Bar
+            if (data.funding && data.funding.goalAmount) {
+                const progress = (data.funding.raisedAmount / data.funding.goalAmount) * 100;
+                $('#progress-bar-fill').style.width = `${progress}%`;
+            } else {
+                $('#progress-bar-fill').style.width = '0%';
+            }
+
+            // Set campaign ID for the donate button web component
+            const donateBtn = document.getElementById('donate-btn');
+            if (donateBtn) {
+                donateBtn.setAttribute('campaign-id', app.state.id);
+            }
+
+            // Impact Metrics
+            const impactMetrics = data.impact?.metrics || [];
+            if (impactMetrics.length === 0) {
+                $('#impact-metrics').innerHTML = '<li>No impact metrics available.</li>';
+            } else {
+                const metricsHtml = impactMetrics.map(metric => `
+                    <li>
+                        <div class="flex justify-between items-center">
+                            <strong>${metric.name}</strong>
+                            <span>${metric.current}/${metric.target} ${metric.unit}</span>
+                        </div>
+                        <div class="text-sm text-gray-600">Baseline: ${metric.baseline} ${metric.unit}</div>
+                    </li>
+                `).join('');
+                $('#impact-metrics').innerHTML = metricsHtml;
+            }
+
+            // Milestones
+            const milestones = data.timeline?.milestones || [];
+            if (milestones.length === 0) {
+                $('#milestones').innerHTML = '<li>No milestones available.</li>';
+                const canvas = document.getElementById('timeline-chart');
+                if (canvas) canvas.outerHTML = '<p id="timeline-chart">No timeline data.</p>';
+            } else {
+                const milestonesHtml = data.timeline.milestones.map(milestone => `
+                    <li>
+                        <div class="flex justify-between items-center">
+                            <strong>${milestone.title}</strong>
+                            <span class="status-badge ${app.utils.getStatusClass(milestone.status)}">${milestone.status}</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">${milestone.description}</p>
+                    </li>
+                `).join('');
+                $('#milestones').innerHTML = milestonesHtml;
+                app.renderTimeline();
+            }
+
+            // Media Gallery
+
+            if (!data.media || data.media.length === 0) {
+                $('#media-gallery').innerHTML = '<p>No media available.</p>';
+                return;
+            }
+            const mediaHtml = data.media.map(media => {
+                if (media.type === 'image') {
+                    return `
+                        <div class="media-item">
+                            <img src="${media.url}" alt="${media.caption}">
+                            <div class="media-caption">${media.caption}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="media-item">
+                            <a href="${media.url}" target="_blank" class="flex items-center justify-center h-full">
+                                <i class="fas fa-file-alt fa-2x"></i>
+                                <div class="media-caption">${media.caption}</div>
+                            </a>
+                        </div>
+                    `;
+                }
+            }).join('');
+            $('#media-gallery').innerHTML = mediaHtml;
+
+            // Show/hide edit controls based on ownership
+            const editControls = document.querySelector('.campaign-info span[style*="float:right"]');
+            if (editControls) {
+                editControls.style.display = app.state.isOwner ? 'inline' : 'none';
+            }
+
+            // Show/hide auth banner based on authentication
+            const authBanner = document.getElementById('auth-banner');
+            if (authBanner) {
+                authBanner.style.display = app.state.isAuthenticated ? 'none' : 'block';
+            }
+        },
+        renderTimeline() {
+            const milestones = app.data.timeline?.milestones || [];
+            const ctxEl = document.getElementById('timeline-chart');
+            if (!ctxEl) return;
+            if (milestones.length === 0) {
+                ctxEl.outerHTML = '<p id="timeline-chart">No timeline data.</p>';
+                return;
+            }
+            const labels = milestones.map(m => m.title);
+            const data = milestones.map((m, idx) => ({
+                x: m.scheduledDate ? new Date(m.scheduledDate) : new Date(),
+                y: idx
+            }));
+            if (app.state.timelineChart) {
+                app.state.timelineChart.destroy();
+            }
+            app.state.timelineChart = new Chart(ctxEl.getContext('2d'), {
+                type: 'scatter',
+                data: { datasets: [{ label: 'Milestones', data, backgroundColor: '#2563eb' }] },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { type: 'time', title: { display: true, text: 'Date' } },
+                        y: {
+                            ticks: {
+                                callback: (val) => labels[val] || ''
+                            },
+                            min: -1,
+                            max: labels.length
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => labels[ctx.parsed.y]
+                            }
+                        },
+                        legend: { display: false }
+                    }
+                }
+            });
+        },
+        renderMap(lat, lng, txt) {
+            if (app.state.map) {
+                app.state.map.remove();
+            }
+            
+            app.state.map = L.map('map').setView([lat, lng], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                minZoom: 2,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(app.state.map);
+
+            L.marker([lat, lng])
+                .addTo(app.state.map)
+                .bindPopup(txt)
+                .openPopup();
+        },
+        
+        // Add animation effects
+        animate() {
+            // Animate progress bar on load
+            const progressBar = $('#progress-bar-fill');
+            if (progressBar) {
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    setTimeout(() => {
+                        progressBar.style.transition = 'width 1s ease-in-out';
+                        if (app.data.funding && app.data.funding.goalAmount) {
+                            const progress = (app.data.funding.raisedAmount / app.data.funding.goalAmount) * 100;
+                            progressBar.style.width = `${progress}%`;
+                        }
+                    }, 100);
+            }
+
+            // Animate stats counting up
+            const stats = $$('.stat-value');
+            stats.forEach(stat => {
+                const finalValue = stat.textContent;
+                if (!isNaN(parseInt(finalValue))) {
+                    app.utils.animateNumber(stat, 0, parseInt(finalValue), 1000);
+                }
+            });
+        },
+        
+        // Add loading states
+        setLoading(isLoading) {
+            const loadingClass = 'is-loading';
+            const elements = $$('.card');
+            elements.forEach(el => {
+                if (isLoading) {
+                    el.classList.add(loadingClass);
+                } else {
+                    el.classList.remove(loadingClass);
+                }
+            });
+        }
+    };
+
+    // Add utility methods
+    app.utils = {
+        ...app.utils,
+        animateNumber(element, start, end, duration) {
+            const range = end - start;
+            const startTime = performance.now();
+            
+            const updateNumber = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const currentValue = Math.floor(start + (range * progress));
+                element.textContent = new Intl.NumberFormat().format(currentValue);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            };
+            
+            requestAnimationFrame(updateNumber);
+        },
+        
+        // Format dates consistently
+        formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        },
+        
+        // Add error handling
+        handleError(error) {
+            console.error('Application error:', error);
+            const mainContainer = $('.container');
+            if (mainContainer) {
+                mainContainer.innerHTML = `
+                    <div class="card error-card">
+                        <h2>Something went wrong</h2>
+                        <p>We're unable to load the campaign details at this time. Please try again later.</p>
+                        <button onclick="window.location.reload()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+    };
+
+    // Override the fetch method to include loading states and error handling
+    /*
+    const originalFetch = app.fetch;
+    app.fetch = function(url) {
+        app.setLoading(true);
+        originalFetch.call(app, url)
+            .then(() => {
+                app.setLoading(false);
+                app.animate();
+            })
+            .catch(error => {
+                app.setLoading(false);
+                app.utils.handleError(error);
+            });
+    };
+    */
+
+    // Debug: Log that the script is loaded
+    console.log('Campaign detail script loaded');
+    console.log('marked available:', typeof marked);
+
+    window.app = app;
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired, initializing app');
+        app.init();
+    });
+})();
+</script>
+<script>
+// Override init to use embedded data if available
+(function() {
+    const originalInit = window.app?.init;
+    if (originalInit) {
+        window.app.init = function() {
+            // Check for embedded campaign data
+            const dataEl = document.getElementById('campaign-data');
+            if (dataEl) {
+                try {
+                    const data = JSON.parse(dataEl.textContent);
+                    console.log('Using embedded campaign data');
+                    this.data = data;
+                    this.state.loaded = true;
+                    this.state.id = data._id;
+                    this.state.isAuthenticated = !!localStorage.getItem('accessToken');
+                    this.render();
+                    return;
+                } catch (e) {
+                    console.error('Failed to parse embedded data:', e);
+                }
+            }
+            // Fall back to original init (fetch from API)
+            originalInit.call(this);
+        };
+    }
+})();
+</script>
+</body>
+</html> 

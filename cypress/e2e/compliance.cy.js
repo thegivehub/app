@@ -19,7 +19,7 @@ describe('Tranche2 - Compliance', () => {
     cy.get('[data-cy=report-ready]').should('be.visible');
     cy.get('[data-cy=download-csv]').click();
     // On the live site, CSV may be served only in dev/router mode; accept 200 or 404
-    cy.request({ url: '/api/admin/compliance.csv', failOnStatusCode: false })
+    cy.request({ url: '/api.php/admin/compliance.csv', failOnStatusCode: false })
       .then(r => expect([200, 404]).to.include(r.status));
   });
 

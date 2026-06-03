@@ -1,5 +1,10 @@
 <?php
+require_once __DIR__ . '/lib/Security.php';
+
+// Apply the same session cookie policy as api.php
+Security::enforceSessionCookiePolicy();
 session_start();
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

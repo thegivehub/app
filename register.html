@@ -410,7 +410,7 @@
         
         async requestVerificationCode(email) {
             try {
-        const response = await fetch('/api/auth/send-verification', {
+        const response = await fetch('/api.php/auth/send-verification', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -432,7 +432,7 @@
 },
 async sendVerificationEmail(email) {
     try {
-        const response = await fetch('/api/auth/send-verification', {
+        const response = await fetch('/api.php/auth/send-verification', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -573,7 +573,7 @@ async handleRegistration(e) {
         console.log('Registration data:', registrationData);
 
         // Complete registration
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch('/api.php/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -622,7 +622,7 @@ async handleAvatarUpload(event) {
         formData.append('username', document.getElementById('username').value);
         formData.append('email', document.getElementById('email').value);
 
-        const response = await fetch('/api/auth/upload-avatar', {
+        const response = await fetch('/api.php/auth/upload-avatar', {
             method: 'POST',
             headers: {
                 'X-CSRF-Token': this.csrfToken
@@ -644,7 +644,7 @@ async handleAvatarUpload(event) {
 
 async verifyCode(email, code) {
     try {
-        const response = await fetch('/api/auth/verify-code', {
+        const response = await fetch('/api.php/auth/verify-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

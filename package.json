@@ -20,7 +20,7 @@
     "cypress:run:groups": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=https://app.thegivehub.com cypress run --spec \"cypress/e2e/*.cy.js\"",
     "cypress:run:tranche2": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=https://app.thegivehub.com cypress run --spec \"cypress/e2e/{kyc_aml,compliance,impact,contracts,infra}.cy.js\"",
     "cypress:record": "cypress run --record --headless --key $CYPRESS_RECORD_KEY",
-    "cypress:run:local": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=https://app.thegivehub.com cypress run --headless",
+    "cypress:run:local": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=https://app.thegivehub.com bash scripts/cypress-runner.sh",
     "cypress:open:local": "APP_ENV=testing CI=true TEST_ADMIN_TOKEN=TEST_ADMIN BASE_URL=https://app.thegivehub.com cypress open"
   },
   "author": "",

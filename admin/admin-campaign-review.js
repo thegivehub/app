@@ -28,7 +28,7 @@ const AdminCampaignReview = {
 
     // Configuration
     config: {
-        apiBase: '/api/admin/campaigns'
+        apiBase: '/api.php/admin/campaigns'
     },
 
     // Initialize the module

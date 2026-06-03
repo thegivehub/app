@@ -1,0 +1,5 @@
+file 'compliance.cy.js.mp4'
+file 'contracts.cy.js.mp4'
+file 'impact.cy.js.mp4'
+file 'infra.cy.js.mp4'
+file 'kyc_aml.cy.js.mp4'

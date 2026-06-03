@@ -190,7 +190,7 @@
       const loadingElement = document.getElementById('loading');
       loadingElement.style.display = 'block';
       
-      fetch('/api/campaign/my', {
+      fetch('/api.php/campaign/my', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${getToken()}`,

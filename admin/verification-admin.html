@@ -488,7 +488,7 @@
                     const data = await response.json();
 
                     // Now get the stats separately
-                    const statsResponse = await fetch('/api/verification/stats', {
+                    const statsResponse = await fetch('/api.php/verification/stats', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                         }

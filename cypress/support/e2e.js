@@ -57,7 +57,7 @@ Cypress.Commands.add('adminSession', () => {
   // Simple authentication without cy.session to avoid promise issues
   cy.request({
     method: 'POST',
-    url: '/api/auth/login',
+    url: '/api.php/auth/login',
     headers: {
       'Content-Type': 'application/json',
       'X-APP-ENV': 'testing'
@@ -134,7 +134,7 @@ Cypress.Commands.overwrite('request', (originalFn, options) => {
   }
   
   // Only add auth headers for API endpoints (except public ones)
-  if (options.url && options.url.includes('/api/') && !options.url.includes('/api/public/')) {
+  if (options.url && options.url.includes('/api.php/') && !options.url.includes('/api.php/public/')) {
     // Get token from Cypress environment
     const accessToken = Cypress.env('ACCESS_TOKEN');
     

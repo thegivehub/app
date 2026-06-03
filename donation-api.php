@@ -1,6 +1,13 @@
 <?php
 // donation-api.php
 require_once __DIR__ . '/lib/autoload.php';
+
+// Load environment variables from .env file
+if (file_exists(__DIR__ . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
+
 require_once __DIR__ . '/lib/DonationProcessor.php';
 require_once __DIR__ . '/lib/Donate.php';
 require_once __DIR__ . '/lib/Security.php';
@@ -24,7 +31,9 @@ if ($method === "POST" || $method === "PUT") {
 
 // Initialize the donation handlers
 $processor = new DonationProcessor();
-$donate = new Donate(getenv("APP_ENV") === "development");
+// Check for APP_ENV in multiple places (Dotenv loads to $_ENV)
+$appEnv = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? getenv("APP_ENV") ?: 'production';
+$donate = new Donate($appEnv === "development");
 
 // Handle CORS
 header("Access-Control-Allow-Origin: *");

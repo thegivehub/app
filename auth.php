@@ -61,31 +61,130 @@ if (!empty($_GET['error'])) {
 
         // We got an access token, let's now get the owner details
         $ownerDetails = $provider->getResourceOwner($token);
-        
-        $out = ["firstName"=>$ownerDetails->getFirstName(), "lastName"=>$ownerDetails->getLastName(), "email"=>$ownerDetails->getEmail(), "language"=>"en", "password"=>$token->getToken(), "googleToken"=>$token->getToken(), "verified"=>true ];
-    
-        $_SESSION['user'] = $out;
-        $_SESSION['token'] = $token->getToken();
-        
-        if ($token->getExpires() < time()) {
-            $token->getRefreshToken();
+
+        $email = $ownerDetails->getEmail();
+        $firstName = $ownerDetails->getFirstName();
+        $lastName = $ownerDetails->getLastName();
+        $googleId = $ownerDetails->getId();
+
+        // Get the users collection from the Auth class
+        $usersCollection = $auth->getUsersCollection();
+
+        // Check if user already exists by email
+        $existingUser = $usersCollection->findOne(['email' => $email]);
+
+        if ($existingUser) {
+            // User exists - update their Google token and last login
+            $userId = $existingUser['_id'];
+
+            $usersCollection->updateOne(
+                ['_id' => $userId],
+                [
+                    '$set' => [
+                        'auth.googleId' => $googleId,
+                        'auth.googleToken' => $token->getToken(),
+                        'auth.lastLogin' => new MongoDB\BSON\UTCDateTime(),
+                        'auth.verified' => true,
+                        'status' => 'active',
+                        'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                    ]
+                ]
+            );
+        } else {
+            // Create new user with Google credentials
+            $username = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $firstName . $lastName)) . rand(100, 999);
+
+            $newUserData = [
+                'email' => $email,
+                'username' => $username,
+                'type' => 'donor',
+                'status' => 'active',
+                'personalInfo' => [
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'email' => $email,
+                    'language' => 'en'
+                ],
+                'auth' => [
+                    'passwordHash' => password_hash($token->getToken() . $googleId, PASSWORD_DEFAULT),
+                    'googleId' => $googleId,
+                    'googleToken' => $token->getToken(),
+                    'verified' => true,
+                    'twoFactorEnabled' => false,
+                    'lastLogin' => new MongoDB\BSON\UTCDateTime()
+                ],
+                'profile' => [
+                    'avatar' => null,
+                    'bio' => '',
+                    'preferences' => [
+                        'emailNotifications' => true,
+                        'currency' => 'USD'
+                    ]
+                ],
+                'roles' => ['user'],
+                'createdAt' => new MongoDB\BSON\UTCDateTime(),
+                'updatedAt' => new MongoDB\BSON\UTCDateTime()
+            ];
+
+            $result = $usersCollection->insertOne($newUserData);
+
+            if (!$result['success']) {
+                throw new Exception('Failed to create user account');
+            }
+
+            $userId = new MongoDB\BSON\ObjectId($result['id']);
         }
-        // Use these details to create a new profile
-        header("Location: /index.html");
+
+        // Generate JWT tokens using the Auth class method (via reflection since it's private)
+        $issuedAt = time();
+        $expire = $issuedAt + $auth->config['jwt_expire'];
+
+        $payload = [
+            'iat' => $issuedAt,
+            'exp' => $expire,
+            'sub' => (string)$userId
+        ];
+
+        $jwt = \Firebase\JWT\JWT::encode($payload, $auth->config['jwt_secret'], 'HS256');
+        $refreshToken = bin2hex(random_bytes(32));
+
+        // Store refresh token in database
+        $usersCollection->updateOne(
+            ['_id' => $userId],
+            [
+                '$set' => [
+                    'auth.refreshToken' => $refreshToken,
+                    'updatedAt' => new MongoDB\BSON\UTCDateTime()
+                ]
+            ]
+        );
+
+        // Store in session for backwards compatibility
+        $_SESSION['user'] = [
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'email' => $email,
+            'language' => 'en',
+            'googleToken' => $token->getToken(),
+            'verified' => true
+        ];
+        $_SESSION['token'] = $token->getToken();
+
+        // Redirect to a page that will store the tokens in localStorage
+        // We need to pass tokens via a secure intermediate page
+        $tokenData = urlencode(base64_encode(json_encode([
+            'accessToken' => $jwt,
+            'refreshToken' => $refreshToken,
+            'expires' => $expire
+        ])));
+
+        header("Location: /google-auth-complete.html?t=" . $tokenData);
 
     } catch (Exception $e) {
 
         // Failed to get user details
+        error_log("Google Auth Error: " . $e->getMessage());
         exit('Something went wrong: ' . $e->getMessage());
 
     }
-
-    // Use this to interact with an API on the users behalf
-    //echo $token->getToken();
-
-    // Use this to get a new access token if the old one expires
-    //echo $token->getRefreshToken();
-
-    // Unix timestamp at which the access token expires
-    //echo $token->getExpires();
 }

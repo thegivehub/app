@@ -46,7 +46,7 @@ class Tranche2Status {
                     'artifacts' => [
                         'code' => ['/lib/Security.php', '/lib/AdminAuthController.php'],
                         'dashboard' => ['/admin/dashboard.html'],
-                        'api' => ['/api/admin/']
+                        'api' => ['/api.php/admin/']
                     ],
                     'functional' => $this->testSecurity()
                 ],
@@ -319,7 +319,7 @@ class Tranche2Status {
                 ],
                 'api_endpoints' => [
                     'Base API' => '/api.php/',
-                    'Admin API' => '/api/admin/',
+                    'Admin API' => '/api.php/admin/',
                     'KYC API' => '/kyc-api.php',
                     'Blockchain API' => '/blockchain-transaction-api.php',
                     'Status API' => '/api.php/Tranche2Status/getStatus'

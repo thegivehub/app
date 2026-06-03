@@ -26,8 +26,30 @@ class Donate {
     private $supportedCryptos;
 
     /**
+     * Get environment variable from multiple sources
+     * Checks $_ENV, $_SERVER, and getenv() in that order
+     *
+     * @param string $key Environment variable name
+     * @return string|false The value or false if not found
+     */
+    private function getEnvVar($key) {
+        // Check $_ENV first (where Dotenv loads variables)
+        if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
+            return $_ENV[$key];
+        }
+
+        // Check $_SERVER
+        if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') {
+            return $_SERVER[$key];
+        }
+
+        // Fall back to getenv()
+        return getenv($key);
+    }
+
+    /**
      * Initialize the Donate class with necessary dependencies
-     * 
+     *
      * @param bool $testMode Whether to use test mode for payment processors
      * @throws Exception If required configuration is missing
      */
@@ -35,34 +57,36 @@ class Donate {
         $this->db = new Database();
         $this->donationProcessor = new DonationProcessor();
         $this->blockchainController = new BlockchainTransactionController($testMode);
-        
-        // Initialize Square client
-        $squareAccessToken = getenv("SQUARE_ACCESS_TOKEN");
-        if (!$squareAccessToken) {
-            throw new Exception("Square access token not configured");
+
+        // Initialize Square client (optional - only needed for Square payments)
+        $squareAccessToken = $this->getEnvVar("SQUARE_ACCESS_TOKEN");
+        if ($squareAccessToken) {
+            $this->squareClient = new SquareClient([
+                "accessToken" => $squareAccessToken,
+                "environment" => $testMode ? Environment::SANDBOX : Environment::PRODUCTION
+            ]);
+        } else {
+            // Square is not configured - crypto donations will still work
+            error_log("Square access token not configured - Square payments disabled");
+            $this->squareClient = null;
         }
-        
-        $this->squareClient = new SquareClient([
-            "accessToken" => $squareAccessToken,
-            "environment" => $testMode ? Environment::SANDBOX : Environment::PRODUCTION
-        ]);
-        
+
         // Define supported cryptocurrency networks and their configurations
         $this->supportedCryptos = [
             "ETH" => [
                 "name" => "Ethereum",
                 "network" => $testMode ? "goerli" : "mainnet",
-                "address" => getenv("ETHEREUM_ADDRESS")
+                "address" => $this->getEnvVar("ETHEREUM_ADDRESS")
             ],
             "BTC" => [
                 "name" => "Bitcoin",
                 "network" => $testMode ? "testnet" : "mainnet",
-                "address" => getenv("BITCOIN_ADDRESS")
+                "address" => $this->getEnvVar("BITCOIN_ADDRESS")
             ],
             "XLM" => [
                 "name" => "Stellar",
                 "network" => $testMode ? "testnet" : "public",
-                "address" => getenv("STELLAR_PUBLIC_KEY")
+                "address" => $this->getEnvVar("STELLAR_PUBLIC_KEY")
             ]
         ];
         
@@ -74,10 +98,10 @@ class Donate {
         }
         
         // Check if we should enable multiple cryptocurrencies
-        $enableMultipleCurrencies = getenv("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true";
+        $enableMultipleCurrencies = $this->getEnvVar("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true";
         if (!$enableMultipleCurrencies) {
             // Keep only the default currency if multiple currencies are disabled
-            $defaultCurrency = getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM";
+            $defaultCurrency = $this->getEnvVar("DEFAULT_DONATION_CURRENCY") ?: "XLM";
             if (isset($this->supportedCryptos[$defaultCurrency])) {
                 $this->supportedCryptos = [
                     $defaultCurrency => $this->supportedCryptos[$defaultCurrency]
@@ -95,6 +119,11 @@ class Donate {
      */
     public function processSquarePayment($data) {
         try {
+            // Check if Square is configured
+            if ($this->squareClient === null) {
+                throw new Exception("Square payments are not configured. Please set SQUARE_ACCESS_TOKEN environment variable.");
+            }
+
             // Validate required fields
             if (empty($data["nonce"]) || empty($data["amount"]) || empty($data["currency"])) {
                 throw new Exception("Missing required payment fields");
@@ -154,7 +183,7 @@ class Donate {
             $cryptoType = strtoupper($data["cryptoType"] ?? '');
             if (empty($cryptoType) || !isset($this->supportedCryptos[$cryptoType])) {
                 // If not specified or invalid, try to use default
-                $defaultCurrency = getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM";
+                $defaultCurrency = $this->getEnvVar("DEFAULT_DONATION_CURRENCY") ?: "XLM";
                 
                 if (isset($this->supportedCryptos[$defaultCurrency])) {
                     $cryptoType = $defaultCurrency;
@@ -416,7 +445,7 @@ class Donate {
                 "name" => $data["name"],
                 "network" => $data["network"],
                 "isTestnet" => $data["network"] !== "mainnet" && $data["network"] !== "public",
-                "isDefault" => $symbol === (getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM")
+                "isDefault" => $symbol === ($this->getEnvVar("DEFAULT_DONATION_CURRENCY") ?: "XLM")
             ];
             
             // Only include addresses if specifically requested (admin features)
@@ -429,8 +458,8 @@ class Donate {
         
         // Add configuration status
         $cryptos["_config"] = [
-            "multiCurrencyEnabled" => getenv("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true",
-            "defaultCurrency" => getenv("DEFAULT_DONATION_CURRENCY") ?: "XLM"
+            "multiCurrencyEnabled" => $this->getEnvVar("ENABLE_MULTIPLE_CRYPTOCURRENCIES") === "true",
+            "defaultCurrency" => $this->getEnvVar("DEFAULT_DONATION_CURRENCY") ?: "XLM"
         ];
         
         return $cryptos;

@@ -148,10 +148,10 @@ class Verification extends Collection {
                     'timestamp' => $this->formatMongoDate($verification['createdAt'] ?? null),
                     'status' => $verification['status'] ?? 'PENDING',
                     'documentUrl' => isset($verification['documents']['primaryId']) ? 
-                                    '/api/documents/' . $verification['documents']['primaryId'] . '/file' : 
+                                    '/api.php/documents/' . $verification['documents']['primaryId'] . '/file' : 
                                     null,
                     'selfieUrl' => isset($verification['documents']['selfie']) ? 
-                                  '/api/documents/' . $verification['documents']['selfie'] . '/file' : 
+                                  '/api.php/documents/' . $verification['documents']['selfie'] . '/file' : 
                                   null,
                 ];
                 
@@ -231,10 +231,10 @@ class Verification extends Collection {
                 'timestamp' => $this->formatMongoDate($verification['createdAt'] ?? null),
                 'status' => $verification['status'] ?? 'PENDING',
                 'documentImage' => isset($verification['documents']['primaryId']) ? 
-                                 '/api/documents/' . $verification['documents']['primaryId'] . '/file' : 
+                                 '/api.php/documents/' . $verification['documents']['primaryId'] . '/file' : 
                                  null,
                 'selfieImage' => isset($verification['documents']['selfie']) ? 
-                               '/api/documents/' . $verification['documents']['selfie'] . '/file' : 
+                               '/api.php/documents/' . $verification['documents']['selfie'] . '/file' : 
                                null,
                 'personalInfo' => $verification['personalInfo'] ?? [],
                 'documentInfo' => [

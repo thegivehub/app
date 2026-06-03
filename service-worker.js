@@ -23,6 +23,11 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+    // Skip non-HTTP(S) requests (e.g., chrome-extension://, data:, blob:)
+    if (!event.request.url.startsWith('http')) {
+        return;
+    }
+
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => caches.match('/offline.html'))

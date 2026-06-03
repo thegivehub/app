@@ -96,8 +96,69 @@
 
         .campaign-description {
             font-size: 1.1rem;
-            color: #666;
+            color: #333;
             margin-bottom: 24px;
+            min-height: 100px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            display: block;
+            white-space: normal;
+            line-height: 1.6;
+        }
+
+        /* Markdown content styles */
+        .campaign-description h1, .campaign-description h2, .campaign-description h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #1e293b;
+            display: block;
+            line-height: 1.3;
+        }
+
+        .campaign-description h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .campaign-description h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .campaign-description h3 {
+            font-size: 1.25em;
+            font-weight: bold;
+        }
+
+        .campaign-description p {
+            margin-bottom: 1em;
+            display: block;
+        }
+
+        .campaign-description ul, .campaign-description ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        .campaign-description a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        .campaign-description code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .campaign-description blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1em;
+            margin-left: 0;
+            font-style: italic;
+            color: #666;
         }
 
         .stats-grid {
@@ -856,14 +917,16 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 </head>
 <body>
 <main>
     <div class="container">
         <div class="action-buttons" style="margin-bottom: 16px;">
-            <a class='link' href="#" onclick="history.go(-1); return false;"><i class="fa-solid fa-arrow-left-long"></i> Go back</a>
             <div style="flex: 1;"></div>
             
             <!-- Preview button with dropdown -->
@@ -1632,6 +1695,7 @@ Thanks for considering,
             marker: null,
             currentPreviewDevice: 'desktop',
             currentTab: 'seo-settings',
+            descriptionEditor: null,
             seoSettings: {
                 title: '',
                 description: '',
@@ -1645,19 +1709,10 @@ Thanks for considering,
             this.bindEvents();
             const query = this.utils.parseSearch();
             const campaignId = query.id;
-            const app=this;
-            this.fetch(`/api/campaign?id=${campaignId}`, {
-                method: 'GET',
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            }).then(data => {
-                app.data = data;
-                app.state.loaded = true;
-                app.render();
-            }).catch(error => {
-                console.error('Error fetching campaign data:', error);
-            });
+
+            // Fetch campaign data - the fetch() method handles rendering
+            this.fetch(`/api/campaign?id=${campaignId}`);
+
             this.initCharacterCounters();
         },
 
@@ -1800,7 +1855,7 @@ Thanks for considering,
 
         fetch(url) {
             const app=this;
-            fetch(url, {
+            return fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1815,10 +1870,13 @@ Thanks for considering,
 
                 // Initialize SEO data from campaign data
                 app.initSeoFromCampaign();
+
+                return data; // Return data so callers can chain
             })
             .catch(error => {
                 console.error('Fetch error:', error);
                 app.utils.showNotification('Failed to load campaign data', 'error');
+                throw error; // Re-throw so callers can handle
             });
         },
 
@@ -1870,11 +1928,24 @@ Thanks for considering,
                 $('#goal-amount').value = this.data.funding?.goalAmount || 0;
                 $('#goal-currency').value = this.data.funding?.currency || 'USD';
                 $('#raised-amount').value = this.data.funding?.raisedAmount || 0;
-                
+
                 if (this.data.location?.coordinates) {
                     $('#lat-input').value = this.data.location.coordinates.latitude || 0;
                     $('#lng-input').value = this.data.location.coordinates.longitude || 0;
                 }
+
+                // Initialize markdown editor for description if not already initialized
+                if (!this.state.descriptionEditor) {
+                    this.state.descriptionEditor = new EasyMDE({
+                        element: document.getElementById('description-input'),
+                        spellChecker: false,
+                        placeholder: 'Enter campaign description (Markdown supported)...',
+                        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
+                        status: ["lines", "words"]
+                    });
+                }
+                // Set the editor value
+                this.state.descriptionEditor.value(this.data.description || '');
             } else {
                 // If canceling, revert to original data
                 this.render();
@@ -1883,10 +1954,42 @@ Thanks for considering,
         
         render() {
             const data = this.data;
-            
+
             // Basic Info
             $('#campaign-title').textContent = data.title || "Campaign Title";
-            $('#campaign-description').textContent = data.description || "Campaign Description";
+
+            // Parse markdown for description
+            if (data.description) {
+                try {
+                    let parsedDescription;
+
+                    // Check if marked is loaded and parse markdown
+                    if (typeof marked !== 'undefined' && marked.parse) {
+                        // Configure marked to handle breaks properly
+                        marked.setOptions({
+                            breaks: true,
+                            gfm: true,
+                            headerIds: false,
+                            mangle: false
+                        });
+                        parsedDescription = marked.parse(data.description);
+                    } else {
+                        // Fallback: simple formatting
+                        parsedDescription = data.description
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    }
+
+                    $('#campaign-description').innerHTML = parsedDescription;
+                } catch (error) {
+                    console.error('Error parsing markdown:', error);
+                    $('#campaign-description').innerHTML = data.description.replace(/\n/g, '<br>');
+                }
+            } else {
+                $('#campaign-description').textContent = "Campaign Description";
+            }
+
             $('#campaign-location').textContent = data.location?.region ? `${data.location.region}, ${data.location.country}` : "Unknown";
             $('#campaign-goal').textContent = this.utils.formatCurrency(data.funding?.goalAmount || 0, data.funding?.currency || 'USD');
             $('#campaign-raised').textContent = this.utils.formatCurrency(data.funding?.raisedAmount || 0, data.funding?.currency || 'USD');
@@ -2417,7 +2520,7 @@ Thanks for considering,
             const updatedCampaign = {
                 ...this.data,
                 title: $('#title-input').value,
-                description: $('#description-input').value,
+                description: this.state.descriptionEditor ? this.state.descriptionEditor.value() : $('#description-input').value,
                 location: {
                     region: $('#location-region').value,
                     country: $('#location-country').value,

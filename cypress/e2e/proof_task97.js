@@ -42,7 +42,7 @@ describe('The Give Hub — Tranche #2, Task #97 Proof', () => {
     cy.get('[data-cy=run-report]').click();
     cy.get('[data-cy=report-ready]').should('be.visible');
     cy.get('[data-cy=download-csv]').click();
-    cy.request('/api/admin/compliance.csv').then(r => {
+    cy.request('/api.php/admin/compliance.csv').then(r => {
       expect(r.status).to.eq(200);
       save(`cypress/artifacts/T99-compliance.csv`, r.body);
     });
@@ -266,8 +266,8 @@ describe('The Give Hub — Tranche #2, Task #97 Proof', () => {
 
   it('T110: Implement rate limiting & abuse protection', () => {
     const tries = Array.from({length:30}, (_,i)=>i);
-    tries.forEach(i => cy.request({ url:'/api/public/ping', failOnStatusCode:false }));
-    cy.request({ url:'/api/public/ping', failOnStatusCode:false }).then(r => {
+    tries.forEach(i => cy.request({ url:'/api.php/public/ping', failOnStatusCode:false }));
+    cy.request({ url:'/api.php/public/ping', failOnStatusCode:false }).then(r => {
       expect([200, 429]).to.include(r.status);
     });
     cy.screenshot(`T110-ratelimit-${ts()}`);

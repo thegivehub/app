@@ -10,6 +10,7 @@ require_once __DIR__ . '/lib/AdminReportsController.php';
 require_once __DIR__ . '/lib/Security.php';
 
 Security::sendHeaders();
+Security::enforceSessionCookiePolicy();
 if (!Security::rateLimit($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_URI'], 100, 60)) {
     header('Retry-After: 60');
     sendAPIJson(429, ['error' => 'Rate limit exceeded']);
@@ -39,7 +40,12 @@ function sanitizeInput($data) {
         }
         return $data;
     }
-    return filter_var($data, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_NO_ENCODE_QUOTES);
+    // Don't strip newlines, carriage returns, or tabs - these are needed for markdown content
+    // Only strip truly dangerous low ASCII characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
+    $sanitized = filter_var($data, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_NO_ENCODE_QUOTES);
+    // Remove null bytes and other control characters, but preserve \n (0x0A), \r (0x0D), and \t (0x09)
+    $sanitized = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $sanitized);
+    return $sanitized;
 }
 
 /**
@@ -117,7 +123,7 @@ if ($method === "OPTIONS") {
     header("Access-Control-Allow-Origin: *");   
     header("Access-Control-Allow-Methods: GET, POST, DELETE, PUT, OPTIONS");
     header("Access-Control-Max-Age: 3600");    
-    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");   
+    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, X-CSRF-Token");   
     exit;
 }
 
@@ -886,4 +892,3 @@ switch ($method) {
 //http_response_code(404);
 //echo json_encode(['success' => false, 'error' => 'Endpoint not found']);
 exit;
-

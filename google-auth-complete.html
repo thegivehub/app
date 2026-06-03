@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completing Sign In - The Give Hub</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <style>
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        .auth-container .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+        }
+        .auth-container h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .auth-container p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .success-message {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <img src="/img/black-logo.svg" class="logo" alt="The Give Hub">
+        <h1>Completing Sign In...</h1>
+        <p>Please wait while we complete your Google sign-in.</p>
+        <div class="spinner" id="spinner"></div>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+    </div>
+
+    <script>
+        (function() {
+            const spinner = document.getElementById('spinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+
+            function showError(message) {
+                spinner.style.display = 'none';
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+
+                // Redirect to login after showing error
+                setTimeout(() => {
+                    window.location.href = '/pages/login.html';
+                }, 3000);
+            }
+
+            function showSuccess(message) {
+                spinner.style.display = 'none';
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+            }
+
+            try {
+                // Get the token data from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const tokenData = urlParams.get('t');
+
+                if (!tokenData) {
+                    showError('No authentication data received. Redirecting to login...');
+                    return;
+                }
+
+                // Decode the token data
+                const decodedData = JSON.parse(atob(decodeURIComponent(tokenData)));
+
+                if (!decodedData.accessToken || !decodedData.refreshToken) {
+                    showError('Invalid authentication data. Redirecting to login...');
+                    return;
+                }
+
+                // Store tokens in localStorage
+                localStorage.setItem('accessToken', decodedData.accessToken);
+                localStorage.setItem('refreshToken', decodedData.refreshToken);
+
+                // Clear the URL to remove sensitive data from browser history
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, '/google-auth-complete.html');
+                }
+
+                showSuccess('Sign in successful! Redirecting...');
+
+                // Redirect to the main app
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 500);
+
+            } catch (error) {
+                console.error('Auth completion error:', error);
+                showError('An error occurred during sign in. Redirecting to login...');
+            }
+        })();
+    </script>
+</body>
+</html>
