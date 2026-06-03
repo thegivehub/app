@@ -90,7 +90,14 @@ try {
     $db->verifications->createIndex(['timestamp' => -1]);
     $db->verifications->createIndex(['reviewedAt' => -1]);
     echo "Created indexes for verifications collection.\n";
-    
+
+    // Revoked tokens collection indexes (logout / token revocation)
+    $db->revoked_tokens->createIndex(['jti' => 1], ['unique' => true]);
+    // TTL index: automatically purge revocation records once the underlying
+    // token would have expired anyway.
+    $db->revoked_tokens->createIndex(['expiresAt' => 1], ['expireAfterSeconds' => 0]);
+    echo "Created indexes for revoked_tokens collection.\n";
+
     // Test insert
     $testDoc = ['name' => 'test', 'timestamp' => new MongoDB\BSON\UTCDateTime()];
     $result = $db->test->insertOne($testDoc);
