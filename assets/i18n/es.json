@@ -1,0 +1,15 @@
+{
+  "nav": { "home": "Inicio", "campaigns": "Campañas", "login": "Iniciar sesión" },
+  "donate": {
+    "title": "Hacer una donación",
+    "amount": "Cantidad ($)",
+    "crypto": "Criptomoneda",
+    "card": "Tarjeta de crédito",
+    "submit": "Completar donación",
+    "recurring": "Hacer este donativo recurrente",
+    "frequency": "Frecuencia",
+    "monthly": "Mensual",
+    "weekly": "Semanal"
+  }
+}
+
