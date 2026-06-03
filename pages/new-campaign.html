@@ -243,19 +243,174 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+        overflow: hidden;
       }
+
+      /* TASK 25: per-file upload progress */
+      .preview-item.uploading {
+        background-color: var(--gray-100);
+      }
+      .preview-item.upload-error {
+        outline: 2px solid var(--red-500);
+      }
+      .upload-progress-overlay {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.35rem 0.5rem;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.75rem;
+      }
+      .upload-progress-track {
+        height: 5px;
+        background: rgba(255, 255, 255, 0.35);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.2rem;
+      }
+      .upload-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--primary);
+        transition: width 0.15s ease;
+      }
+      .upload-progress-overlay.error .upload-progress-fill {
+        background: var(--red-500);
+      }
+      .upload-progress-overlay.done {
+        background: rgba(16, 122, 87, 0.85);
+      }
+      .preview-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        cursor: pointer;
+        line-height: 1;
+        font-size: 14px;
+        z-index: 2;
+      }
+
+      /* TASK 22: draft auto-save indicator */
+      .draft-indicator {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 1.2rem;
+      }
+      .draft-indicator.saving { color: var(--primary); }
+      .draft-indicator.saved { color: #0f9d58; }
+      .draft-restore-bar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 0 1.5rem;
+        padding: 0.75rem 1rem;
+        background: #eff6ff;
+        border: 1px solid var(--primary);
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+      .draft-restore-bar .btn { padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+      .draft-restore-actions { display: flex; gap: 0.5rem; }
+
+      /* TASK 23: edit / preview toggle */
+      .view-toggle {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0 1.5rem 1rem;
+      }
+      .view-toggle .toggle-btn {
+        padding: 0.5rem 1.25rem;
+        border: 1px solid var(--gray-300);
+        background: white;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--gray-600);
+      }
+      .view-toggle .toggle-btn:first-child { border-radius: 6px 0 0 6px; }
+      .view-toggle .toggle-btn:last-child { border-radius: 0 6px 6px 0; }
+      .view-toggle .toggle-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+      }
+      #previewView { display: none; padding: 2rem; }
+      #previewView.active { display: block; }
+      .cp-hero {
+        width: 100%;
+        max-height: 360px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        background: var(--gray-100);
+      }
+      .cp-title { font-size: 1.75rem; margin-bottom: 0.5rem; color: var(--gray-700); }
+      .cp-meta { color: var(--gray-600); margin-bottom: 1rem; font-size: 0.95rem; }
+      .cp-goal {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 1rem;
+      }
+      .cp-goal-track {
+        height: 10px;
+        background: var(--gray-200);
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+      }
+      .cp-goal-track > div { height: 100%; width: 0%; background: var(--primary); }
+      .cp-description { line-height: 1.7; }
+      .cp-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+      }
+      .cp-gallery img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
+
       @media (max-width: 768px) {
         body {
           padding: 0;
         }
       }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
   </head>
   <body>
     <div class="container">
       <div class="form-header">
         <img src="/img/round-logo.svg" height="100" style="float: left" />
         <h1>Create New Campaign</h1>
+        <div id="draftIndicator" class="draft-indicator" aria-live="polite"></div>
+      </div>
+
+      <!-- TASK 22: restore-draft prompt -->
+      <div id="draftRestoreBar" class="draft-restore-bar">
+        <span id="draftRestoreText">A saved draft was found. Restore it?</span>
+        <div class="draft-restore-actions">
+          <button type="button" class="btn btn-primary" id="restoreDraftBtn">Restore</button>
+          <button type="button" class="btn btn-secondary" id="discardDraftBtn">Discard</button>
+        </div>
+      </div>
+
+      <!-- TASK 23: edit / preview toggle -->
+      <div class="view-toggle" role="tablist">
+        <button type="button" class="toggle-btn active" id="editModeBtn" role="tab" aria-selected="true">Edit</button>
+        <button type="button" class="toggle-btn" id="previewModeBtn" role="tab" aria-selected="false">Preview</button>
       </div>
 
       <div class="progress-bar">
@@ -411,11 +566,31 @@
           </button>
         </div>
       </form>
+
+      <!-- TASK 23: live preview of the public campaign page -->
+      <div id="previewView" role="tabpanel" aria-labelledby="previewModeBtn">
+        <img id="cpHero" class="cp-hero" alt="Campaign cover image" style="display:none" />
+        <h1 id="cpTitle" class="cp-title">Untitled Campaign</h1>
+        <div id="cpMeta" class="cp-meta"></div>
+        <div id="cpGoal" class="cp-goal"></div>
+        <div class="cp-goal-track"><div id="cpGoalFill"></div></div>
+        <div id="cpGallery" class="cp-gallery"></div>
+        <div id="cpDescription" class="cp-description"></div>
+      </div>
     </div>
 <script>
   let currentStep = 1;
   const totalSteps = 4;
   const owmAPIKey='0aa78454a886474fc288a25fd41ca9a4';
+
+  // Initialize markdown editor for description
+  const descriptionEditor = new EasyMDE({
+    element: document.getElementById('description'),
+    spellChecker: false,
+    placeholder: 'Enter campaign description (Markdown supported)...',
+    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
+    status: ["lines", "words"]
+  });
 
   document.getElementById('nextBtn').addEventListener('click', () => {
     if (validateCurrentStep()) {
@@ -492,7 +667,7 @@
       const campaignData = {
         title: document.getElementById('campaignTitle').value,
         type: document.getElementById('campaignType').value,
-        description: document.getElementById('description').value,
+        description: descriptionEditor.value(),
         funding:{
           currency: document.getElementById('currency').value,
           goalAmount: document.getElementById('goalAmount').value,
@@ -551,27 +726,121 @@
   const imageUpload = document.getElementById('imageUpload');
   const imagePreview = document.getElementById('imagePreview');
 
+  // TASK 25: read a File into a data URL (Promise wrapper around FileReader)
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => reject(reader.error || new Error('Read failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // TASK 25: upload a single image data URL to /image-upload.php using
+  // XMLHttpRequest so we can report per-file progress (0-100%).
+  // The endpoint and its JSON request/response shape are kept intact.
+  function uploadImageFile(dataUrl, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/image-upload.php');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      const token = getToken();
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && typeof onProgress === 'function') {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        let body = null;
+        try { body = JSON.parse(xhr.responseText); } catch (_) {}
+        if (xhr.status >= 200 && xhr.status < 300 && body && !body.error) {
+          if (typeof onProgress === 'function') onProgress(100);
+          // image-upload.php returns { success, url, ... }
+          resolve(body.url || body.imageUrl || dataUrl);
+        } else {
+          reject(new Error((body && body.error) || `Upload failed (${xhr.status})`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+
+      xhr.send(JSON.stringify({ image: dataUrl, objectType: 'campaign' }));
+    });
+  }
+
+  // TASK 25: build a preview tile that shows a per-file progress bar, then
+  // uploads the image and stores the returned server URL on the element.
+  async function addImageFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const preview = document.createElement('div');
+    preview.className = 'preview-item uploading';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'preview-remove';
+    removeBtn.textContent = '×';
+    removeBtn.title = 'Remove image';
+    removeBtn.addEventListener('click', () => { preview.remove(); scheduleAutoSave(); });
+
+    const overlay = document.createElement('div');
+    overlay.className = 'upload-progress-overlay';
+    const label = document.createElement('span');
+    label.textContent = 'Uploading 0%';
+    const track = document.createElement('div');
+    track.className = 'upload-progress-track';
+    const fill = document.createElement('div');
+    fill.className = 'upload-progress-fill';
+    track.appendChild(fill);
+    overlay.appendChild(label);
+    overlay.appendChild(track);
+
+    preview.appendChild(removeBtn);
+    preview.appendChild(overlay);
+    imagePreview.appendChild(preview);
+
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      preview.style.backgroundImage = `url(${dataUrl})`;
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+
+      const url = await uploadImageFile(dataUrl, (pct) => {
+        fill.style.width = pct + '%';
+        label.textContent = 'Uploading ' + pct + '%';
+      });
+
+      // success state
+      preview.classList.remove('uploading');
+      preview.dataset.url = url;
+      overlay.classList.add('done');
+      label.textContent = 'Uploaded ✓';
+      // hide the success bar shortly after
+      setTimeout(() => { overlay.style.display = 'none'; }, 1200);
+      scheduleAutoSave();
+    } catch (err) {
+      preview.classList.remove('uploading');
+      preview.classList.add('upload-error');
+      overlay.classList.add('error');
+      label.textContent = 'Failed: ' + err.message;
+      fill.style.width = '100%';
+      console.error('Image upload error:', err);
+    }
+  }
+
+  function handleFiles(fileList) {
+    Array.from(fileList).forEach((file) => addImageFile(file));
+  }
+
   imageUpload.addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
     input.click();
-
-    input.onchange = () => {
-      Array.from(input.files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const preview = document.createElement('div');
-          preview.className = 'preview-item';
-          preview.style.backgroundImage = `url(${e.target.result})`;
-          preview.style.backgroundSize = 'cover';
-          preview.style.backgroundPosition = 'center';
-          imagePreview.appendChild(preview);
-        };
-        reader.readAsDataURL(file);
-      });
-    };
+    input.onchange = () => handleFiles(input.files);
   });
 
   // Drag and drop handling
@@ -587,21 +856,7 @@
   imageUpload.addEventListener('drop', (e) => {
     e.preventDefault();
     imageUpload.style.borderColor = 'var(--gray-300)';
-
-    Array.from(e.dataTransfer.files).forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const preview = document.createElement('div');
-          preview.className = 'preview-item';
-          preview.style.backgroundImage = `url(${e.target.result})`;
-          preview.style.backgroundSize = 'cover';
-          preview.style.backgroundPosition = 'center';
-          imagePreview.appendChild(preview);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    handleFiles(e.dataTransfer.files);
   });
   function getLatLong(txt) {
       // Remove any special characters and spaces
@@ -653,7 +908,7 @@
     const formData = {
       title: document.getElementById('campaignTitle').value,
       type: document.getElementById('campaignType').value,
-      description: document.getElementById('description').value,
+      description: descriptionEditor.value(),
       funding: {
         currency: document.getElementById('currency').value,
         goalAmount: parseFloat(document.getElementById('goalAmount').value),
@@ -679,23 +934,28 @@
       }
     };
 
-    // Get image data from preview
+    // Get image data from preview. Prefer the server URL returned by
+    // image-upload.php (stored on dataset.url by addImageFile); fall back to
+    // the inline data URL if the upload has not completed.
     const imageElements = document.querySelectorAll('#imagePreview .preview-item');
+    const imageUrlOf = (el) => {
+      if (el.dataset && el.dataset.url) return el.dataset.url;
+      if (el.style.backgroundImage) {
+        return el.style.backgroundImage.replace(/url\(['"]?(.+?)['"]?\)/, '$1');
+      }
+      return null;
+    };
     // Set main image (first image)
     if (imageElements.length > 0) {
-      const mainImg = imageElements[0];
-      if (mainImg.style.backgroundImage) {
-        const url = mainImg.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-        formData.image = url;
-      }
+      const mainUrl = imageUrlOf(imageElements[0]);
+      if (mainUrl) formData.image = mainUrl;
     }
-    
+
     // Add additional images to images array
     formData.images = [];
     imageElements.forEach((img, index) => {
-      if (img.style.backgroundImage) {
-        const url = img.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-        // Add all images to images array (backend will handle duplicates if needed)
+      const url = imageUrlOf(img);
+      if (url) {
         formData.images.push({
           image: url,
           caption: `Image ${index + 1}`
@@ -728,6 +988,9 @@
     })
     .then(data => {
       console.log('Success:', data);
+
+      // TASK 22: clear the saved draft now that the campaign is submitted
+      clearDraft();
 
       // Show success message
       alert('Campaign submitted successfully! It will be reviewed by our team.');
@@ -800,6 +1063,260 @@ function getUserId() {
     e.preventDefault(); // Prevent default form submission
     submitForm();
   };
+
+  /* ===================================================================
+   * TASK 22 — Auto-save campaign draft to localStorage
+   * =================================================================== */
+  // This form is the "new campaign" creator, so the draft key is fixed to
+  // 'new'. (An edit form would substitute the campaign id here.)
+  const DRAFT_KEY = 'givehub:campaign-draft:new';
+  const DRAFT_FIELDS = ['campaignTitle', 'campaignType', 'currency',
+    'goalAmount', 'deadline', 'minContribution'];
+
+  const draftIndicator = document.getElementById('draftIndicator');
+  let draftSavedTimer = null;
+  let autoSaveTimer = null;
+  let suppressAutoSave = true; // don't save while we are restoring/loading
+
+  function setDraftIndicator(state) {
+    if (!draftIndicator) return;
+    draftIndicator.className = 'draft-indicator ' + state;
+    if (state === 'saving') draftIndicator.textContent = 'Saving…';
+    else if (state === 'saved') {
+      draftIndicator.textContent = 'Draft saved ✓';
+      clearTimeout(draftSavedTimer);
+      draftSavedTimer = setTimeout(() => {
+        if (draftIndicator.classList.contains('saved')) draftIndicator.textContent = 'Draft saved';
+      }, 3000);
+    } else draftIndicator.textContent = '';
+  }
+
+  function collectDraft() {
+    const data = {};
+    DRAFT_FIELDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    data.description = descriptionEditor ? descriptionEditor.value() : '';
+    // capture location-block fields if present
+    ['location-country', 'location-region', 'location-latitude', 'location-longitude'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    // capture already-uploaded image urls (and inline data fallback)
+    data.images = [];
+    document.querySelectorAll('#imagePreview .preview-item').forEach((el) => {
+      const url = (el.dataset && el.dataset.url)
+        ? el.dataset.url
+        : (el.style.backgroundImage ? el.style.backgroundImage.replace(/url\(['"]?(.+?)['"]?\)/, '$1') : null);
+      if (url) data.images.push(url);
+    });
+    data.currentStep = currentStep;
+    data.savedAt = new Date().toISOString();
+    return data;
+  }
+
+  function saveDraft() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft()));
+      setDraftIndicator('saved');
+    } catch (e) {
+      console.error('Failed to save draft', e);
+    }
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    setDraftIndicator('');
+  }
+
+  // Debounced auto-save (~2s after the last input) + immediate "Saving…" hint
+  function scheduleAutoSave() {
+    if (suppressAutoSave) return;
+    setDraftIndicator('saving');
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveDraft, 2000);
+  }
+  window.scheduleAutoSave = scheduleAutoSave; // used by image upload handlers
+
+  function applyDraft(data) {
+    suppressAutoSave = true;
+    DRAFT_FIELDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && data[id] != null) el.value = data[id];
+    });
+    if (descriptionEditor && data.description != null) descriptionEditor.value(data.description);
+    ['location-country', 'location-region', 'location-latitude', 'location-longitude'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && data[id] != null) el.value = data[id];
+    });
+    if (Array.isArray(data.images)) {
+      data.images.forEach((url, i) => {
+        const preview = document.createElement('div');
+        preview.className = 'preview-item';
+        preview.dataset.url = url;
+        preview.style.backgroundImage = `url(${url})`;
+        preview.style.backgroundSize = 'cover';
+        preview.style.backgroundPosition = 'center';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'preview-remove';
+        removeBtn.textContent = '×';
+        removeBtn.title = 'Remove image';
+        removeBtn.addEventListener('click', () => { preview.remove(); scheduleAutoSave(); });
+        preview.appendChild(removeBtn);
+        imagePreview.appendChild(preview);
+      });
+    }
+    suppressAutoSave = false;
+  }
+
+  // Wire up auto-save listeners. Use event delegation on the form so that
+  // fields rendered later (e.g. the <location-block> custom element) are
+  // also covered without needing to re-bind.
+  function bindAutoSave() {
+    const form = document.getElementById('campaignForm');
+    const onEdit = (e) => {
+      if (e.target.matches('input, select, textarea')) scheduleAutoSave();
+    };
+    form.addEventListener('input', onEdit, true);
+    form.addEventListener('change', onEdit, true);
+    // EasyMDE writes to a hidden textarea, so listen on its CodeMirror instance
+    if (descriptionEditor && descriptionEditor.codemirror) {
+      descriptionEditor.codemirror.on('change', scheduleAutoSave);
+    }
+  }
+
+  // On load: offer to restore an existing draft (non-intrusive bar)
+  function initDraft() {
+    bindAutoSave();
+    let raw = null;
+    try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) {}
+    if (!raw) { suppressAutoSave = false; return; }
+
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { suppressAutoSave = false; return; }
+
+    const bar = document.getElementById('draftRestoreBar');
+    const text = document.getElementById('draftRestoreText');
+    if (data.savedAt) {
+      text.textContent = 'A saved draft from ' +
+        new Date(data.savedAt).toLocaleString() + ' was found. Restore it?';
+    }
+    bar.style.display = 'flex';
+
+    document.getElementById('restoreDraftBtn').addEventListener('click', () => {
+      applyDraft(data);
+      bar.style.display = 'none';
+      setDraftIndicator('saved');
+    });
+    document.getElementById('discardDraftBtn').addEventListener('click', () => {
+      clearDraft();
+      bar.style.display = 'none';
+      suppressAutoSave = false;
+    });
+  }
+
+  /* ===================================================================
+   * TASK 23 — Edit / Preview toggle
+   * =================================================================== */
+  const editModeBtn = document.getElementById('editModeBtn');
+  const previewModeBtn = document.getElementById('previewModeBtn');
+  const previewView = document.getElementById('previewView');
+  const campaignFormEl = document.getElementById('campaignForm');
+  const viewToggleEls = [
+    document.querySelector('.progress-bar')
+  ].filter(Boolean);
+
+  function renderPreview() {
+    const title = document.getElementById('campaignTitle').value || 'Untitled Campaign';
+    const type = document.getElementById('campaignType').value;
+    const currency = document.getElementById('currency').value || 'USD';
+    const goal = parseFloat(document.getElementById('goalAmount').value) || 0;
+    const deadline = document.getElementById('deadline').value;
+    const descMd = descriptionEditor ? descriptionEditor.value() : '';
+    const countryEl = document.getElementById('location-country');
+    const regionEl = document.getElementById('location-region');
+    const location = [regionEl && regionEl.value, countryEl && countryEl.value]
+      .filter(Boolean).join(', ');
+
+    document.getElementById('cpTitle').textContent = title;
+
+    const metaParts = [];
+    if (type) metaParts.push(type.charAt(0).toUpperCase() + type.slice(1));
+    if (location) metaParts.push(location);
+    if (deadline) {
+      metaParts.push('Ends ' + new Date(deadline).toLocaleDateString('en-US',
+        { year: 'numeric', month: 'long', day: 'numeric' }));
+    }
+    document.getElementById('cpMeta').textContent = metaParts.join('  •  ');
+
+    let goalStr = '';
+    try {
+      goalStr = new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(goal);
+    } catch (e) { goalStr = currency + ' ' + goal.toLocaleString(); }
+    document.getElementById('cpGoal').textContent = goal > 0 ? ('Goal: ' + goalStr) : 'No goal set';
+    document.getElementById('cpGoalFill').style.width = '0%';
+
+    // images
+    const urls = [];
+    document.querySelectorAll('#imagePreview .preview-item').forEach((el) => {
+      const url = (el.dataset && el.dataset.url)
+        ? el.dataset.url
+        : (el.style.backgroundImage ? el.style.backgroundImage.replace(/url\(['"]?(.+?)['"]?\)/, '$1') : null);
+      if (url) urls.push(url);
+    });
+    const hero = document.getElementById('cpHero');
+    if (urls.length) { hero.src = urls[0]; hero.style.display = 'block'; }
+    else { hero.style.display = 'none'; }
+    const gallery = document.getElementById('cpGallery');
+    gallery.innerHTML = '';
+    urls.slice(1).forEach((url) => {
+      const img = document.createElement('img');
+      img.src = url;
+      gallery.appendChild(img);
+    });
+
+    // description (Markdown -> HTML if marked is available, else plain text)
+    const descEl = document.getElementById('cpDescription');
+    if (window.marked && typeof window.marked.parse === 'function') {
+      descEl.innerHTML = window.marked.parse(descMd || '');
+    } else {
+      descEl.textContent = descMd || '';
+    }
+  }
+
+  function setView(mode) {
+    const preview = mode === 'preview';
+    previewView.classList.toggle('active', preview);
+    campaignFormEl.style.display = preview ? 'none' : '';
+    viewToggleEls.forEach((el) => { el.style.display = preview ? 'none' : ''; });
+    editModeBtn.classList.toggle('active', !preview);
+    previewModeBtn.classList.toggle('active', preview);
+    editModeBtn.setAttribute('aria-selected', String(!preview));
+    previewModeBtn.setAttribute('aria-selected', String(preview));
+    if (preview) renderPreview();
+  }
+
+  editModeBtn.addEventListener('click', () => setView('edit'));
+  previewModeBtn.addEventListener('click', () => setView('preview'));
+
+  // Pull in marked for nicer Markdown rendering in the preview (optional)
+  (function loadMarked() {
+    if (window.marked) return;
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js';
+    s.async = true;
+    document.head.appendChild(s);
+  })();
+
+  // Initialise draft handling once the DOM, editor and custom elements are
+  // ready (the <location-block> module loads asynchronously).
+  if (document.readyState === 'complete') {
+    initDraft();
+  } else {
+    window.addEventListener('load', initDraft);
+  }
 
 </script>
   </body>
